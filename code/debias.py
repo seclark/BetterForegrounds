@@ -13,9 +13,13 @@ def asymptotic_estimator(p, sigp, floor = False):
     Defined in Montier+ 2014 Eq. 13 as the above if p > sigp, 0 otherwise. :: floor = True
     """    
 
+    # Work on numpy arrays
+    p = np.asarray(p)
+    sigp = np.asarray(sigp)
+
     # Montier+ 2014 equation
     if floor == True:
-        p_db = np.zeros(len(p))
+        p_db = np.zeros(len(np.atleast_1d(p)))
         p_db[np.where(p > sigp)] = np.sqrt(p**2 - sigp**2)
     
     # Simplest case
