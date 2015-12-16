@@ -2,6 +2,7 @@ from __future__ import division, print_function
 import numpy as np
 import healpy as hp
 from numpy.linalg import lapack_lite
+import time
 
 import debias
 
@@ -25,17 +26,18 @@ map353Gal[0], map353Gal[1], map353Gal[2], cov353Gal[0,0], cov353Gal[0,1], cov353
 # sigma_p as defined in arxiv:1407.0178v1 Eqn 3.
 sigma_p = np.zeros((2, 2, Npix)) # [sig_Q^2, sig_QU // sig_QU, UU]
 sigma_p[0, 0, :] = (1.0/map353Gal[0, :]**2)*cov353Gal[1, 1, :] #QQ
-sigma_p[0, 1, :] = (1.0/map353Gal[0, :]**2)*np.sqrt(cov353Gal[1, 2, :]) #QU
-sigma_p[1, 0, :] = (1.0/map353Gal[0, :]**2)*np.sqrt(cov353Gal[1, 2, :]) #QU
+sigma_p[0, 1, :] = (1.0/map353Gal[0, :]**2)*cov353Gal[1, 2, :] #QU
+sigma_p[1, 0, :] = (1.0/map353Gal[0, :]**2)*cov353Gal[1, 2, :] #QU
 sigma_p[1, 1, :] = (1.0/map353Gal[0, :]**2)*cov353Gal[2, 2, :] # UU
 
-# temporary hack
-sigma_p = sigma_p[:, :, 0:10]
-
 # Montier+ II Eq. 5
-eps = np.sqrt(cov353Gal[1, 1, :]/cov353Gal[2, 2, :])
-rhosq = cov353Gal[1, 2, :]/(cov353Gal[1, 1, :]*cov353Gal[2, 2, :])
-sigpGsq = (cov353Gal[1, 1, :]/map353Gal[0, :]**2)*(np.sqrt(1 - rhosq)/eps)
+#eps = np.sqrt(cov353Gal[1, 1, :]/cov353Gal[2, 2, :])
+#rhosq = cov353Gal[1, 2, :]/(cov353Gal[1, 1, :]*cov353Gal[2, 2, :])
+#sigpGsq = (cov353Gal[1, 1, :]/map353Gal[0, :]**2)*(np.sqrt(1 - rhosq)/eps)
+
+# Assume rho = 1, so define det(sigma_p) = sigma_p,G^4
+det_sigma_p = np.linalg.det(sigma_p.swapaxes(0, 2))
+sigpGsq = np.sqrt(det_sigma_p)
 
 # measured polarization angle (psi_i = arctan(U_i/Q_i))
 psimeas = np.mod(0.5*np.arctan2(map353Gal[2, :], map353Gal[1, :]), np.pi)
@@ -47,20 +49,22 @@ pmeas = np.sqrt(map353Gal[1, :]**2 + map353Gal[2, :]**2)
 invsig = np.linalg.inv(sigma_p.swapaxes(0, 2))
 #invsig = invsig.swapaxes(0, 2)
 
-nsample = 10
-psi0_all = np.linspace(0, np.pi, 10)
-p0_all = np.linspace(0, 1.0, 10)
+# Create grid of psi0's and p0's to sample
+nsample = 100
+psi0_all = np.linspace(0, np.pi, nsample)
+p0_all = np.linspace(0, 1.0, nsample)
 
 p0_psi0_grid = np.asarray(np.meshgrid(p0_all, psi0_all))
 p0_psi0_pairs = zip(p0_psi0_grid[0, ...].ravel(), p0_psi0_grid[1, ...].ravel())
 
 rharr = np.zeros((2, 1), np.float_)
+# temporary hack -- only look at first 1000 points
+Npix = 1000
 
 # Brute force loop first
-out = np.zeros((10, nsample*nsample), np.float_) # 10 -> Npix
-for p, isig in enumerate(invsig[0:10]):
-
-    print(psimeas[p], pmeas[p])
+time0 = time.time()
+out = np.zeros((Npix, nsample*nsample), np.float_) # 10 -> Npix in real thing, just calculating first 10 for now
+for p, isig in enumerate(invsig):
 
     for (i, (p0, psi0)) in enumerate(p0_psi0_pairs):
 
@@ -72,6 +76,8 @@ for p, isig in enumerate(invsig[0:10]):
         lharr = rharr.T
         
         out[p, i] = (1/(np.pi*sigpGsq[p]))*np.exp(0.5*np.dot(lharr, np.dot(isig, rharr)))
+time1 = time.time()
+print("process took ", time1 - time0, "seconds")
         
         
         
