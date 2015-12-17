@@ -10,6 +10,34 @@ import debias
  Simple psi, p estimation routines.
 """
 
+def ax_posterior(ax, p0s, psi0s, B2D, cmap = "hsv"):
+    
+    obj = ax.pcolormesh(p0s, psi0s, B2D, cmap = cmap)
+    ax.set_xlim(np.nanmin(p0s), np.nanmax(p0s))
+    ax.set_ylim(np.nanmin(psi0s), np.nanmax(psi0s))
+    plt.colorbar(obj)
+    
+def plot_randomsample_posteriors(pmeas, psimeas, p0s, psi0s, posteriors, cmap = "hsv", overplotmeas = True, sigpGsq = None):
+    
+    nposts, lpostssq = posteriors.shape
+    lposts = np.round(np.sqrt(lpostssq))
+    
+    fig = plt.figure(figsize = (12, 10), facecolor = "white")
+    for i in xrange(9):
+        indx = np.random.randint(nposts)
+        ax = fig.add_subplot(3, 3, i)
+        ax_posterior(ax, p0s, psi0s, posteriors[indx, :].reshape(lposts, lposts), cmap = cmap)
+        
+        # Overplot measured values
+        if overplotmeas == True:
+            ax.plot([pmeas[indx], pmeas[indx]], [0, np.pi], '--', color = "pink", lw = 3)
+            ax.plot([0, 1], [psimeas[indx], psimeas[indx]], '--', color = "pink", lw = 3)
+            
+        if sigpGsq != None:
+            ax.set_title(r"$p_{meas}/\sigma_{p, G} = $"+str(np.round(pmeas[indx]/sigpGsq[indx], 1)), size = 15)
+
+    plt.subplots_adjust(hspace = 0.5, wspace = 0.5)
+
 full_planck_fn = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/HFI_SkyMap_353_2048_R2.02_full.fits"
 
 # resolution
@@ -80,6 +108,6 @@ print("process took ", time1 - time0, "seconds")
         
         
         
-    
+
     
     
