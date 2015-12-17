@@ -43,11 +43,10 @@ sigpGsq = np.sqrt(det_sigma_p)
 psimeas = np.mod(0.5*np.arctan2(map353Gal[2, :], map353Gal[1, :]), np.pi)
 
 # measured polarization fraction
-pmeas = np.sqrt(map353Gal[1, :]**2 + map353Gal[2, :]**2)
+pmeas = np.sqrt(map353Gal[1, :]**2 + map353Gal[2, :]**2)/map353Gal[0, :]
 
 # invert matrix -- must have Npix axis first
 invsig = np.linalg.inv(sigma_p.swapaxes(0, 2))
-#invsig = invsig.swapaxes(0, 2)
 
 # Create grid of psi0's and p0's to sample
 nsample = 100
@@ -71,11 +70,11 @@ for p, isig in enumerate(invsig):
         # Implement Montier+ II Eq. 25
         rharr[0, 0] = pmeas[p]*np.cos(2*psimeas[p]) - p0*np.cos(2*psi0)
         rharr[1, 0] = pmeas[p]*np.sin(2*psimeas[p]) - p0*np.sin(2*psi0)
-    
+
         # Lefthand array is transpose of righthand array
         lharr = rharr.T
-        
-        out[p, i] = (1/(np.pi*sigpGsq[p]))*np.exp(0.5*np.dot(lharr, np.dot(isig, rharr)))
+    
+        out[p, i] = (1/(np.pi*sigpGsq[p]))*np.exp(-0.5*np.dot(lharr, np.dot(isig, rharr)))
 time1 = time.time()
 print("process took ", time1 - time0, "seconds")
         
