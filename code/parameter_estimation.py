@@ -162,34 +162,11 @@ def Planck_posteriors(map353Gal = None, cov353Gal = None):
     p0_all = np.linspace(0, 1.0, nsample)
 
     p0_psi0_grid = np.asarray(np.meshgrid(p0_all, psi0_all))
-    """
-    p0_psi0_pairs = zip(p0_psi0_grid[0, ...].ravel(), p0_psi0_grid[1, ...].ravel())
 
-    rharr = np.zeros((2, 1), np.float_)
-    
-    # Brute force loop first
-    print("starting slow way")
-    time0 = time.time()
-    out = np.zeros((Npix, nsample*nsample), np.float_) 
-    for p, isig in enumerate(invsig[:Npix, :, :]): #the :Npix is a hack - should go away
-
-        for (i, (p0, psi0)) in enumerate(p0_psi0_pairs):
-
-            # Implement Montier+ II Eq. 25
-            rharr[0, 0] = pmeas[p]*np.cos(2*psimeas[p]) - p0*np.cos(2*psi0)
-            rharr[1, 0] = pmeas[p]*np.sin(2*psimeas[p]) - p0*np.sin(2*psi0)
-
-            # Lefthand array is transpose of righthand array
-            lharr = rharr.T
-    
-            out[p, i] = (1/(np.pi*sigpGsq[p]))*np.exp(-0.5*np.dot(lharr, np.dot(isig, rharr)))
-    time1 = time.time()
-    print("process took ", time1 - time0, "seconds")
-    """
     # Testing new "fast way" that works for isig array of size (2, 2, nsample*nsample) s.t. loop is over Npix
     print("starting fast way")
-    outfast = np.zeros((Npix, nsample*nsample), np.float_)
     time0 = time.time()
+    outfast = np.zeros((Npix, nsample*nsample), np.float_)
     
     # These have length Npix
     measpart0 = pmeas*np.cos(2*psimeas)
@@ -214,60 +191,8 @@ def Planck_posteriors(map353Gal = None, cov353Gal = None):
     
         outfast[i, :] = np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', invsig[i, :, :], rharrbig))
     time1 = time.time()
-    
-    
-    # Is this faster?
-    #uu = np.einsum('ij, jlk -> ilk', lharr, np.einsum('ijk, jl -> ilk', sp100, rharr)) # single
-    
-    # this is for all Npoints p... so just make rharr and lharr incl all (p0, psi0) and will be good.
-    # Will work for isig array shape (2, 2, Npix) and rharrbig shape (2, 1, Npix)
-    """
-    print("starting fast way")
-    outfast = np.zeros((Npix, nsample*nsample), np.float_)
-    time0 = time.time()
-    measpart0 = pmeas*np.cos(2*psimeas)
-    measpart1 = pmeas*np.sin(2*psimeas)
-    
-    p0pairs = p0_psi0_grid[0, ...].ravel()
-    psi0pairs = p0_psi0_grid[1, ...].ravel()
-    
-    truepart0 = p0pairs*np.cos(2*psi0pairs)
-    truepart1 = p0pairs*np.sin(2*psi0pairs)
-    
-    measpart0 = measpart0.reshape(len(measpart0), 1)
-    measpart1 = measpart1.reshape(len(measpart1), 1)
-    truepart0 = truepart0.reshape(1, len(truepart0))
-    truepart1 = truepart1.reshape(1, len(truepart1))
-    
-    # Too memory intensive
-    rharrbig = np.zeros((2, 1, Npix, nsample*nsample), np.float_)
-    lharrbig = np.zeros((1, 2, Npix, nsample*nsample), np.float_)
-    
-    rharrbig[0, 0, :, :] = measpart0 - truepart0
-    rharrbig[1, 0, :, :] = measpart1 - truepart1
-    
-    lharrbig[0, 0, :, :] = measpart0 - truepart0
-    lharrbig[0, 1, :, :] = measpart1 - truepart1
-    
-    print("entering loop")
-    for i, (p0, psi0) in enumerate(p0_psi0_pairs):
-        outfast[:, i] = np.einsum('ij...,jk...->ik...', lharrbig[:, :, :, i], np.einsum('ij...,jk...->ik...', isig, rharrbig[:, :, :, i]))
-    time1 = time.time()
-    """
-    """
-    time0 = time.time()
-    # This will work for isig array shape (2, 2, Npix, nsample*nsample). 
-    isigbig = np.repeat(isig[:, :, np.newaxis], Npix, axis=2)
-    isigbig = np.repeat(isigbig[:, :, :, np.newaxis], nsample*nsample, axis=3)
-    print(isigbig.shape)
-    
-    outfast = np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', isigbig, rharrbig))
-    time1 = time.time()
-    """
     print("fast version took ", time1 - time0, "seconds")
     
     return outfast
     
     
-        
-#outfast = Planck_posteriors()
