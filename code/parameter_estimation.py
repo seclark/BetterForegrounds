@@ -65,6 +65,60 @@ def get_Planck_data(Nside = 2048):
     map353Gal[0], map353Gal[1], map353Gal[2], cov353Gal[0,0], cov353Gal[0,1], cov353Gal[0,2], cov353Gal[1,1], cov353Gal[1,2], cov353Gal[2,2], header353Gal = hp.fitsfunc.read_map(full_planck_fn, field=(0,1,2,4,5,6,7,8,9), h=True)
 
     return map353Gal, cov353Gal
+    
+def test_posteriors():
+    """
+    Calculate 2d Bayesian posteriors of test cases in Montier+ 2015 II.
+    """
+    # Number of covariance matrix examples
+    Nex = 5
+    
+    # eps = 1, rho = 0, (eps_eff = 1, theta = 0)
+    eps = np.asarray([1.0, 0.5, 2.0, 1.0, 1.0])
+    rho = np.asarray([0, 0, 0, -0.5, 1.5])
+    
+    for i in xrange(Nex):
+        covmatrix = np.zeros((2, 2, Nex), np.float_)
+        covmatrix[0, 0, i] = eps[i]
+        covmatrix[0, 1, i] = rho[i]
+        covmatrix[1, 0, i] = rho[i]
+        covmatrix[1, 1, i] = 1.0/eps[i]
+        
+    sigma_p = covmatrix
+
+    psimeas = np.repeat(0.0, Nex)
+    pmeas = np.repeat(0.1, Nex)
+    
+    invsig = np.linalg.inv(sigma_p.swapaxes(0, 2))
+    
+    print("Done inverting sigma_p")
+
+    # Create grid of psi0's and p0's to sample
+    nsample = 100
+    psi0_all = np.linspace(0, np.pi, nsample)
+    p0_all = np.linspace(0, 1.0, nsample)
+
+    p0_psi0_grid = np.asarray(np.meshgrid(p0_all, psi0_all))
+    
+    print("starting slow way")
+    time0 = time.time()
+    out = np.zeros((Npix, nsample*nsample), np.float_) 
+    for p, isig in enumerate(invsig[:Npix, :, :]): #the :Npix is a hack - should go away
+
+        for (i, (p0, psi0)) in enumerate(p0_psi0_pairs):
+
+            # Implement Montier+ II Eq. 25
+            rharr[0, 0] = pmeas[p]*np.cos(2*psimeas[p]) - p0*np.cos(2*psi0)
+            rharr[1, 0] = pmeas[p]*np.sin(2*psimeas[p]) - p0*np.sin(2*psi0)
+
+            # Lefthand array is transpose of righthand array
+            lharr = rharr.T
+    
+            out[p, i] = (1/(np.pi*sigpGsq[p]))*np.exp(-0.5*np.dot(lharr, np.dot(isig, rharr)))
+    time1 = time.time()
+    print("process took ", time1 - time0, "seconds")
+    
+    return out
 
 def Planck_posteriors(map353Gal = None, cov353Gal = None):
     """
@@ -93,8 +147,14 @@ def Planck_posteriors(map353Gal = None, cov353Gal = None):
     # measured polarization fraction
     pmeas = np.sqrt(map353Gal[1, :]**2 + map353Gal[2, :]**2)/map353Gal[0, :]
 
+    # temporary hack -- only look at first 1000 points
+    Npix = 1000
+    sigma_p = sigma_p[:, :, 0:Npix]
+    
     # invert matrix -- must have Npix axis first
     invsig = np.linalg.inv(sigma_p.swapaxes(0, 2))
+    
+    print("Done inverting sigma_p")
 
     # Create grid of psi0's and p0's to sample
     nsample = 100
@@ -102,13 +162,13 @@ def Planck_posteriors(map353Gal = None, cov353Gal = None):
     p0_all = np.linspace(0, 1.0, nsample)
 
     p0_psi0_grid = np.asarray(np.meshgrid(p0_all, psi0_all))
+    """
     p0_psi0_pairs = zip(p0_psi0_grid[0, ...].ravel(), p0_psi0_grid[1, ...].ravel())
 
     rharr = np.zeros((2, 1), np.float_)
-    # temporary hack -- only look at first 1000 points
-    Npix = 1000
-
+    
     # Brute force loop first
+    print("starting slow way")
     time0 = time.time()
     out = np.zeros((Npix, nsample*nsample), np.float_) 
     for p, isig in enumerate(invsig[:Npix, :, :]): #the :Npix is a hack - should go away
@@ -125,21 +185,46 @@ def Planck_posteriors(map353Gal = None, cov353Gal = None):
             out[p, i] = (1/(np.pi*sigpGsq[p]))*np.exp(-0.5*np.dot(lharr, np.dot(isig, rharr)))
     time1 = time.time()
     print("process took ", time1 - time0, "seconds")
+    """
+    # Testing new "fast way" that works for isig array of size (2, 2, nsample*nsample) s.t. loop is over Npix
+    print("starting fast way")
+    outfast = np.zeros((Npix, nsample*nsample), np.float_)
+    time0 = time.time()
+    
+    # These have length Npix
+    measpart0 = pmeas*np.cos(2*psimeas)
+    measpart1 = pmeas*np.sin(2*psimeas)
+    
+    p0pairs = p0_psi0_grid[0, ...].ravel()
+    psi0pairs = p0_psi0_grid[1, ...].ravel()
+    
+    # These have length nsample*nsample
+    truepart0 = p0pairs*np.cos(2*psi0pairs)
+    truepart1 = p0pairs*np.sin(2*psi0pairs)
+    
+    rharrbig = np.zeros((2, 1, nsample*nsample), np.float_)
+    lharrbig = np.zeros((1, 2, nsample*nsample), np.float_)
+    
+    print("entering loop")
+    for i in xrange(Npix):
+        rharrbig[0, 0, :] = measpart0[i] - truepart0
+        rharrbig[1, 0, :] = measpart1[i] - truepart1
+        lharrbig[0, 0, :] = measpart0[i] - truepart0
+        lharrbig[0, 1, :] = measpart1[i] - truepart1
+    
+        outfast[i, :] = np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', invsig[i, :, :], rharrbig))
+    time1 = time.time()
+    
     
     # Is this faster?
     #uu = np.einsum('ij, jlk -> ilk', lharr, np.einsum('ijk, jl -> ilk', sp100, rharr)) # single
     
     # this is for all Npoints p... so just make rharr and lharr incl all (p0, psi0) and will be good.
     # Will work for isig array shape (2, 2, Npix) and rharrbig shape (2, 1, Npix)
-    #for i, (p0, psi0) in enumerate(p0_psi0_pairs):
-    #    out[:, i] = np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', sp100, rharrbig))
-    
+    """
+    print("starting fast way")
+    outfast = np.zeros((Npix, nsample*nsample), np.float_)
     time0 = time.time()
-    # This will work for isig array shape (2, 2, Npix, nsample*nsample). 
-    isigbig = np.repeat(isig[:, :, np.newaxis], Npix, axis=2)
-    isigbig = np.repeat(isigbig[:, :, :, np.newaxis], nsample*nsample, axis=3)
-    print(isigbig.shape)
-    
     measpart0 = pmeas*np.cos(2*psimeas)
     measpart1 = pmeas*np.sin(2*psimeas)
     
@@ -154,6 +239,7 @@ def Planck_posteriors(map353Gal = None, cov353Gal = None):
     truepart0 = truepart0.reshape(1, len(truepart0))
     truepart1 = truepart1.reshape(1, len(truepart1))
     
+    # Too memory intensive
     rharrbig = np.zeros((2, 1, Npix, nsample*nsample), np.float_)
     lharrbig = np.zeros((1, 2, Npix, nsample*nsample), np.float_)
     
@@ -163,15 +249,25 @@ def Planck_posteriors(map353Gal = None, cov353Gal = None):
     lharrbig[0, 0, :, :] = measpart0 - truepart0
     lharrbig[0, 1, :, :] = measpart1 - truepart1
     
+    print("entering loop")
+    for i, (p0, psi0) in enumerate(p0_psi0_pairs):
+        outfast[:, i] = np.einsum('ij...,jk...->ik...', lharrbig[:, :, :, i], np.einsum('ij...,jk...->ik...', isig, rharrbig[:, :, :, i]))
+    time1 = time.time()
+    """
+    """
+    time0 = time.time()
+    # This will work for isig array shape (2, 2, Npix, nsample*nsample). 
+    isigbig = np.repeat(isig[:, :, np.newaxis], Npix, axis=2)
+    isigbig = np.repeat(isigbig[:, :, :, np.newaxis], nsample*nsample, axis=3)
+    print(isigbig.shape)
+    
     outfast = np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', isigbig, rharrbig))
     time1 = time.time()
-    
+    """
     print("fast version took ", time1 - time0, "seconds")
     
-    return out, outfast
+    return outfast
     
     
         
-
-    
-    
+#outfast = Planck_posteriors()
