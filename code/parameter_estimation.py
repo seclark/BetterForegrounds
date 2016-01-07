@@ -92,6 +92,9 @@ def plot_test_posteriors(pmeas, psimeas, p0s, psi0s, posteriors, cmap = "hsv", o
         
     plt.subplots_adjust(hspace = 0.5, wspace = 0.5)
 
+def get_Planck_data_projected(Nside = 2048, region = "SC_241"):
+
+    cov_fn = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/HFI_SkyMap_353_"+str(Nside)+"_R2.02_full_IAU_"+region+"_projected_cov.fits"
 
 def get_Planck_data(Nside = 2048):
     """
@@ -270,7 +273,7 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None):
     Nside = 2048
     Npix = 12*Nside**2
     if map353Gal == None:
-        map353Gal, cov353Gal = get_Planck_data(Nside = Nside)
+        map353Gal, cov353Gal = get_Planck_data_projected(Nside = Nside, region = "SC_241")
 
     # sigma_p as defined in arxiv:1407.0178v1 Eqn 3.
     sigma_p = np.zeros((2, 2, Npix)) # [sig_Q^2, sig_QU // sig_QU, UU]
