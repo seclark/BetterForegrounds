@@ -32,3 +32,9 @@ thets = get_thets(wlen)
 # full-galfa-sky file
 fgs_fn = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/GALFA_HI_W_S1019_1023.fits"
 fgs_hdr = fits.get_header(fgs_fn)
+
+# Fill array with each individual theta
+blank = np.zeros((fgs_hdr["NAXIS1"], fgs_hdr["NAXIS2"], len(thets), np.float_)
+for i in xrange(len(thets)):
+    blank[:, :, i] = thets[i]
+
