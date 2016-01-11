@@ -3,6 +3,9 @@ import numpy as np
 import healpy as hp
 import math
 from astropy.io import fits
+from astropy import wcs
+from astropy import units as u
+from astropy.coordinates import SkyCoord
 
 def get_thets(wlen, save = False):
     """
@@ -30,11 +33,57 @@ wlen = 75
 thets = get_thets(wlen)
 
 # full-galfa-sky file
-fgs_fn = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/GALFA_HI_W_S1019_1023.fits"
-fgs_hdr = fits.get_header(fgs_fn)
+root_fn = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/"
+fgs_fn = root_fn + "GALFA_HI_W_S1019_1023.fits"
+fgs_hdr = fits.getheader(fgs_fn)
+
+# Planck file
+Pfile = root_fn + "HFI_SkyMap_353_2048_R2.02_full.fits"
 
 # Fill array with each individual theta
-blank = np.zeros((fgs_hdr["NAXIS1"], fgs_hdr["NAXIS2"], len(thets), np.float_)
-for i in xrange(len(thets)):
-    blank[:, :, i] = thets[i]
+#all_bins = np.zeros((fgs_hdr["NAXIS1"], fgs_hdr["NAXIS2"], len(thets)), np.float_)
+#for i in xrange(len(thets)):
+channel_data = np.zeros((fgs_hdr["NAXIS1"], fgs_hdr["NAXIS2"], 1), np.float_)
+channel_data[:, :, 0] = thets[0]
 
+# Planck data
+hdulist = fits.open(Pfile)
+tbdata = hdulist[1].data
+hpq = tbdata.field('Q_STOKES').flatten()
+    
+gwcs = wcs.WCS(fgs_fn)
+xax = np.linspace(1, fgs_hdr["NAXIS1"], fgs_hdr["NAXIS1"]).reshape(fgs_hdr["NAXIS1"], 1)
+yax = np.linspace(1, fgs_hdr["NAXIS2"], fgs_hdr["NAXIS2"]).reshape(1, fgs_hdr["NAXIS2"])
+test = gwcs.all_pix2world(xax, yax, 1)
+RA = test[0]
+Dec = test[1]
+c = SkyCoord(ra=RA*u.degree, dec=Dec*u.degree, frame="icrs")
+
+hppos = hp.pixelfunc.ang2pix(hp.pixelfunc.npix2nside(50331648),  np.pi/2-np.asarray(c.dec.rad), np.asarray(c.ra.rad), nest=True)
+
+# All and final positions
+flat_hppos = hppos.flatten()
+final_data = np.zeros(hpq.size).flatten() - 999
+
+# Q data to place
+channel_data = ((channel_data).T)[:, :].flatten() # this should be upside down? Yes it is! So this is what we want.
+
+# zip position information and Qdata. 
+alldata = zip(flat_hppos, channel_data)
+
+# Append duplicate key entries rather than overwriting them
+grouped_data = {}
+for k, v in alldata:
+    grouped_data.setdefault(k, []).append(v)
+
+# Average nonzero RHT data. Do not count NaN values in histogram
+for z in grouped_data.keys():
+    final_data[z] = np.nansum(grouped_data[z])/np.count_nonzero(~np.isnan(grouped_data[z]))
+
+final_data[np.isnan(final_data)] = -999
+final_data[np.isinf(final_data)] = -999
+
+# Write file
+#out_hdr = hdulist[0].header
+
+#fits.writeto(out_fn, final_data, out_hdr)
