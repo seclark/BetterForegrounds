@@ -28,14 +28,13 @@ def get_thets(wlen, save = False):
     
     return thets
 
-def interpolate_thetas():    
+def interpolate_thetas(vstart = 1019, vstop = 1023, wlen = 75):    
     # Our analysis is run with wlen = 75
-    wlen = 75
     thets = get_thets(wlen)
 
     # full-galfa-sky file
     root_fn = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/"
-    fgs_fn = root_fn + "GALFA_HI_W_S1019_1023.fits"
+    fgs_fn = root_fn + "GALFA_HI_W_S"+str(vstart)+"_"+str(vstop)+".fits"
     fgs_hdr = fits.getheader(fgs_fn)
 
     # Planck file
@@ -92,6 +91,8 @@ def interpolate_thetas():
 
     return final_data, out_hdr
 
-out_fn = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/Full_GALFA_mask_projected.fits"
-final_data, out_hdr = interpolate_thetas()
-fits.writeto(out_fn, final_data, out_hdr)
+
+
+#out_fn = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/Full_GALFA_mask_projected.fits"
+#final_data, out_hdr = interpolate_thetas()
+#fits.writeto(out_fn, final_data, out_hdr)
