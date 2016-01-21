@@ -7,6 +7,11 @@ from astropy import wcs
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
+# RHT helper code
+import sys 
+sys.path.insert(0, '../../RHT')
+import RHT_tools
+
 def get_thets(wlen, save = False):
     """
     Theta bins for a given rolling window length.
@@ -86,10 +91,15 @@ def interpolate_thetas(vstart = 1019, vstop = 1023, wlen = 75):
     final_data[np.isnan(final_data)] = -999
     final_data[np.isinf(final_data)] = -999
 
-    # Write file
+    # Same header as original
     out_hdr = hdulist[0].header
 
     return final_data, out_hdr
+
+# If we want to pull data from multiple velocity slices, we need to combine their RHT weights theta-bin by theta-bin.
+# Get RHT data
+
+# Step through theta_bins
 
 
 
