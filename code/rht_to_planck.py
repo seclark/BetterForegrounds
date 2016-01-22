@@ -112,20 +112,23 @@ def single_theta_slice(theta_i):
 
 # Step through theta_bins
 # then step through velocities
-vels = [16, 17, 18, 19, 20, 21, 22, 23, 24]
+vels = [16, 17, 18, 19, 20, 21, 22, 23, 24] # channels used in PRL
+root = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/"
+wlen = 75
+nthetas = 165
 
 for theta_index in xrange(nthetas):
     singe_theta_backprojection = np.zeros((naxis2, naxis1), np.float_)
     
     for v in xrange(vels):
         # Define RHT filename based on velocity
-        root = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/"
         rht_fn = root + "SC_241.66_28.675.best_"+(v)+"_xyt_w75_s15_t70_galfapixcorr.fits"
         
         ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
         single_theta_backprojection += single_theta_slice(theta_index)
         
-        
+    # Save each theta slice individually
+    out_fn = "SC_241.66_28.675.best_"+str(vels[0])+"_"+str(vels[-1])+"_w75_s15_t70_galfapixcorr_thetabin_"+str(theta_index)+".fits"        
 
 
 #out_fn = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/Full_GALFA_mask_projected.fits"
