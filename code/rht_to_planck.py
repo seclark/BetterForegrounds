@@ -28,6 +28,36 @@ def get_thets(wlen, save = False):
     
     return thets
 
+Nside=2048
+Npix=12*Nside**2
+thets = get_thets(75)
+thetaGal_Equ0 = hp.fitsfunc.read_map('/scr/depot1/jch/RHT_QU/rotation_maps/theta_0.0_Equ_inGal.fits')
+# # transformation check
+# for theta in thets:
+#     thetaGal = hp.fitsfunc.read_map('/scr/depot1/jch/RHT_QU/rotation_maps/theta_'+str(theta)+'_Equ_inGal.fits')
+#     for j in xrange(100): #check for first 100 pixels
+#         #print("theta_Equ = ",theta*180.0/np.pi," theta_Gal = ",thetaGal[j]*180.0/np.pi," diff = ",(theta-thetaGal[j])*180.0/np.pi)
+#         guess = thetaGal_Equ0[j] - theta
+#         if (guess < 0.0):
+#             guess += np.pi
+#         #print("theta_Equ = ",theta*180.0/np.pi," theta_Gal = ",thetaGal[j]*180.0/np.pi," guess = ",guess*180.0/np.pi,"theta_Gal-guess = ",(thetaGal[j]-guess)*180.0/np.pi)
+#         if (np.absolute((thetaGal[j]-guess)*180.0/np.pi) > 1.0e-4):
+#             print("theta_Equ = ",theta*180.0/np.pi," theta_Gal = ",thetaGal[j]*180.0/np.pi," guess = ",guess*180.0/np.pi,"theta_Gal-guess = ",(thetaGal[j]-guess)*180.0/np.pi)
+#             #print "pix=",j
+#             quit()
+# quit()
+
+# transformation -- has been checked on first 100 pixels of healpix map, should be OK
+thets_EquinGal = np.zeros((Npix,len(thets)))
+for i in xrange(Npix):
+    for j in xrange(len(thets)):
+        thets_EquinGal[i,j] = thetaGal_Equ0[i] - thets[j]
+        if (thets_EquinGal[i,j] < 0.0):
+            thets_EquinGal[i,j] += np.pi
+quit()
+
+
+
 def interpolate_thetas():    
     # Our analysis is run with wlen = 75
     wlen = 75
