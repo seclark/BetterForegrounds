@@ -1,0 +1,12 @@
+simul_type = 2
+infile = /scr/depot1/jch/RHT_QU/rotation_maps/temp.fits
+infile2 = ''
+nlmax = 6143
+maskfile = ''
+theta_cut_deg =   0.000000000000000E+000
+regression = 0
+plmfile = ''
+outfile = /scr/depot1/jch/RHT_QU/rotation_maps/temp_cl.fits
+outfile_alms = /scr/depot1/jch/RHT_QU/rotation_maps/temp_alms.fits
+won = 0
+iter_order = 0
