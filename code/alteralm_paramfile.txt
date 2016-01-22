@@ -1,0 +1,12 @@
+infile_alms = /scr/depot1/jch/RHT_QU/rotation_maps/temp_alms.fits
+fwhm_arcmin_in = 0.0
+# beam_file_in
+fwhm_arcmin_out = 0.0
+beam_file_out = ''
+coord_in = C
+epoch_in =    2000.00000000000
+coord_out = G
+epoch_out =    2000.00000000000
+nsmax_out = 2048
+nlmax_out = 6143
+outfile_alms = /scr/depot1/jch/RHT_QU/rotation_maps/temp_alms_Gal.fits

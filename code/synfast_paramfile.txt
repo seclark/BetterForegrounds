@@ -1,0 +1,12 @@
+simul_type = 2
+nsmax = 2048
+nlmax = 6143
+infile = ''
+iseed = 185265
+fwhm_arcmin = 0.0
+beam_file = ''
+almsfile = /scr/depot1/jch/RHT_QU/rotation_maps/temp_alms_Gal.fits
+apply_windows = F
+plmfile = ''
+outfile = /scr/depot1/jch/RHT_QU/rotation_maps/temp_Gal.fits
+outfile_alms = ''
