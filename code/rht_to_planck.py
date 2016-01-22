@@ -114,6 +114,7 @@ def single_theta_slice(theta_i):
 # then step through velocities
 vels = [16, 17, 18, 19, 20, 21, 22, 23, 24] # channels used in PRL
 root = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/"
+out_root = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/theta_backprojections/SC_241/"
 wlen = 75
 nthetas = 165
 
