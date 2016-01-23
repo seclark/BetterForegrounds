@@ -208,25 +208,33 @@ if __name__ == "__main__":
 
     # Get starting parameters from vels[0]
     rht_fn = root + "SC_241.66_28.675.best_"+str(vels[0])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
-    ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+    ipoints16, jpoints16, rthetas16, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+    #naxis2 = 1150
+    #naxis1 = 5600
 
     # Original Galfa data
     galfa_fn = "/Volumes/DataDavy/GALFA/SC_241/cleaned/SC_241.66_28.675.best_20.fits"
     galfa_hdr = fits.getheader(galfa_fn)
 
-    for theta_index in xrange(1):
-        single_theta_backprojection = np.zeros((naxis2, naxis1), np.float_)
+    for theta_index in xrange(1, nthetas):
+        #single_theta_backprojection = np.zeros((naxis2, naxis1), np.float_)
+        # Might as well initialize from first vels -- that's one less velocity slice to load in each time
+        single_theta_backprojection = single_theta_slice(theta_index, ipoints16, jpoints16, rthetas16, naxis1, naxis2)
     
-        for v in vels:
+        # Only step through other vels
+        for v in vels[1:]:
+            time0 = time.time()
             # Define RHT filename based on velocity
             rht_fn = root + "SC_241.66_28.675.best_"+str(v)+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
         
             ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
             single_theta_backprojection += single_theta_slice(theta_index, ipoints, jpoints, rthetas, naxis1, naxis2)
             single_theta_backprojection_galactic, out_hdr = interpolate_data_to_hp_galactic(single_theta_backprojection, galfa_hdr)
+            time1 = time.time()
+            print("velocity %f took %f minutes" %(v, (time1 - time0)/60.))
         
         # Save each theta slice individually
-        out_fn = "SC_241.66_28.675.best_"+str(vels[0])+"_"+str(vels[-1])+"_w"+str(wlen)+"_s15_t70_galfapixcorr_thetabin_"+str(theta_index)+".fits"        
+        out_fn = out_root + "SC_241.66_28.675.best_"+str(vels[0])+"_"+str(vels[-1])+"_w"+str(wlen)+"_s15_t70_galfapixcorr_thetabin_"+str(theta_index)+".fits"        
         out_hdr["THETAI"] = theta_index
         out_hdr["VSTART"] = vels[0]
         out_hdr["VSTOP"] = vels[-1]
