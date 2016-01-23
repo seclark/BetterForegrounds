@@ -7,6 +7,7 @@ from astropy import wcs
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 import copy
+import time
 
 # RHT helper code
 import sys 
