@@ -212,28 +212,70 @@ if __name__ == "__main__":
     ipoints16, jpoints16, rthetas16, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
     #naxis2 = 1150
     #naxis1 = 5600
+    
+    # And from vels[1]
+    rht_fn = root + "SC_241.66_28.675.best_"+str(vels[1])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints17, jpoints17, rthetas17, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+    
+    # And from vels[2]
+    rht_fn = root + "SC_241.66_28.675.best_"+str(vels[2])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints18, jpoints18, rthetas18, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+
+    # And from vels[3]
+    rht_fn = root + "SC_241.66_28.675.best_"+str(vels[3])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints19, jpoints19, rthetas19, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+
+    # And from vels[4]
+    rht_fn = root + "SC_241.66_28.675.best_"+str(vels[4])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints20, jpoints20, rthetas20, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+
+    # And from vels[5]
+    rht_fn = root + "SC_241.66_28.675.best_"+str(vels[5])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints21, jpoints21, rthetas21, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+
+    # And from vels[6]
+    rht_fn = root + "SC_241.66_28.675.best_"+str(vels[6])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints22, jpoints22, rthetas22, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+
+    # And from vels[7]
+    rht_fn = root + "SC_241.66_28.675.best_"+str(vels[7])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints23, jpoints23, rthetas23, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+
+     # And from vels[8]
+    rht_fn = root + "SC_241.66_28.675.best_"+str(vels[8])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints24, jpoints24, rthetas24, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
 
     # Original Galfa data
     galfa_fn = "/Volumes/DataDavy/GALFA/SC_241/cleaned/SC_241.66_28.675.best_20.fits"
     galfa_hdr = fits.getheader(galfa_fn)
 
     for theta_index in xrange(1, nthetas):
+        time0 = time.time()
+        
         #single_theta_backprojection = np.zeros((naxis2, naxis1), np.float_)
         # Might as well initialize from first vels -- that's one less velocity slice to load in each time
         single_theta_backprojection = single_theta_slice(theta_index, ipoints16, jpoints16, rthetas16, naxis1, naxis2)
-    
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints17, jpoints17, rthetas17, naxis1, naxis2)
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints18, jpoints18, rthetas18, naxis1, naxis2)
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints19, jpoints19, rthetas19, naxis1, naxis2)
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints20, jpoints20, rthetas20, naxis1, naxis2)
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints21, jpoints21, rthetas21, naxis1, naxis2)
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints22, jpoints22, rthetas22, naxis1, naxis2)
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints23, jpoints23, rthetas23, naxis1, naxis2)
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints24, jpoints24, rthetas24, naxis1, naxis2)
+        
         # Only step through other vels
-        for v in vels[1:]:
-            time0 = time.time()
-            # Define RHT filename based on velocity
-            rht_fn = root + "SC_241.66_28.675.best_"+str(v)+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+        #for v in vels[1:]:
+        #    # Define RHT filename based on velocity
+        #    rht_fn = root + "SC_241.66_28.675.best_"+str(v)+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+        # 
+        #    ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+        #    single_theta_backprojection += single_theta_slice(theta_index, ipoints, jpoints, rthetas, naxis1, naxis2)
         
-            ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
-            single_theta_backprojection += single_theta_slice(theta_index, ipoints, jpoints, rthetas, naxis1, naxis2)
-            single_theta_backprojection_galactic, out_hdr = interpolate_data_to_hp_galactic(single_theta_backprojection, galfa_hdr)
-            time1 = time.time()
-            print("velocity %f took %f minutes" %(v, (time1 - time0)/60.))
-        
+        single_theta_backprojection_galactic, out_hdr = interpolate_data_to_hp_galactic(single_theta_backprojection, galfa_hdr)
+        time1 = time.time()
+        print("theta %f took %f minutes" %(theta_index, (time1 - time0)/60.))
+    
         # Save each theta slice individually
         out_fn = out_root + "SC_241.66_28.675.best_"+str(vels[0])+"_"+str(vels[-1])+"_w"+str(wlen)+"_s15_t70_galfapixcorr_thetabin_"+str(theta_index)+".fits"        
         out_hdr["THETAI"] = theta_index
