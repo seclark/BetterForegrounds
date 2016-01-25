@@ -8,6 +8,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 import copy
 import time
+import matplotlib.pyplot as plt
 
 # RHT helper code
 import sys 
@@ -198,8 +199,7 @@ def single_theta_slice(theta_i, ipoints, jpoints, rthetas, naxis1, naxis2):
     
     return single_theta_backprojection
     
-if __name__ == "__main__":
-
+def reproject_by_thetabin():
     # Step through theta_bins
     # then step through velocities
     vels = [16, 17, 18, 19, 20, 21, 22, 23, 24] # channels used in PRL
@@ -249,7 +249,7 @@ if __name__ == "__main__":
     galfa_fn = "/Volumes/DataDavy/GALFA/SC_241/cleaned/SC_241.66_28.675.best_20.fits"
     galfa_hdr = fits.getheader(galfa_fn)
 
-    for theta_index in xrange(1, nthetas):
+    for theta_index in xrange(78, nthetas):
         time0 = time.time()
         
         #single_theta_backprojection = np.zeros((naxis2, naxis1), np.float_)
@@ -284,4 +284,88 @@ if __name__ == "__main__":
     
         fits.writeto(out_fn, single_theta_backprojection_galactic, out_hdr)
 
+def plot_by_thetabin():
 
+    unprojected_root = "/Volumes/DataDavy/GALFA/SC_241/cleaned/galfapix_corrected/"
+    unprojected_fn = "SC_241.66_28.675.best_24_xyt_w75_s15_t70_galfapixcorr.fits"
+    
+    vels = [16, 17, 18, 19, 20, 21, 22, 23, 24] # channels used in PRL
+    wlen = 75
+
+    # Get starting parameters from vels[0]
+    rht_fn = unprojected_root + "SC_241.66_28.675.best_"+str(vels[0])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints16, jpoints16, rthetas16, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+    """
+    # And from vels[1]
+    rht_fn = unprojected_root + "SC_241.66_28.675.best_"+str(vels[1])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints17, jpoints17, rthetas17, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+    
+    # And from vels[2]
+    rht_fn = unprojected_root + "SC_241.66_28.675.best_"+str(vels[2])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints18, jpoints18, rthetas18, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+
+    # And from vels[3]
+    rht_fn = unprojected_root + "SC_241.66_28.675.best_"+str(vels[3])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints19, jpoints19, rthetas19, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+
+    # And from vels[4]
+    rht_fn = unprojected_root + "SC_241.66_28.675.best_"+str(vels[4])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints20, jpoints20, rthetas20, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+
+    # And from vels[5]
+    rht_fn = unprojected_root + "SC_241.66_28.675.best_"+str(vels[5])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints21, jpoints21, rthetas21, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+
+    # And from vels[6]
+    rht_fn = unprojected_root + "SC_241.66_28.675.best_"+str(vels[6])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints22, jpoints22, rthetas22, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+
+    # And from vels[7]
+    rht_fn = unprojected_root + "SC_241.66_28.675.best_"+str(vels[7])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints23, jpoints23, rthetas23, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+
+     # And from vels[8]
+    rht_fn = unprojected_root + "SC_241.66_28.675.best_"+str(vels[8])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints24, jpoints24, rthetas24, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+    """
+    
+    for theta_index in xrange(1):
+        time0 = time.time()
+
+        # Might as well initialize from first vels -- that's one less velocity slice to load in each time
+        single_theta_backprojection = single_theta_slice(theta_index, ipoints16, jpoints16, rthetas16, naxis1, naxis2)
+        """
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints17, jpoints17, rthetas17, naxis1, naxis2)
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints18, jpoints18, rthetas18, naxis1, naxis2)
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints19, jpoints19, rthetas19, naxis1, naxis2)
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints20, jpoints20, rthetas20, naxis1, naxis2)
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints21, jpoints21, rthetas21, naxis1, naxis2)
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints22, jpoints22, rthetas22, naxis1, naxis2)
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints23, jpoints23, rthetas23, naxis1, naxis2)
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints24, jpoints24, rthetas24, naxis1, naxis2)
+        """
+    
+    projected_root = "/Volumes/DataDavy/GALFA/SC_241/cleaned/galfapix_corrected/theta_backprojections/"
+    projected_fn = "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_99.fits"
+    
+    cmap = "bone_r"
+    projected_data = fits.getdata(projected_root + projected_fn)
+    plot_projected = hp.mollview(np.clip(projected_data, 0, np.nanmax(projected_data)), return_projected_map = True, nest = True)
+    
+    fig = plt.figure(figsize = (6, 6.5))
+    ax1 = fig.add_subplot(211)
+    
+    ny, nx = plot_projected.shape
+    im1 = ax1.imshow(np.log10(plot_projected), cmap = cmap)
+    plt.colorbar(im1)
+    #ax1.set_ylim(0, ny)
+    ax1.set_ylim(200, 400)
+    ax1.set_xlim(200, 500)
+    ax2 = fig.add_subplot(212)
+    im2 = ax2.imshow(np.log10(single_theta_backprojection), cmap = cmap)
+    plt.colorbar(im2, orientation = "horizontal")
+
+if __name__ == "__main__":
+    plot_by_thetabin()
+
+    
