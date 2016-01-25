@@ -295,7 +295,7 @@ def plot_by_thetabin():
     # Get starting parameters from vels[0]
     rht_fn = unprojected_root + "SC_241.66_28.675.best_"+str(vels[0])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
     ipoints16, jpoints16, rthetas16, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
-    """
+    
     # And from vels[1]
     rht_fn = unprojected_root + "SC_241.66_28.675.best_"+str(vels[1])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
     ipoints17, jpoints17, rthetas17, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
@@ -327,14 +327,13 @@ def plot_by_thetabin():
      # And from vels[8]
     rht_fn = unprojected_root + "SC_241.66_28.675.best_"+str(vels[8])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
     ipoints24, jpoints24, rthetas24, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
-    """
+    
     
     for theta_index in xrange(1):
         time0 = time.time()
 
         # Might as well initialize from first vels -- that's one less velocity slice to load in each time
         single_theta_backprojection = single_theta_slice(theta_index, ipoints16, jpoints16, rthetas16, naxis1, naxis2)
-        """
         single_theta_backprojection += single_theta_slice(theta_index, ipoints17, jpoints17, rthetas17, naxis1, naxis2)
         single_theta_backprojection += single_theta_slice(theta_index, ipoints18, jpoints18, rthetas18, naxis1, naxis2)
         single_theta_backprojection += single_theta_slice(theta_index, ipoints19, jpoints19, rthetas19, naxis1, naxis2)
@@ -343,7 +342,7 @@ def plot_by_thetabin():
         single_theta_backprojection += single_theta_slice(theta_index, ipoints22, jpoints22, rthetas22, naxis1, naxis2)
         single_theta_backprojection += single_theta_slice(theta_index, ipoints23, jpoints23, rthetas23, naxis1, naxis2)
         single_theta_backprojection += single_theta_slice(theta_index, ipoints24, jpoints24, rthetas24, naxis1, naxis2)
-        """
+        
     
     projected_root = "/Volumes/DataDavy/GALFA/SC_241/cleaned/galfapix_corrected/theta_backprojections/"
     projected_fn = "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_99.fits"
