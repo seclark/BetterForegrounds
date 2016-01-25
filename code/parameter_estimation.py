@@ -4,6 +4,7 @@ import healpy as hp
 from numpy.linalg import lapack_lite
 import time
 import matplotlib.pyplot as plt
+from astropy.io import fits
 
 import debias
 
@@ -94,7 +95,14 @@ def plot_test_posteriors(pmeas, psimeas, p0s, psi0s, posteriors, cmap = "hsv", o
 
 def get_Planck_data_projected(Nside = 2048, region = "SC_241"):
 
-    cov_fn = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/HFI_SkyMap_353_"+str(Nside)+"_R2.02_full_IAU_"+region+"_projected_cov.fits"
+    fn_root = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/" 
+    cov_fn = fn_root + "HFI_SkyMap_353_"+str(Nside)+"_R2.02_full_IAU_"+region+"_projected_cov.fits"
+    TQU_fn = fn_root + "HFI_SkyMap_353_"+str(Nside)+"_R2.02_full_IAU_"+region+"_projected_TQUonly.fits"
+    
+    TQUcov = fits.getdata(cov_fn)
+    TQU = fits.getdata(TQU_fn)
+    
+    return TQUcov, TQU
 
 def get_Planck_data(Nside = 2048):
     """
