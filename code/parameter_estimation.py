@@ -275,13 +275,14 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None):
     """
     Calculate 2D Bayesian posteriors for Planck data.
     This is specifically for SC_241 (region from previous paper) for now.
-    That means this is in Equatorial (not Galactic) coordinates, and the IAU (not Planck) definition of angle.
+    Uses projected and re-pixelized RHT data: Planck (non-IAU) polarization angle definition,
+    Galactic coordinates, Healpix.
     """
     # resolution
     Nside = 2048
     Npix = 12*Nside**2
     if map353Gal == None:
-        map353Gal, cov353Gal = get_Planck_data_projected(Nside = Nside, region = "SC_241")
+        map353Gal, cov353Gal = get_Planck_data(Nside = Nside)
 
     # sigma_p as defined in arxiv:1407.0178v1 Eqn 3.
     sigma_p = np.zeros((2, 2, Npix)) # [sig_Q^2, sig_QU // sig_QU, UU]
