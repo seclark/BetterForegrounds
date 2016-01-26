@@ -249,7 +249,7 @@ def reproject_by_thetabin():
     galfa_fn = "/Volumes/DataDavy/GALFA/SC_241/cleaned/SC_241.66_28.675.best_20.fits"
     galfa_hdr = fits.getheader(galfa_fn)
 
-    for theta_index in xrange(78, nthetas):
+    for theta_index in xrange(nthetas):
         time0 = time.time()
         
         #single_theta_backprojection = np.zeros((naxis2, naxis1), np.float_)
