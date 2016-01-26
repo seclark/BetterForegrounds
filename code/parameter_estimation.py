@@ -196,7 +196,7 @@ def test_posteriors():
     
     return out, covmatrix
 
-def Planck_posteriors(map353Gal = None, cov353Gal = None):
+def Planck_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = None):
     """
     Calculate 2D Bayesian posteriors for Planck data.
     """
@@ -223,8 +223,9 @@ def Planck_posteriors(map353Gal = None, cov353Gal = None):
     # measured polarization fraction
     pmeas = np.sqrt(map353Gal[1, :]**2 + map353Gal[2, :]**2)/map353Gal[0, :]
 
-    # temporary hack -- only look at first 1000 points
-    Npix = 1000
+    # temporary hack -- to only look at first n points
+    if firstnpoints != None:
+        Npix = firstnpoints
     sigma_p = sigma_p[:, :, 0:Npix]
     
     # invert matrix -- must have Npix axis first
@@ -271,7 +272,7 @@ def Planck_posteriors(map353Gal = None, cov353Gal = None):
     
     return outfast
 
-def SC_241_posteriors(map353Gal = None, cov353Gal = None):
+def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     """
     Calculate 2D Bayesian posteriors for Planck data.
     This is specifically for SC_241 (region from previous paper) for now.
@@ -284,71 +285,9 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None):
     if map353Gal == None:
         map353Gal, cov353Gal = get_Planck_data(Nside = Nside)
 
-    # sigma_p as defined in arxiv:1407.0178v1 Eqn 3.
-    sigma_p = np.zeros((2, 2, Npix)) # [sig_Q^2, sig_QU // sig_QU, UU]
-    sigma_p[0, 0, :] = (1.0/map353Gal[0, :]**2)*cov353Gal[1, 1, :] #QQ
-    sigma_p[0, 1, :] = (1.0/map353Gal[0, :]**2)*cov353Gal[1, 2, :] #QU
-    sigma_p[1, 0, :] = (1.0/map353Gal[0, :]**2)*cov353Gal[1, 2, :] #QU
-    sigma_p[1, 1, :] = (1.0/map353Gal[0, :]**2)*cov353Gal[2, 2, :] # UU
-
-    # Assume rho = 1, so define det(sigma_p) = sigma_p,G^4
-    det_sigma_p = np.linalg.det(sigma_p.swapaxes(0, 2))
-    sigpGsq = np.sqrt(det_sigma_p)
-
-    # measured polarization angle (psi_i = arctan(U_i/Q_i))
-    psimeas = np.mod(0.5*np.arctan2(map353Gal[2, :], map353Gal[1, :]), np.pi)
-
-    # measured polarization fraction
-    pmeas = np.sqrt(map353Gal[1, :]**2 + map353Gal[2, :]**2)/map353Gal[0, :]
-
-    # temporary hack -- only look at first 1000 points
-    Npix = 1000
-    sigma_p = sigma_p[:, :, 0:Npix]
+    # likelihood = planck-only posterior
+    likelihood = Planck_posteriors(map353Gal = map353Gal, cov353Gal = cov353Gal, firstnpoints = firstnpoints)
     
-    # invert matrix -- must have Npix axis first
-    invsig = np.linalg.inv(sigma_p.swapaxes(0, 2))
     
-    print("Done inverting sigma_p")
-
-    # Create grid of psi0's and p0's to sample
-    nsample = 100
-    psi0_all = np.linspace(0, np.pi, nsample)
-    p0_all = np.linspace(0, 1.0, nsample)
-
-    p0_psi0_grid = np.asarray(np.meshgrid(p0_all, psi0_all))
-
-    # Testing new "fast way" that works for isig array of size (2, 2, nsample*nsample) s.t. loop is over Npix
-    print("starting fast way")
-    time0 = time.time()
-    outfast = np.zeros((Npix, nsample*nsample), np.float_)
-    
-    # These have length Npix
-    measpart0 = pmeas*np.cos(2*psimeas)
-    measpart1 = pmeas*np.sin(2*psimeas)
-    
-    p0pairs = p0_psi0_grid[0, ...].ravel()
-    psi0pairs = p0_psi0_grid[1, ...].ravel()
-    
-    # These have length nsample*nsample
-    truepart0 = p0pairs*np.cos(2*psi0pairs)
-    truepart1 = p0pairs*np.sin(2*psi0pairs)
-    
-    rharrbig = np.zeros((2, 1, nsample*nsample), np.float_)
-    lharrbig = np.zeros((1, 2, nsample*nsample), np.float_)
-    
-    print("entering loop")
-    for i in xrange(Npix):
-        rharrbig[0, 0, :] = measpart0[i] - truepart0
-        rharrbig[1, 0, :] = measpart1[i] - truepart1
-        lharrbig[0, 0, :] = measpart0[i] - truepart0
-        lharrbig[0, 1, :] = measpart1[i] - truepart1
-    
-        outfast[i, :] = np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', invsig[i, :, :], rharrbig))
-    time1 = time.time()
-    print("fast version took ", time1 - time0, "seconds")
-    
-    # outfast needs to be dotted w/ prior.
-    
-    return outfast
     
     
