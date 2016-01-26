@@ -347,6 +347,8 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None):
     time1 = time.time()
     print("fast version took ", time1 - time0, "seconds")
     
+    # outfast needs to be dotted w/ prior.
+    
     return outfast
     
     
