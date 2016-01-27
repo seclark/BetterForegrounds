@@ -287,7 +287,37 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
 
     # likelihood = planck-only posterior
     likelihood = Planck_posteriors(map353Gal = map353Gal, cov353Gal = cov353Gal, firstnpoints = firstnpoints)
+
+
+        
+def add_hthets(data1, data2):
+    """
+    Combine two R(theta) arrays
+    Overlapping (x, y) points have associated R(theta) arrays summed
+    Unique (x, y) points are added to the list
+    """
+
+    for key in data2.keys():
+        if data1.has_key(key):
+            data1[key] = [data1[key]] + [data2[key]]
+            data1[key] = list(np.sum(data1[key], axis=0))
+        else:
+            data1[key] = data2[key]
     
+    return data1
     
+jitot = {}
+if len(ch) > 1:
+    for i in xrange(len(ch)):
+        print "loading channel %d" % (ch[i])
+        ipoints2, jpoints2, hthets2, naxis1, naxis2 = star.loadRHT(wlen, smr, thresh, ch[i], region = region, planck = planck, gauss = False)
+        
+        jipoints2 = zip(jpoints2, ipoints2)
+        jih2 = dict(zip(jipoints2, hthets2))
+        
+        jitot = add_hthets(jitot, jih2)
+        
+
+
     
     
