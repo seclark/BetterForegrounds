@@ -304,12 +304,19 @@ def add_hthets(data1, data2):
     
     data1 :: this is the array to be *ADDED TO*
     """
-
+    
+    # Note: we are in a situation where there will be many more appends than new keys.
+    # It is cheaper to try the append and catch the exception than to check for the key existence first
+    # (ask forgiveness, not permission)
+    
     for key in data2.keys():
-        if data1.has_key(key):
-            data1[key] = [data1[key]] + [data2[key]]
-            data1[key] = list(np.sum(data1[key], axis=0))
-        else:
+        try:
+            # NOTE: removing this because all are different thetabins, so will never need this.
+            #data1[key] = [data1[key]] + [data2[key]]
+            #data1[key] = list(np.sum(data1[key], axis=0)) 
+            data1[key] += data2[key]
+            
+        except KeyError:
             data1[key] = data2[key]
     
     return data1
