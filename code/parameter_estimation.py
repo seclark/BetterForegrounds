@@ -5,6 +5,7 @@ from numpy.linalg import lapack_lite
 import time
 import matplotlib.pyplot as plt
 from astropy.io import fits
+import cPickle as pickle
 
 # Local repo imports
 import debias
@@ -317,6 +318,9 @@ def add_hthets(data1, data2):
 # Pull in each projected theta bin
 projected_root = "/Volumes/DataDavy/GALFA/SC_241/cleaned/galfapix_corrected/theta_backprojections/"
 
+# Output filename
+projected_data_dictionary_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_dictionary.p"
+
 # resolution
 Nside = 2048
 Npix = 12*Nside**2
@@ -351,7 +355,7 @@ for _thetabin_i in xrange(nthets):
     
     print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
         
-
-
+# pickle the entire dictionary
+pickle.dump( total_weights, open( projected_data_dictionary_fn, "wb" ) )
     
     
