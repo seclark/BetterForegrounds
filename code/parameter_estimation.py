@@ -6,7 +6,13 @@ import time
 import matplotlib.pyplot as plt
 from astropy.io import fits
 
+# Local repo imports
 import debias
+
+# Other repo imports (RHT helper code)
+import sys 
+sys.path.insert(0, '../../RHT')
+import RHT_tools
 
 """
  Simple psi, p estimation routines.
@@ -288,7 +294,6 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     # likelihood = planck-only posterior
     likelihood = Planck_posteriors(map353Gal = map353Gal, cov353Gal = cov353Gal, firstnpoints = firstnpoints)
 
-
         
 def add_hthets(data1, data2):
     """
@@ -305,6 +310,8 @@ def add_hthets(data1, data2):
             data1[key] = data2[key]
     
     return data1
+    
+
     
 jitot = {}
 if len(ch) > 1:
