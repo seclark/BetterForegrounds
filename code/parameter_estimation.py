@@ -300,6 +300,8 @@ def add_hthets(data1, data2):
     Combine two R(theta) arrays
     Overlapping (x, y) points have associated R(theta) arrays summed
     Unique (x, y) points are added to the list
+    
+    data1 :: this is the array to be *ADDED TO*
     """
 
     for key in data2.keys():
@@ -324,32 +326,30 @@ hp_index = np.arange(Npix)
 
 nthets = 165 
 
+total_weights = {}
 
 for _thetabin_i in xrange(nthets):
+    time0 = time.time()
     projected_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_"+str(_thetabin_i)+".fits"
     projdata = fits.getdata(projected_fn)
     
     # Some data stored as -999 for 'none'
     projdata[projdata == -999] = 0
     
-    nonzero_indx = np.nonzero(projdata)[0]
-    print("there are {} nonzero elements").format(len(nonzero_indx))
-
+    # The healpix indices we keep will be the ones where there is nonzero data
+    nonzero_index = np.nonzero(projdata)[0]
+    print("there are {} nonzero elements".format(len(nonzero_index)))
     
-jitot = {}
-if len(ch) > 1:
-    for i in xrange(len(ch)):
-        print "loading channel %d" % (ch[i])
-        
-         projected_root = "/Volumes/DataDavy/GALFA/SC_241/cleaned/galfapix_corrected/theta_backprojections/"
-    projected_fn = "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_99.fits"
+    # Make arrays of len(nthets) which contain the RHT weights at specified thetabin.
+    rht_weights = np.zeros((len(nonzero_index), nthets), np.float_)
+    rht_weights[:, _thetabin_i] = projdata[nonzero_index]
     
-        ipoints, jpoints, hthets, naxis1, naxis2 = RHT_tools.get_RHT_data(xyt_filename = xyt_fn)
-        
-        jipoints2 = zip(jpoints2, ipoints2)
-        jih2 = dict(zip(jipoints2, hthets2))
-        
-        jitot = add_hthets(jitot, jih2)
+    # Add these weights to all the other weights in a dictionary
+    indexed_weights = dict(zip(nonzero_index, rht_weights))
+    total_weights = add_hthets(total_weights, indexed_weights)
+    time1 = time.time()
+    
+    print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
         
 
 
