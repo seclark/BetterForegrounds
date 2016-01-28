@@ -24,10 +24,11 @@ def ax_posterior(ax, p0s, psi0s, B2D, cmap = "hsv", colorbar = False):
     Plot 2D posterior distribution on given axes instance
     """
     
+    obj = ax.pcolor(p0s, psi0s, B2D, cmap = cmap)
     #obj = ax.pcolormesh(p0s, psi0s, B2D, cmap = cmap)
     maxval = np.nanmax(B2D)
     levels = np.asarray([0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 0.7, 0.9])*maxval
-    obj = ax.contourf(p0s, psi0s, B2D, levels, cmap = cmap, extend = "both")
+    obj = ax.contour(p0s, psi0s, B2D, levels, extend = "both", colors = "gray")
     ax.set_xlim(np.nanmin(p0s), np.nanmax(p0s))
     ax.set_ylim(np.nanmin(psi0s), np.nanmax(psi0s))
     ax.set_xlabel(r"$p_0$", size = 15)
@@ -81,10 +82,10 @@ def plot_test_posteriors(pmeas, psimeas, p0s, psi0s, posteriors, cmap = "hsv", o
         # Overplot measured values
         if overplotmeas == True:
             if rollax == True:
-                ax.plot([pmeas[i], pmeas[i]], [-np.pi/2.0, np.pi/2.0], '--', color = "pink", lw = 3)
+                ax.plot([pmeas[i], pmeas[i]], [-np.pi/2.0, np.pi/2.0], '--', color = "pink", lw = 1)
             else:                
-                ax.plot([pmeas[i], pmeas[i]], [0, np.pi], '--', color = "pink", lw = 3)
-            ax.plot([0, 1], [psimeas[i], psimeas[i]], '--', color = "pink", lw = 3)
+                ax.plot([pmeas[i], pmeas[i]], [0, np.pi], '--', color = "pink", lw = 1)
+            ax.plot([0, 1], [psimeas[i], psimeas[i]], '--', color = "pink", lw = 1)
             
         if sigpGsq != None:
             ax.set_title(r"$p_{meas}/\sigma_{p, G} = "+str(np.round(pmeas[i]/sigpGsq[i], 1))+"$", size = 15)
@@ -311,9 +312,6 @@ def add_hthets(data1, data2):
     
     for key in data2.keys():
         try:
-            # NOTE: removing this because all are different thetabins, so will never need this.
-            #data1[key] = [data1[key]] + [data2[key]]
-            #data1[key] = list(np.sum(data1[key], axis=0)) 
             data1[key] += data2[key]
             
         except KeyError:
@@ -321,48 +319,48 @@ def add_hthets(data1, data2):
     
     return data1
     
-    
-# Pull in each projected theta bin
-projected_root = "/Volumes/DataDavy/GALFA/SC_241/cleaned/galfapix_corrected/theta_backprojections/"
+def store_weights_as_dict():    
+    # Pull in each projected theta bin
+    projected_root = "/Volumes/DataDavy/GALFA/SC_241/cleaned/galfapix_corrected/theta_backprojections/"
 
-# Output filename
-projected_data_dictionary_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_dictionary.p"
+    # Output filename
+    projected_data_dictionary_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_dictionary.p"
 
-# resolution
-Nside = 2048
-Npix = 12*Nside**2
+    # resolution
+    Nside = 2048
+    Npix = 12*Nside**2
 
-# These are the healpix indices. They will be the keys in our dictionary.
-hp_index = np.arange(Npix)
+    # These are the healpix indices. They will be the keys in our dictionary.
+    hp_index = np.arange(Npix)
 
-nthets = 165 
+    nthets = 165 
 
-total_weights = {}
+    total_weights = {}
 
-for _thetabin_i in xrange(nthets):
-    time0 = time.time()
-    projected_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_"+str(_thetabin_i)+".fits"
-    projdata = fits.getdata(projected_fn)
+    for _thetabin_i in xrange(nthets):
+        time0 = time.time()
+        projected_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_"+str(_thetabin_i)+".fits"
+        projdata = fits.getdata(projected_fn)
     
-    # Some data stored as -999 for 'none'
-    projdata[projdata == -999] = 0
+        # Some data stored as -999 for 'none'
+        projdata[projdata == -999] = 0
     
-    # The healpix indices we keep will be the ones where there is nonzero data
-    nonzero_index = np.nonzero(projdata)[0]
-    print("there are {} nonzero elements".format(len(nonzero_index)))
+        # The healpix indices we keep will be the ones where there is nonzero data
+        nonzero_index = np.nonzero(projdata)[0]
+        print("there are {} nonzero elements".format(len(nonzero_index)))
     
-    # Make arrays of len(nthets) which contain the RHT weights at specified thetabin.
-    rht_weights = np.zeros((len(nonzero_index), nthets), np.float_)
-    rht_weights[:, _thetabin_i] = projdata[nonzero_index]
+        # Make arrays of len(nthets) which contain the RHT weights at specified thetabin.
+        rht_weights = np.zeros((len(nonzero_index), nthets), np.float_)
+        rht_weights[:, _thetabin_i] = projdata[nonzero_index]
     
-    # Add these weights to all the other weights in a dictionary
-    indexed_weights = dict(zip(nonzero_index, rht_weights))
-    total_weights = add_hthets(total_weights, indexed_weights)
-    time1 = time.time()
+        # Add these weights to all the other weights in a dictionary
+        indexed_weights = dict(zip(nonzero_index, rht_weights))
+        total_weights = add_hthets(total_weights, indexed_weights)
+        time1 = time.time()
     
-    print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
+        print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
         
-# pickle the entire dictionary
-pickle.dump( total_weights, open( projected_data_dictionary_fn, "wb" ) )
-    
+    # pickle the entire dictionary
+    pickle.dump( total_weights, open( projected_data_dictionary_fn, "wb" ) )
+
     
