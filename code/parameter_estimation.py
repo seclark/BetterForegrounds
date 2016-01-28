@@ -52,11 +52,11 @@ def plot_randomsample_posteriors(pmeas, psimeas, p0s, psi0s, posteriors, cmap = 
         
         # Overplot measured values
         if overplotmeas == True:
-            ax.plot([pmeas[indx], pmeas[indx]], [0, np.pi], '--', color = "pink", lw = 3)
-            ax.plot([0, 1], [psimeas[indx], psimeas[indx]], '--', color = "pink", lw = 3)
+            ax.plot([pmeas[indx], pmeas[indx]], [0, np.pi], '--', color = "pink", lw = 1)
+            ax.plot([0, 1], [psimeas[indx], psimeas[indx]], '--', color = "pink", lw = 1)
             
         if sigpGsq != None:
-            ax.set_title(r"$"+str(indx)+",$ $p_{meas}/\sigma_{p, G} = "+str(np.round(pmeas[indx]/sigpGsq[indx], 1))+"$", size = 15)
+            ax.set_title(r"$"+str(indx)+",$ $p_{meas}/\sigma_{p, G} = "+str(np.round(pmeas[indx]/np.sqrt(sigpGsq[indx]), 1))+"$", size = 15)
 
     plt.subplots_adjust(hspace = 0.5, wspace = 0.5)
     
@@ -101,16 +101,32 @@ def plot_test_posteriors(pmeas, psimeas, p0s, psi0s, posteriors, cmap = "hsv", o
         
     plt.subplots_adjust(hspace = 0.5, wspace = 0.5)
 
-def get_Planck_data_projected(Nside = 2048, region = "SC_241"):
+def eps_from_cov(covmat, twoD = False):
+    """
+    Take covariance matrix, returns epsilon = sigma_Q/sigma_U
+    2D == True :: 2D covariance matrix; otherwise 3D is assumed (I info included)
+    """
+    
+    if twoD == True:
+        eps = np.sqrt(covmat[0, 0]/covmat[1, 1])
+    else: 
+        eps = np.sqrt(covmat[1, 1]/covmat[2, 2])
+        
+    return eps
+        
+def rho_from_cov(covmat, twoD = False):
+    """
+    Take covariance matrix, returns rho = sigma_QU /(sigma_Q sigma_U)
+    2D == True :: 2D covariance matrix; otherwise 3D is assumed (I info included)
+    """
+    
+    if twoD == True:
+        rho = covmat[0, 1]/(np.sqrt(covmat[1, 1])*np.sqrt(covmat[0, 0]))
+    else: 
+        rho = covmat[1, 2]/(np.sqrt(covmat[2, 2])*np.sqrt(covmat[1, 1]))
+        
+    return rho    
 
-    fn_root = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/" 
-    cov_fn = fn_root + "HFI_SkyMap_353_"+str(Nside)+"_R2.02_full_IAU_"+region+"_projected_cov.fits"
-    TQU_fn = fn_root + "HFI_SkyMap_353_"+str(Nside)+"_R2.02_full_IAU_"+region+"_projected_TQUonly.fits"
-    
-    TQUcov = fits.getdata(cov_fn)
-    TQU = fits.getdata(TQU_fn)
-    
-    return TQUcov, TQU
 
 def get_Planck_data(Nside = 2048):
     """
@@ -189,7 +205,7 @@ def test_posteriors():
 
         for (i, (p0, psi0)) in enumerate(p0_psi0_pairs):
 
-            # Implement Montier+ II Eq. 25
+            # Implement Montier+ II Eq. 24
             rharr[0, 0] = pmeas[p]*np.cos(2*psimeas[p]) - p0*np.cos(2*psi0)
             rharr[1, 0] = pmeas[p]*np.sin(2*psimeas[p]) - p0*np.sin(2*psi0)
 
@@ -204,7 +220,7 @@ def test_posteriors():
     
     return out, covmatrix
 
-def Planck_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = None):
+def Planck_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000, plotrandomsample = True):
     """
     Calculate 2D Bayesian posteriors for Planck data.
     """
@@ -274,9 +290,12 @@ def Planck_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = None):
         lharrbig[0, 0, :] = measpart0[i] - truepart0
         lharrbig[0, 1, :] = measpart1[i] - truepart1
     
-        outfast[i, :] = np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', invsig[i, :, :], rharrbig))
+        outfast[i, :] = (1/(np.pi*sigpGsq[i]))*np.exp(-0.5*np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', invsig[i, :, :], rharrbig)))
     time1 = time.time()
     print("fast version took ", time1 - time0, "seconds")
+    
+    if plotrandomsample == True:
+        plot_randomsample_posteriors(pmeas, psimeas, p0_all, psi0_all, outfast, cmap = "jet", overplotmeas = True, sigpGsq = sigpGsq)
     
     return outfast
 
