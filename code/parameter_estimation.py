@@ -315,6 +315,11 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     # likelihood = planck-only posterior
     likelihood = Planck_posteriors(map353Gal = map353Gal, cov353Gal = cov353Gal, firstnpoints = firstnpoints)
 
+    # Planck-projected RHT data for prior
+    projected_root = "/Volumes/DataDavy/GALFA/SC_241/cleaned/galfapix_corrected/theta_backprojections/"
+    projected_data_dictionary_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_dictionary.p"
+    RHT_data = pickle.load( open( projected_data_dictionary_fn, "rb" ) )
+
         
 def add_hthets(data1, data2):
     """
