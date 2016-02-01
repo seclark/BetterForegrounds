@@ -319,6 +319,24 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     projected_root = "/Volumes/DataDavy/GALFA/SC_241/cleaned/galfapix_corrected/theta_backprojections/"
     projected_data_dictionary_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_dictionary.p"
     RHT_data = pickle.load( open( projected_data_dictionary_fn, "rb" ) )
+    
+
+def project_angles(firstnpoints = 1000):
+    zero_thetas = fits.getdata("/Volumes/DataDavy/Planck/projected_angles/theta_0.0_Equ_inGal.fits")
+    thets = get_thets(75)
+    
+    if firstnpoints > 0:
+        thets_EquinGal = np.zeros((firstnpoints,len(thets)))
+    else:
+        Nside=2048
+        Npix=12*Nside**2
+        thets_EquinGal = np.zeros((Npix,len(thets)))
+        
+    for i in xrange(Npix):
+        for j in xrange(len(thets)):
+            thets_EquinGal[i,j] = thetaGal_Equ0[i] - thets[j]
+            
+            np.mod(thets_EquinGal, np.pi)
 
         
 def add_hthets(data1, data2):
