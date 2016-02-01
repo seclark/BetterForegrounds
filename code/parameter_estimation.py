@@ -323,14 +323,15 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
 
 def project_angles(firstnpoints = 1000):
     zero_thetas = fits.getdata("/Volumes/DataDavy/Planck/projected_angles/theta_0.0_Equ_inGal.fits")
-    thets = get_thets(75)
+    thets = RHT_tools.get_thets(75)
     
     if firstnpoints > 0:
-        thets_EquinGal = np.zeros((firstnpoints,len(thets)))
+        Npix = firstnpoints
     else:
         Nside=2048
         Npix=12*Nside**2
-        thets_EquinGal = np.zeros((Npix,len(thets)))
+    
+    thets_EquinGal = np.zeros((Npix,len(thets)))
         
     for i in xrange(Npix):
         for j in xrange(len(thets)):
