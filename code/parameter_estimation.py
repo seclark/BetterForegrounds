@@ -309,7 +309,7 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     # resolution
     Nside = 2048
     Npix = 12*Nside**2
-    if map353Gal == None:
+    if map353Gal is None:
         map353Gal, cov353Gal = get_Planck_data(Nside = Nside)
 
     # likelihood = planck-only posterior
@@ -321,7 +321,10 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     RHT_data = pickle.load( open( projected_data_dictionary_fn, "rb" ) )
     
     # Projected angle bins
-    thets_EquinGal = project_angles(firstnpoints = firstnpoints)
+    theta_bins_gal = project_angles(firstnpoints = firstnpoints)
+    
+    return likelihood
+    
 
 def project_angles(firstnpoints = 1000):
     """
@@ -384,7 +387,7 @@ def store_weights_as_dict():
 
     total_weights = {}
 
-    for _thetabin_i in xrange(nthets):
+    for _thetabin_i in xrange(1):
         time0 = time.time()
         projected_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_"+str(_thetabin_i)+".fits"
         projdata = fits.getdata(projected_fn)
@@ -408,6 +411,13 @@ def store_weights_as_dict():
         print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
         
     # pickle the entire dictionary
-    pickle.dump( total_weights, open( projected_data_dictionary_fn, "wb" ) )
+    #pickle.dump( total_weights, open( projected_data_dictionary_fn, "wb" ) )
+    
+    #return total_weights
+    
+    # SQL storage
+    value_names = [''.join(i) for i in it.permutations(string.lowercase,2)]
+    
+    
 
     
