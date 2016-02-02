@@ -6,6 +6,8 @@ import time
 import matplotlib.pyplot as plt
 from astropy.io import fits
 import cPickle as pickle
+import itertools
+import string
 
 # Local repo imports
 import debias
@@ -415,9 +417,22 @@ def store_weights_as_dict():
     
     #return total_weights
     
-    # SQL storage
-    value_names = [''.join(i) for i in it.permutations(string.lowercase,2)]
+    # Arbitrary 2-letter SQL storage value names
+    value_names = [''.join(i) for i in itertools.permutations(string.lowercase,2)]
     
+    # Remove protected words from value names
+    if "as" in value_names: value_names.remove("as")
+    if "is" in value_names: value_names.remove("is")
+    
+    # Comma separated list of nthets column names
+    value_names = ",".join(value_names[:nthets])
+    
+    # Statement for creation of SQL database
+    createstatement = 'create table t (id,'+value_names+');'
+    
+    print(createstatement)
+    
+    return total_weights
     
 
     
