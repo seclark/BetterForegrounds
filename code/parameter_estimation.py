@@ -320,8 +320,13 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     projected_data_dictionary_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_dictionary.p"
     RHT_data = pickle.load( open( projected_data_dictionary_fn, "rb" ) )
     
+    # Projected angle bins
+    thets_EquinGal = project_angles(firstnpoints = firstnpoints)
 
 def project_angles(firstnpoints = 1000):
+    """
+    Project angles from Equatorial, B-field, IAU Definition -> Galactic, Polarization Angle, Planck Definition
+    """
     zero_thetas = fits.getdata("/Volumes/DataDavy/Planck/projected_angles/theta_0.0_Equ_inGal.fits")
     thets = RHT_tools.get_thets(75)
     
@@ -335,6 +340,7 @@ def project_angles(firstnpoints = 1000):
     thets_EquinGal = np.mod(np.asarray(zero_thetas[:Npix]).reshape(Npix, 1).astype(np.float_) - thets, np.pi)
     
     return thets_EquinGal
+    
 
         
 def add_hthets(data1, data2):
