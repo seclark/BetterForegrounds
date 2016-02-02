@@ -326,6 +326,7 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
 def project_angles(firstnpoints = 1000):
     """
     Project angles from Equatorial, B-field, IAU Definition -> Galactic, Polarization Angle, Planck Definition
+    Note: projected angles are still equally spaced -- no need to re-interpolate
     """
     zero_thetas = fits.getdata("/Volumes/DataDavy/Planck/projected_angles/theta_0.0_Equ_inGal.fits")
     thets = RHT_tools.get_thets(75)
