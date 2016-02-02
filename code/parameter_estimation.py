@@ -331,13 +331,10 @@ def project_angles(firstnpoints = 1000):
         Nside=2048
         Npix=12*Nside**2
     
-    thets_EquinGal = np.zeros((Npix,len(thets)))
-        
-    for i in xrange(Npix):
-        for j in xrange(len(thets)):
-            thets_EquinGal[i,j] = thetaGal_Equ0[i] - thets[j]
-            
-            np.mod(thets_EquinGal, np.pi)
+    # This array is a strange fits dtype
+    thets_EquinGal = np.mod(np.asarray(zero_thetas[:Npix]).reshape(Npix, 1).astype(np.float_) - thets, np.pi)
+    
+    return thets_EquinGal
 
         
 def add_hthets(data1, data2):
