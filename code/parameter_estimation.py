@@ -491,7 +491,11 @@ for _thetabin_i in xrange(1):
     # B) Tries to insert an ID (if it does not exist yet)
     # with a specific value in a second column 
     c.executemany("INSERT OR IGNORE INTO "+tablename+" (id, ab) VALUES (?, ?)", [(i, projdata[i]) for i in nonzero_index])
+    c.executemany("UPDATE "+tablename+" SET ab=? WHERE id=?", [(projdata[i], i) for i in nonzero_index])
+    
     conn.commit()
+    
+    
 
     # C) Updates the newly inserted or pre-existing entry            
     #c.execute("UPDATE {tn} SET {cn}=('Hi World') WHERE {idf}=(123456)".\
