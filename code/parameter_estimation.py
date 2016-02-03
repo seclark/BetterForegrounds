@@ -448,45 +448,56 @@ for _thetabin_i in xrange(1):
     print("there are {} nonzero elements".format(len(nonzero_index)))
 
     # Make arrays of len(nthets) which contain the RHT weights at specified thetabin.
-    rht_weights = np.zeros((len(nonzero_index), nthets), np.float_)
-    rht_weights[:, _thetabin_i] = projdata[nonzero_index]
+    #rht_weights = np.zeros((len(nonzero_index), nthets), np.float_)
+    #rht_weights[:, _thetabin_i] = projdata[nonzero_index]
 
     # Add these weights to all the other weights in a dictionary
-    indexed_weights = dict(zip(nonzero_index, rht_weights))
-    total_weights = add_hthets(total_weights, indexed_weights)
-    time1 = time.time()
+    #indexed_weights = dict(zip(nonzero_index, rht_weights))
+    #total_weights = add_hthets(total_weights, indexed_weights)
+    #time1 = time.time()
 
-    print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
+    #print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
 
-# Arbitrary 2-letter SQL storage value names
-value_names = [''.join(i) for i in itertools.permutations(string.lowercase,2)]
+    # Arbitrary 2-letter SQL storage value names
+    value_names = [''.join(i) for i in itertools.permutations(string.lowercase,2)]
 
-# Remove protected words from value names
-if "as" in value_names: value_names.remove("as")
-if "is" in value_names: value_names.remove("is")
+    # Remove protected words from value names
+    if "as" in value_names: value_names.remove("as")
+    if "is" in value_names: value_names.remove("is")
 
-# Comma separated list of nthets column names
-value_names = ",".join(value_names[:nthets])
+    # Comma separated list of nthets column names
+    value_names = ",".join(value_names[:nthets])
 
-# Name table
-tablename = "RHT_weights"
+    # Name table
+    tablename = "RHT_weights"
 
-# Statement for creation of SQL database
-createstatement = "CREATE TABLE "+tablename+" (id,"+value_names+");"
+    # Statement for creation of SQL database
+    createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+value_names+");"
 
-# Statement for insertion of values into SQL database
-insertstatement = "INSERT into "+tablename+" VALUES ("+",".join('?'*nthets)+")"
+    # Statement for insertion of values into SQL database
+    insertstatement = "INSERT into "+tablename+" VALUES ("+",".join('?'*nthets)+")"
 
-# Instantiate into memory first for testing purposes.....
-conn = sqlite3.connect(':memory:')
-c = conn.cursor()
-c.execute(createstatement)
-conn.commit()
+    # Instantiate into memory first for testing purposes.....
+    conn = sqlite3.connect(':memory:')
+    c = conn.cursor()
+    c.execute(createstatement)
+    conn.commit()
 
-# Insert ids from weights dictionary
-c.executemany("INSERT INTO "+tablename+"(id) VALUES(?)", [(i,) for i in total_weights.keys()])
-conn.commit()
+    # Insert ids from weights dictionary
+    c.executemany("INSERT INTO "+tablename+"(id) VALUES(?)", [(i,) for i in nonzero_index])
+    #c.executemany("UPDATE "+tablename+" SET(ab) = VALUES(?)", [(i,) for i in projdata[nonzero_index]])
+    conn.commit()
+    
+    # B) Tries to insert an ID (if it does not exist yet)
+    # with a specific value in a second column 
+    c.executemany("INSERT OR IGNORE INTO "+tablename+" (id, ab) VALUES (?, ?)", [(i, projdata[i]) for i in nonzero_index])
+    conn.commit()
 
-c.executemany("INSERT INTO "+tablename+"("+value_names+") VALUES ("+",".join('?'*(nthets))+")", [(i,) for i in total_weights.values()])
+    # C) Updates the newly inserted or pre-existing entry            
+    #c.execute("UPDATE {tn} SET {cn}=('Hi World') WHERE {idf}=(123456)".\
+    #    format(tn=table_name, cn=column_name, idf=id_column))
+    
+
+    #c.executemany("INSERT INTO "+tablename+"("+value_names+") VALUES ("+",".join('?'*(nthets))+")", [(i,) for i in total_weights.values()])
 
     
