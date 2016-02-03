@@ -475,9 +475,27 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     # Planck-projected RHT data for prior stored as SQL db
     conn = sqlite3.connect("allweights_db.sqlite")
     c = conn.cursor()
+    tablename = "RHT_weights"
     
     # Projected angle bins
     theta_bins_gal = project_angles(firstnpoints = firstnpoints)
     
     return likelihood
+
+class Prior():
+    """
+    Class for building priors
+    Instantiated by healpix index
+    """
+    
+    def __init__(self, hp_index):
+        self.hp_index = hp_index
+    
+    def _getRHT():
+        c.execute("SELECT * FROM "+tablename+" WHERE id = ?", (hp_index,)).fetchall()
+    
+    
+    
+    
+    
     
