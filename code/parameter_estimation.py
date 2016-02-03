@@ -428,17 +428,24 @@ if "is" in value_names: value_names.remove("is")
 # Comma separated list of nthets column names
 value_names = ",".join(value_names[:nthets])
 
+# Name table
+tablename = "RHT_weights"
+
 # Statement for creation of SQL database
-createstatement = 'create table t (id,'+value_names+');'
+createstatement = "CREATE TABLE "+tablename+" (id,"+value_names+");"
 
 # Statement for insertion of values into SQL database
-insertstatement = "insert into t values ("+",".join('?'*nthets)+")"
+insertstatement = "INSERT into "+tablename+" values ("+",".join('?'*nthets)+")"
 
 # Instantiate into memory first for testing purposes.....
 conn = sqlite3.connect(':memory:')
 c = conn.cursor()
 c.execute(createstatement)
 conn.commit()
+
+# Insert ids from weights dictionary
+c.executemany("INSERT INTO "+tablename+"(id) VALUES(?)", [(i,) for i in total_weights.keys()])
+
 
 
     
