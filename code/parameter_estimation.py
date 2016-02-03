@@ -302,33 +302,6 @@ def Planck_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000, p
     
     return outfast
 
-def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
-    """
-    Calculate 2D Bayesian posteriors for Planck data.
-    This is specifically for SC_241 (region from previous paper) for now.
-    Uses projected and re-pixelized RHT data: Planck (non-IAU) polarization angle definition,
-    Galactic coordinates, Healpix.
-    """
-    # resolution
-    Nside = 2048
-    Npix = 12*Nside**2
-    if map353Gal is None:
-        map353Gal, cov353Gal = get_Planck_data(Nside = Nside)
-
-    # likelihood = planck-only posterior
-    likelihood = Planck_posteriors(map353Gal = map353Gal, cov353Gal = cov353Gal, firstnpoints = firstnpoints)
-
-    # Planck-projected RHT data for prior
-    projected_root = "/Volumes/DataDavy/GALFA/SC_241/cleaned/galfapix_corrected/theta_backprojections/"
-    projected_data_dictionary_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_dictionary.p"
-    RHT_data = pickle.load( open( projected_data_dictionary_fn, "rb" ) )
-    
-    # Projected angle bins
-    theta_bins_gal = project_angles(firstnpoints = firstnpoints)
-    
-    return likelihood
-    
-
 def project_angles(firstnpoints = 1000):
     """
     Project angles from Equatorial, B-field, IAU Definition -> Galactic, Polarization Angle, Planck Definition
@@ -482,4 +455,29 @@ def projected_thetaweights_to_database():
         print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
 
     conn.close()
+    
+def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
+    """
+    Calculate 2D Bayesian posteriors for Planck data.
+    This is specifically for SC_241 (region from previous paper) for now.
+    Uses projected and re-pixelized RHT data: Planck (non-IAU) polarization angle definition,
+    Galactic coordinates, Healpix.
+    """
+    # resolution
+    Nside = 2048
+    Npix = 12*Nside**2
+    if map353Gal is None:
+        map353Gal, cov353Gal = get_Planck_data(Nside = Nside)
+
+    # likelihood = planck-only posterior
+    likelihood = Planck_posteriors(map353Gal = map353Gal, cov353Gal = cov353Gal, firstnpoints = firstnpoints)
+
+    # Planck-projected RHT data for prior stored as SQL db
+    conn = sqlite3.connect("allweights_db.sqlite")
+    c = conn.cursor()
+    
+    # Projected angle bins
+    theta_bins_gal = project_angles(firstnpoints = firstnpoints)
+    
+    return likelihood
     
