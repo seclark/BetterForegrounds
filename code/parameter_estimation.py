@@ -443,16 +443,17 @@ if "as" in value_names: value_names.remove("as")
 if "is" in value_names: value_names.remove("is")
 
 # Comma separated list of nthets column names
-column_names = ",".join(value_names[:nthets])
+column_names = " FLOAT DEFAULT 0.0,".join(value_names[:nthets])
 
 # Name table
 tablename = "RHT_weights"
 
 # Statement for creation of SQL database
-createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+");"
+createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+" FLOAT DEFAULT 0.0);"
 
 # Instantiate into memory first for testing purposes.....
-conn = sqlite3.connect(':memory:')
+conn = sqlite3.connect(":memory:")
+#conn = sqlite3.connect("allweights_db.sqlite")
 c = conn.cursor()
 c.execute(createstatement)
 conn.commit()
@@ -481,4 +482,6 @@ for _thetabin_i in xrange(2):
     
     time1 = time.time()
     print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
+
+#conn.close()
     
