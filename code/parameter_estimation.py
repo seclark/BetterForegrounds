@@ -435,7 +435,29 @@ nthets = 165
 
 total_weights = {}
 
-for _thetabin_i in xrange(1):
+# Arbitrary 2-letter SQL storage value names
+value_names = [''.join(i) for i in itertools.permutations(string.lowercase,2)]
+
+# Remove protected words from value names
+if "as" in value_names: value_names.remove("as")
+if "is" in value_names: value_names.remove("is")
+
+# Comma separated list of nthets column names
+column_names = ",".join(value_names[:nthets])
+
+# Name table
+tablename = "RHT_weights"
+
+# Statement for creation of SQL database
+createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+");"
+
+# Instantiate into memory first for testing purposes.....
+conn = sqlite3.connect(':memory:')
+c = conn.cursor()
+c.execute(createstatement)
+conn.commit()
+
+for _thetabin_i in xrange(2):
     time0 = time.time()
     
     # Load in single-theta backprojection
@@ -449,40 +471,11 @@ for _thetabin_i in xrange(1):
     nonzero_index = np.nonzero(projdata)[0]
     print("there are {} nonzero elements".format(len(nonzero_index)))
 
-    # Arbitrary 2-letter SQL storage value names
-    value_names = [''.join(i) for i in itertools.permutations(string.lowercase,2)]
-
-    # Remove protected words from value names
-    if "as" in value_names: value_names.remove("as")
-    if "is" in value_names: value_names.remove("is")
-
-    # Comma separated list of nthets column names
-    value_names = ",".join(value_names[:nthets])
-
-    # Name table
-    tablename = "RHT_weights"
-
-    # Statement for creation of SQL database
-    createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+value_names+");"
-
-    # Statement for insertion of values into SQL database
-    insertstatement = "INSERT into "+tablename+" VALUES ("+",".join('?'*nthets)+")"
-
-    # Instantiate into memory first for testing purposes.....
-    conn = sqlite3.connect(':memory:')
-    c = conn.cursor()
-    c.execute(createstatement)
-    conn.commit()
-
-    # Insert ids from weights dictionary
-    c.executemany("INSERT INTO "+tablename+"(id) VALUES(?)", [(i,) for i in nonzero_index])
-    conn.commit()
-    
     # Either inserts new ID with given value or ignores if id already exists 
-    c.executemany("INSERT OR IGNORE INTO "+tablename+" (id, ab) VALUES (?, ?)", [(i, projdata[i]) for i in nonzero_index])
+    c.executemany("INSERT OR IGNORE INTO "+tablename+" (id, "+value_names[_thetabin_i]+") VALUES (?, ?)", [(i, projdata[i]) for i in nonzero_index])
     
     # Inserts data to new ids
-    c.executemany("UPDATE "+tablename+" SET ab=? WHERE id=?", [(projdata[i], i) for i in nonzero_index])
+    c.executemany("UPDATE "+tablename+" SET "+value_names[_thetabin_i]+"=? WHERE id=?", [(projdata[i], i) for i in nonzero_index])
     
     conn.commit()
     
