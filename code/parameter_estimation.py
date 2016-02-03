@@ -437,6 +437,8 @@ total_weights = {}
 
 for _thetabin_i in xrange(1):
     time0 = time.time()
+    
+    # Load in single-theta backprojection
     projected_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_"+str(_thetabin_i)+".fits"
     projdata = fits.getdata(projected_fn)
 
@@ -446,17 +448,6 @@ for _thetabin_i in xrange(1):
     # The healpix indices we keep will be the ones where there is nonzero data
     nonzero_index = np.nonzero(projdata)[0]
     print("there are {} nonzero elements".format(len(nonzero_index)))
-
-    # Make arrays of len(nthets) which contain the RHT weights at specified thetabin.
-    #rht_weights = np.zeros((len(nonzero_index), nthets), np.float_)
-    #rht_weights[:, _thetabin_i] = projdata[nonzero_index]
-
-    # Add these weights to all the other weights in a dictionary
-    #indexed_weights = dict(zip(nonzero_index, rht_weights))
-    #total_weights = add_hthets(total_weights, indexed_weights)
-    #time1 = time.time()
-
-    #print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
 
     # Arbitrary 2-letter SQL storage value names
     value_names = [''.join(i) for i in itertools.permutations(string.lowercase,2)]
@@ -485,23 +476,16 @@ for _thetabin_i in xrange(1):
 
     # Insert ids from weights dictionary
     c.executemany("INSERT INTO "+tablename+"(id) VALUES(?)", [(i,) for i in nonzero_index])
-    #c.executemany("UPDATE "+tablename+" SET(ab) = VALUES(?)", [(i,) for i in projdata[nonzero_index]])
     conn.commit()
     
-    # B) Tries to insert an ID (if it does not exist yet)
-    # with a specific value in a second column 
+    # Either inserts new ID with given value or ignores if id already exists 
     c.executemany("INSERT OR IGNORE INTO "+tablename+" (id, ab) VALUES (?, ?)", [(i, projdata[i]) for i in nonzero_index])
+    
+    # Inserts data to new ids
     c.executemany("UPDATE "+tablename+" SET ab=? WHERE id=?", [(projdata[i], i) for i in nonzero_index])
     
     conn.commit()
     
-    
-
-    # C) Updates the newly inserted or pre-existing entry            
-    #c.execute("UPDATE {tn} SET {cn}=('Hi World') WHERE {idf}=(123456)".\
-    #    format(tn=table_name, cn=column_name, idf=id_column))
-    
-
-    #c.executemany("INSERT INTO "+tablename+"("+value_names+") VALUES ("+",".join('?'*(nthets))+")", [(i,) for i in total_weights.values()])
-
+    time1 = time.time()
+    print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
     
