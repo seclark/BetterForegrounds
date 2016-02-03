@@ -488,13 +488,25 @@ class Prior():
     Instantiated by healpix index
     """
     
-    def __init__(self, hp_index):
+    def __init__(self, hp_index, c):
         self.hp_index = hp_index
+        self.rht_data = c.execute("SELECT * FROM RHT_weights WHERE id = ?", (self.hp_index,)).fetchall()
     
-    def _getRHT():
-        c.execute("SELECT * FROM "+tablename+" WHERE id = ?", (hp_index,)).fetchall()
+    def _make_prior(self, psibins = None, npsample = 165):
+        # Add 0.7 because that was the RHT threshold 
+        self.prior = np.array([self.rht_data[0][1:]]*npsample).T + 0.7
+        
+        try:
+            self.norm = np.trapz(self.prior, psibins, axis = 1)
+        except TypeError:
+            print("Please supply psibins of valid type")
+            
+        self.norm = np.trapz(self.norm, dx = 1.0/npsample)
     
-    
+        # Normalize prior over domain
+        self.prior = self.prior/self.norm
+        
+        
     
     
     
