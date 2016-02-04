@@ -321,7 +321,51 @@ def project_angles(firstnpoints = 1000):
     
     return thets_EquinGal
     
+def project_angles_db(wlen = 75):
+    """
+    Project angles from Equatorial, B-field, IAU Definition -> Galactic, Polarization Angle, Planck Definition
+    Store in SQL Database by healpix id
+    Note: projected angles are still equally spaced -- no need to re-interpolate
+    """
+    
+    zero_thetas = fits.getdata("/Volumes/DataDavy/Planck/projected_angles/theta_0.0_Equ_inGal.fits")
+    thets = RHT_tools.get_thets(wlen)
+    nthets = len(thets)
+    
+    # Arbitrary 2-letter SQL storage value names
+    value_names = [''.join(i) for i in itertools.permutations(string.lowercase,2)]
 
+    # Remove protected words from value names
+    if "as" in value_names: value_names.remove("as")
+    if "is" in value_names: value_names.remove("is")
+
+    # Comma separated list of nthets column names
+    column_names = " FLOAT DEFAULT 0.0,".join(value_names[:nthets])
+
+    # Name table
+    tablename = "theta_bins_wlen"+str(wlen)
+
+    # Statement for creation of SQL database
+    createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+" FLOAT DEFAULT 0.0);"
+
+    # Instantiate database
+    conn = sqlite3.connect(":memory:")
+    #conn = sqlite3.connect("theta_bins_wlen75_db.sqlite")
+    c = conn.cursor()
+    c.execute(createstatement)
+    conn.commit()
+    
+    insertstatement = "INSERT INTO "+tablename+" VALUES ("+",".join('?'*nthets)+")"
+    
+    Npix = 10
+    # One-liner that == Colin's loop in rht_to_planck.py
+    thets_EquinGal = np.mod(np.asarray(zero_thetas[:Npix]).reshape(Npix, 1).astype(np.float_) - thets, np.pi)
+    
+    for _hp_index in xrange(Npix):
+        thets_EquinGal = np.mod(np.asarray(zero_thetas[_hpindex]).reshape(nthets, 1).astype(np.float_) - thets, np.pi)
+        c.execute(insertstatement, itertools.chain([_hp_index], thets_EquinGal))    
+    
+    return thets_EquinGal
         
 def add_hthets(data1, data2):
     """
@@ -481,18 +525,26 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     theta_bins_gal = project_angles(firstnpoints = firstnpoints)
     
     return likelihood
-
-class Prior():
+    
+class BayesianComponent():
     """
-    Class for building priors
+    Base class for building Bayesian pieces
     Instantiated by healpix index
     """
     
-    def __init__(self, hp_index, c):
+    def __init__(self, hp_index):
         self.hp_index = hp_index
+
+class Prior(BayesianComponent):
+    """
+    Class for building priors
+    """
+    
+    def __init__(self, hp_index, c, psibins = None, npsample = 165):
+    
+        BayesianComponent.__init__(self, hp_index)
         self.rht_data = c.execute("SELECT * FROM RHT_weights WHERE id = ?", (self.hp_index,)).fetchall()
     
-    def _make_prior(self, psibins = None, npsample = 165):
         # Add 0.7 because that was the RHT threshold 
         self.prior = np.array([self.rht_data[0][1:]]*npsample).T + 0.7
         
@@ -506,8 +558,8 @@ class Prior():
         # Normalize prior over domain
         self.prior = self.prior/self.norm
         
-        
+
     
-    
-    
-    
+
+
+
