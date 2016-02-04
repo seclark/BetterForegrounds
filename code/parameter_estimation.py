@@ -572,8 +572,13 @@ class Prior(BayesianComponent):
                 print("Unknown TypeError")
                 
                     
-
+class Likelihood(BayesianComponent):
+    """
+    Class for building Planck-based likelihood
+    """
     
+    def __init__(self, hp_index):
+        BayesianComponent.__init__(self, hp_index)        
 
 
 
