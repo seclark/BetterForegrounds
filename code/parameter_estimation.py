@@ -435,8 +435,9 @@ def store_weights_as_dict():
 
     #return total_weights
     
-def planck_data_to_database():
+def planck_data_to_database(Nside = 2048):
     map353Gal, cov353Gal = get_Planck_data(Nside = Nside)
+    Npix = 12*Nside**2
     
     # map353Gal contains T, Q, U information
     tablename = "Planck_Nside_2048_TQU_Galactic"
@@ -454,6 +455,14 @@ def planck_data_to_database():
     c = conn.cursor()
     c.execute(createstatement)
     conn.commit()
+    
+    insertstatement = "INSERT INTO "+tablename+" VALUES ("+",".join('?'*4)+")"
+
+    for _hp_index in xrange(3):
+        try:
+            c.execute(insertstatement, [i for i in itertools.chain([_hp_index], map353Gal[:, _hp_index])])    
+        except:
+            print(_hp_index, map353Gal[:, _hp_index])
 
 def projected_thetaweights_to_database():
     """
@@ -579,7 +588,7 @@ class Prior(BayesianComponent):
             # Add 0.7 because that was the RHT threshold 
             self.prior = np.array([self.rht_data[1:]]*npsample).T + 0.7
             
-            self.integrated_over_psi = self.integrate_highest_dimension(self.prior), dx = np.pi/npsisample)
+            self.integrated_over_psi = self.integrate_highest_dimension(self.prior, dx = np.pi/npsisample)
             self.integrated_over_p_and_psi = self.integrate_highest_dimension(self.integrated_over_psi, dx = 1.0/npsample)
     
             # Normalize prior over domain
