@@ -434,6 +434,26 @@ def store_weights_as_dict():
     pickle.dump( total_weights, open( projected_data_dictionary_fn, "wb" ) )
 
     #return total_weights
+    
+def planck_data_to_database():
+    map353Gal, cov353Gal = get_Planck_data(Nside = Nside)
+    
+    # map353Gal contains T, Q, U information
+    tablename = "Planck_Nside_2048_TQU_Galactic"
+    
+    # Comma separated list of nthets column names
+    value_names = ["T", "Q", "U"]
+    column_names = " FLOAT DEFAULT 0.0,".join(value_names)
+
+    # Statement for creation of SQL database
+    createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+" FLOAT DEFAULT 0.0);"
+    
+    # Instantiate database
+    conn = sqlite3.connect(":memory:")
+    #conn = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+    c = conn.cursor()
+    c.execute(createstatement)
+    conn.commit()
 
 def projected_thetaweights_to_database():
     """
