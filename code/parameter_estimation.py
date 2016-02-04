@@ -534,30 +534,8 @@ class BayesianComponent():
     
     def __init__(self, hp_index):
         self.hp_index = hp_index
-        
-    def norm_over_psi(self, field, psibins):
-        """
-        Assumes 2D data, integrates over axis = 1
-        """
-        try:
-            normed_over_psi = np.trapz(field, x = psibins, axis = 1)
-        except IndexError:
-            print("Assuming psi spacing is constant {}".format(np.pi/165))
-        
-        return normed_over_psi
     
-    def norm_over_p(self, field, pbins):
-        """
-        Assumes 1D data, integrates over axis = 0
-        """
-        try:
-            normed_over_p = np.trapz(field, x = pbins, axis = 0)
-        except IndexError:
-            print("Assuming p spacing is constant {}".format(1.0/165))
-        
-        return normed_over_p
-    
-    def integrate_highest_dimension(self, field, dx = 0):
+    def integrate_highest_dimension(self, field, dx = 1):
         """
         Integrates over highest-dimension axis.
         """
@@ -581,11 +559,11 @@ class Prior(BayesianComponent):
             # Add 0.7 because that was the RHT threshold 
             self.prior = np.array([self.rht_data[1:]]*npsample).T + 0.7
             
-            self.normed_over_psi = self.integrate_highest_dimension(self.prior, dx = np.pi/npsisample)
-            self.normed_over_p = self.integrate_highest_dimension(self.normed_over_psi, dx = 1.0/npsample)
+            self.integrated_over_psi = self.integrate_highest_dimension(self.prior), dx = np.pi/npsisample)
+            self.integrated_over_p_and_psi = self.integrate_highest_dimension(self.integrated_over_psi, dx = 1.0/npsample)
     
             # Normalize prior over domain
-            self.prior = self.prior/self.norm
+            self.normed_prior = self.prior/self.integrated_over_p_and_psi
 
         except TypeError:
             if self.rht_data is None:
