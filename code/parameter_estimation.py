@@ -534,6 +534,15 @@ class BayesianComponent():
     
     def __init__(self, hp_index):
         self.hp_index = hp_index
+        
+    def norm_over_psi(self, field, psibins):
+        try:
+            self.norm = np.trapz(field, x = psibins, axis = 1)
+        except IndexError:
+            print("Assuming psi spacing is constant {}".format(psibins/len(psibins)))
+            
+    
+        
 
 class Prior(BayesianComponent):
     """
@@ -543,21 +552,24 @@ class Prior(BayesianComponent):
     def __init__(self, hp_index, c, psibins = None, npsample = 165):
     
         BayesianComponent.__init__(self, hp_index)
-        self.rht_data = c.execute("SELECT * FROM RHT_weights WHERE id = ?", (self.hp_index,)).fetchall()
-    
-        # Add 0.7 because that was the RHT threshold 
-        self.prior = np.array([self.rht_data[0][1:]]*npsample).T + 0.7
+        self.rht_data = c.execute("SELECT * FROM RHT_weights WHERE id = ?", (self.hp_index,)).fetchone()
         
         try:
-            self.norm = np.trapz(self.prior, psibins, axis = 1)
-        except TypeError:
-            print("Please supply psibins of valid type")
+            # Add 0.7 because that was the RHT threshold 
+            self.prior = np.array([self.rht_data[1:]]*npsample).T + 0.7
             
-        self.norm = np.trapz(self.norm, dx = 1.0/npsample)
+            self.norm = np.trapz(self.norm, dx = 1.0/npsample)
     
-        # Normalize prior over domain
-        self.prior = self.prior/self.norm
-        
+            # Normalize prior over domain
+            self.prior = self.prior/self.norm
+
+        except TypeError:
+            if self.rht_data is None:
+                print("Index {} not found".format(hp_index))
+            else:
+                print("Unknown TypeError")
+                
+                    
 
     
 
