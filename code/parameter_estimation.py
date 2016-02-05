@@ -436,8 +436,13 @@ def store_weights_as_dict():
     #return total_weights
     
 def planck_data_to_database(Nside = 2048):
+
+    # This is in RING order.
     map353Gal, cov353Gal = get_Planck_data(Nside = Nside)
     Npix = 12*Nside**2
+    
+    # Want pixel indices in NESTED order:
+    hp_indices = hp.ring2nest(Nside, len(map353Gal[0, :]))
     
     # map353Gal contains T, Q, U information
     tablename = "Planck_Nside_2048_TQU_Galactic"
@@ -469,6 +474,7 @@ def projected_thetaweights_to_database():
     Writes all projected weights from region to an SQL database.
     Code to store weights as pickled dict can't be run on laptop but this *can*
     For SC_241, SQL database is 1.4Gb on disk rather than 7.8Gb for pickled dict
+    NOTE :: id = primary key, pixel index in NESTED order
     """
     
     # Pull in each projected theta bin
@@ -576,7 +582,7 @@ class BayesianComponent():
 
 class Prior(BayesianComponent):
     """
-    Class for building priors
+    Class for building RHT priors
     """
     
     def __init__(self, hp_index, c, psibins = None, npsample = 165, npsisample = 165):
