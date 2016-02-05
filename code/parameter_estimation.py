@@ -471,9 +471,11 @@ def planck_data_to_database(Nside = 2048):
 
     for _hp_index in xrange(3):
         try:
-            c.execute(insertstatement, [i for i in itertools.chain([_hp_index], map353Gal[:, _hp_index])])    
+            c.execute(insertstatement, [i for i in itertools.chain([_hp_index], tqu353nest[:, _hp_index])])    
         except:
             print(_hp_index, map353Gal[:, _hp_index])
+            
+    return c
 
 def projected_thetaweights_to_database():
     """
