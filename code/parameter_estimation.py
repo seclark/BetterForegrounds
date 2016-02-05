@@ -442,7 +442,13 @@ def planck_data_to_database(Nside = 2048):
     Npix = 12*Nside**2
     
     # Want pixel indices in NESTED order:
-    hp_indices = hp.ring2nest(Nside, len(map353Gal[0, :]))
+    #hp_indices = hp.ring2nest(Nside, len(map353Gal[0, :]))
+    
+    # Convert data to NESTED order:
+    tqu353nest = hp.pixelfunc.reorder(map353Gal, r2n = True)
+    tqu353nest = np.asarray(tqu353nest)
+    
+    
     
     # map353Gal contains T, Q, U information
     tablename = "Planck_Nside_2048_TQU_Galactic"
