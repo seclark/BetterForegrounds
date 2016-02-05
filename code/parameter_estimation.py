@@ -448,7 +448,7 @@ def planck_data_to_database(Nside = 2048):
     tqu353nest = hp.pixelfunc.reorder(map353Gal, r2n = True)
     tqu353nest = np.asarray(tqu353nest)
     
-    
+    # Should also do this for covariance matrix data...
     
     # map353Gal contains T, Q, U information
     tablename = "Planck_Nside_2048_TQU_Galactic"
@@ -461,21 +461,20 @@ def planck_data_to_database(Nside = 2048):
     createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+" FLOAT DEFAULT 0.0);"
     
     # Instantiate database
-    conn = sqlite3.connect(":memory:")
-    #conn = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+    #conn = sqlite3.connect(":memory:")
+    conn = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
     c = conn.cursor()
     c.execute(createstatement)
     conn.commit()
     
     insertstatement = "INSERT INTO "+tablename+" VALUES ("+",".join('?'*4)+")"
 
-    for _hp_index in xrange(3):
+    for _hp_index in xrange(Npix):
         try:
             c.execute(insertstatement, [i for i in itertools.chain([_hp_index], tqu353nest[:, _hp_index])])    
         except:
             print(_hp_index, map353Gal[:, _hp_index])
             
-    return c
 
 def projected_thetaweights_to_database():
     """
