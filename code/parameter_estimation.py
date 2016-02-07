@@ -554,6 +554,10 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     Npix = 12*Nside**2
     if map353Gal is None:
         map353Gal, cov353Gal = get_Planck_data(Nside = Nside)
+        
+    # Get Planck data from database instead
+    conn = sqlite3.connect("allweights_db.sqlite")
+    c = conn.cursor()
 
     # likelihood = planck-only posterior
     likelihood = Planck_posteriors(map353Gal = map353Gal, cov353Gal = cov353Gal, firstnpoints = firstnpoints)
