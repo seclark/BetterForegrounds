@@ -496,6 +496,8 @@ def planck_data_to_database(Nside = 2048, covdata = True):
         c.execute(insertstatement, [i for i in itertools.chain([_hp_index], usedata[:, _hp_index])])    
         #except:
         #    print(_hp_index, map353Gal[:, _hp_index])
+    
+    conn.commit()
             
 
 def projected_thetaweights_to_database():
@@ -574,12 +576,15 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     # resolution
     Nside = 2048
     Npix = 12*Nside**2
-    if map353Gal is None:
-        map353Gal, cov353Gal = get_Planck_data(Nside = Nside)
+    #if map353Gal is None:
+    #    map353Gal, cov353Gal = get_Planck_data(Nside = Nside)
         
-    # Get Planck data from database instead
+    # Get Planck data from database
     planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
     planck_tqu_cursor = planck_tqu_db.cursor()
+    
+    planck_cov_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+    planck_cov_cursor = planck_cov_db.cursor()
 
     # likelihood = planck-only posterior
     likelihood = Planck_posteriors(map353Gal = map353Gal, cov353Gal = cov353Gal, firstnpoints = firstnpoints)
@@ -590,7 +595,7 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     tablename = "RHT_weights"
     
     # Projected angle bins
-    theta_bins_gal = project_angles(firstnpoints = firstnpoints)
+    #theta_bins_gal = project_angles(firstnpoints = firstnpoints)
     
     return likelihood
     
@@ -647,13 +652,13 @@ class Likelihood(BayesianComponent):
     
     def __init__(self, hp_index, planck_tqu_cursor, planck_cov_cursor):
         BayesianComponent.__init__(self, hp_index)      
-        self.T, self.Q, self.U = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (self.hp_index,)).fetchone()
-        self.TT, self.QQ, self.UU, self.TQ, self.QQ, self.QU, self.TU, self.QU, self.UU = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (self.hp_index,)).fetchone()
+        self.TQU = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (self.hp_index,)).fetchall()
+        self.covmat = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (self.hp_index,)).fetchall()
         
           
           
 
-#if __name__ == "__main__":
-#    planck_data_to_database(Nside = 2048, covdata = True)
+if __name__ == "__main__":
+    planck_data_to_database(Nside = 2048, covdata = False)
 
 
