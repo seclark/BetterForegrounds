@@ -652,12 +652,77 @@ class Likelihood(BayesianComponent):
     
     def __init__(self, hp_index, planck_tqu_cursor, planck_cov_cursor):
         BayesianComponent.__init__(self, hp_index)      
-        self.TQU = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (self.hp_index,)).fetchall()
-        self.covmat = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (self.hp_index,)).fetchall()
+        (self.hp_index, self.T, self.Q, self.U) = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (self.hp_index,)).fetchone()
+        (self.hp_index, self.TT, self.TQ, self.TU, self.TQa, self.QQ, self.QU, self.TUa, self.QUa, self.UU) = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (self.hp_index,)).fetchone()
         
+        # sigma_p as defined in arxiv:1407.0178v1 Eqn 3.
+        sigma_p = np.zeros((2, 2, Npix)) # [sig_Q^2, sig_QU // sig_QU, UU]
+        sigma_p[0, 0, :] = (1.0/self.T**2)*self.QQ #QQ
+        sigma_p[0, 1, :] = (1.0/self.T**2)*self.QU #QU
+        sigma_p[1, 0, :] = (1.0/self.T**2)*self.QU #QU
+        sigma_p[1, 1, :] = (1.0/self.T**2)*self.UU #UU
           
-          
+    
+    """
 
+    # Assume rho = 1, so define det(sigma_p) = sigma_p,G^4
+    det_sigma_p = np.linalg.det(sigma_p.swapaxes(0, 2))
+    sigpGsq = np.sqrt(det_sigma_p)
+
+    # measured polarization angle (psi_i = arctan(U_i/Q_i))
+    psimeas = np.mod(0.5*np.arctan2(map353Gal[2, :], map353Gal[1, :]), np.pi)
+
+    # measured polarization fraction
+    pmeas = np.sqrt(map353Gal[1, :]**2 + map353Gal[2, :]**2)/map353Gal[0, :]
+
+    # temporary hack -- to only look at first n points
+    if firstnpoints != None:
+        Npix = firstnpoints
+    sigma_p = sigma_p[:, :, 0:Npix]
+    
+    # invert matrix -- must have Npix axis first
+    invsig = np.linalg.inv(sigma_p.swapaxes(0, 2))
+    
+    print("Done inverting sigma_p")
+
+    # Create grid of psi0's and p0's to sample
+    nsample = 100
+    psi0_all = np.linspace(0, np.pi, nsample)
+    p0_all = np.linspace(0, 1.0, nsample)
+
+    p0_psi0_grid = np.asarray(np.meshgrid(p0_all, psi0_all))
+
+    # Testing new "fast way" that works for isig array of size (2, 2, nsample*nsample) s.t. loop is over Npix
+    print("starting fast way")
+    time0 = time.time()
+    outfast = np.zeros((Npix, nsample*nsample), np.float_)
+    
+    # These have length Npix
+    measpart0 = pmeas*np.cos(2*psimeas)
+    measpart1 = pmeas*np.sin(2*psimeas)
+    
+    p0pairs = p0_psi0_grid[0, ...].ravel()
+    psi0pairs = p0_psi0_grid[1, ...].ravel()
+    
+    # These have length nsample*nsample
+    truepart0 = p0pairs*np.cos(2*psi0pairs)
+    truepart1 = p0pairs*np.sin(2*psi0pairs)
+    
+    rharrbig = np.zeros((2, 1, nsample*nsample), np.float_)
+    lharrbig = np.zeros((1, 2, nsample*nsample), np.float_)
+    
+    print("entering loop")
+    for i in xrange(Npix):
+        rharrbig[0, 0, :] = measpart0[i] - truepart0
+        rharrbig[1, 0, :] = measpart1[i] - truepart1
+        lharrbig[0, 0, :] = measpart0[i] - truepart0
+        lharrbig[0, 1, :] = measpart1[i] - truepart1
+    
+        outfast[i, :] = (1/(np.pi*sigpGsq[i]))*np.exp(-0.5*np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', invsig[i, :, :], rharrbig)))
+    time1 = time.time()
+    print("fast version took ", time1 - time0, "seconds")
+    
+    """
 #if __name__ == "__main__":
 #    planck_data_to_database(Nside = 2048, covdata = True)
 
