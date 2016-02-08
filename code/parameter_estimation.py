@@ -583,7 +583,7 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
     planck_tqu_cursor = planck_tqu_db.cursor()
     
-    planck_cov_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+    planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
     planck_cov_cursor = planck_cov_db.cursor()
 
     # likelihood = planck-only posterior
@@ -653,12 +653,12 @@ class Likelihood(BayesianComponent):
     def __init__(self, hp_index, planck_tqu_cursor, planck_cov_cursor):
         BayesianComponent.__init__(self, hp_index)      
         self.TQU = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (self.hp_index,)).fetchall()
-        self.covmat = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (self.hp_index,)).fetchall()
+        self.covmat = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (self.hp_index,)).fetchall()
         
           
           
 
-if __name__ == "__main__":
-    planck_data_to_database(Nside = 2048, covdata = False)
+#if __name__ == "__main__":
+#    planck_data_to_database(Nside = 2048, covdata = True)
 
 
