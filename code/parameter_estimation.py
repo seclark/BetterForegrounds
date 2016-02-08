@@ -578,15 +578,15 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
         map353Gal, cov353Gal = get_Planck_data(Nside = Nside)
         
     # Get Planck data from database instead
-    conn = sqlite3.connect("allweights_db.sqlite")
-    c = conn.cursor()
+    planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+    planck_tqu_cursor = planck_tqu_db.cursor()
 
     # likelihood = planck-only posterior
     likelihood = Planck_posteriors(map353Gal = map353Gal, cov353Gal = cov353Gal, firstnpoints = firstnpoints)
 
     # Planck-projected RHT data for prior stored as SQL db
-    conn = sqlite3.connect("allweights_db.sqlite")
-    c = conn.cursor()
+    rht_db = sqlite3.connect("allweights_db.sqlite")
+    rht_cursor = rht_db.cursor()
     tablename = "RHT_weights"
     
     # Projected angle bins
@@ -645,10 +645,15 @@ class Likelihood(BayesianComponent):
     Class for building Planck-based likelihood
     """
     
-    def __init__(self, hp_index):
-        BayesianComponent.__init__(self, hp_index)        
+    def __init__(self, hp_index, planck_tqu_cursor, planck_cov_cursor):
+        BayesianComponent.__init__(self, hp_index)      
+        self.T, self.Q, self.U = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (self.hp_index,)).fetchone()
+        self.TT, self.QQ, self.UU, self.TQ, self.QQ, self.QU, self.TU, self.QU, self.UU = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (self.hp_index,)).fetchone()
+        
+          
+          
 
-if __name__ == "__main__":
-    planck_data_to_database(Nside = 2048, covdata = True)
+#if __name__ == "__main__":
+#    planck_data_to_database(Nside = 2048, covdata = True)
 
 
