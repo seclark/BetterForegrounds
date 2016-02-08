@@ -445,12 +445,14 @@ def planck_data_to_database(Nside = 2048, covdata = True):
     #hp_indices = hp.ring2nest(Nside, len(map353Gal[0, :]))
     
     # Convert data to NESTED order:
-    tqu353nest = hp.pixelfunc.reorder(map353Gal, r2n = True)
-    tqu353nest = np.asarray(tqu353nest)
-    
-    cov353nest = hp.pixelfunc.reorder(cov353Gal, r2n = True)
-    cov353nest = np.asarray(cov353nest)
-    cov353nest = cov353nest.reshape(9, Npix)
+    if covdata is True:
+        usedata = np.asarray(cov353Gal)
+        usedata = usedata.reshape(9, Npix)
+        usedata = hp.pixelfunc.reorder(usedata, r2n = True)
+        usedata = np.asarray(usedata)
+    else:
+        usedata = hp.pixelfunc.reorder(map353Gal, r2n = True)
+        usedata = np.asarray(usedata)
     
     # Should also do this for covariance matrix data...
     
@@ -462,10 +464,9 @@ def planck_data_to_database(Nside = 2048, covdata = True):
     
     # Comma separated list of nthets column names
     if covdata is True:
-        cov353=[[TT,TQ,TU],[TQ,QQ,QU],[TU,QU,UU]]
-        value_names = ["T", "Q", "U"]
+        value_names = ["TT", "TQ", "TU", "TQa", "QQ", "QU", "TU1", "QUa", "UU"]
     else:
-        value_names = ["TT", "TQ", "TU", "TQ", "QQ", "QU", "TU", "QU", "UU"]
+        value_names = ["T", "Q", "U"]
     
     column_names = " FLOAT DEFAULT 0.0,".join(value_names)
 
@@ -482,13 +483,19 @@ def planck_data_to_database(Nside = 2048, covdata = True):
     c.execute(createstatement)
     conn.commit()
     
-    insertstatement = "INSERT INTO "+tablename+" VALUES ("+",".join('?'*4)+")"
-
+    if covdata is True:
+        numvalues = 10
+    else:
+        numvalues = 4
+    
+    insertstatement = "INSERT INTO "+tablename+" VALUES ("+",".join('?'*numvalues)+")"
+    
+    print("Beginning database creation")
     for _hp_index in xrange(Npix):
-        try:
-            c.execute(insertstatement, [i for i in itertools.chain([_hp_index], tqu353nest[:, _hp_index])])    
-        except:
-            print(_hp_index, map353Gal[:, _hp_index])
+        #try:
+        c.execute(insertstatement, [i for i in itertools.chain([_hp_index], usedata[:, _hp_index])])    
+        #except:
+        #    print(_hp_index, map353Gal[:, _hp_index])
             
 
 def projected_thetaweights_to_database():
@@ -641,5 +648,7 @@ class Likelihood(BayesianComponent):
     def __init__(self, hp_index):
         BayesianComponent.__init__(self, hp_index)        
 
+if __name__ == "__main__":
+    planck_data_to_database(Nside = 2048, covdata = True)
 
 
