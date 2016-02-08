@@ -707,11 +707,15 @@ class Likelihood(BayesianComponent):
         lharrbig[0, 0, :] = measpart0 - truepart0
         lharrbig[0, 1, :] = measpart1 - truepart1
 
-        print(lharrbig.shape, invsig.shape, rharrbig.shape)
-        self.outfast = (1/(np.pi*self.sigpGsq))*np.exp(-0.5*np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', invsig, rharrbig)))
-        time1 = time.time()
-        print("posterior creation took ", time1 - time0, "seconds")
+        self.likelihood = (1/(np.pi*self.sigpGsq))*np.exp(-0.5*np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', invsig, rharrbig)))
+
+class Posterior(BayesianComponent):
+    """
+    Class for building a posterior composed of a Planck-based likelihood and an RHT prior
+    """
     
+    def __init__(self, hp_index):
+        BayesianComponent.__init__(self, hp_index)  
     
 #if __name__ == "__main__":
 #    planck_data_to_database(Nside = 2048, covdata = True)
