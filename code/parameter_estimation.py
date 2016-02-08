@@ -448,6 +448,10 @@ def planck_data_to_database(Nside = 2048, covdata = True):
     tqu353nest = hp.pixelfunc.reorder(map353Gal, r2n = True)
     tqu353nest = np.asarray(tqu353nest)
     
+    cov353nest = hp.pixelfunc.reorder(cov353Gal, r2n = True)
+    cov353nest = np.asarray(cov353nest)
+    cov353nest = cov353nest.reshape(9, Npix)
+    
     # Should also do this for covariance matrix data...
     
     # map353Gal contains T, Q, U information
@@ -458,9 +462,10 @@ def planck_data_to_database(Nside = 2048, covdata = True):
     
     # Comma separated list of nthets column names
     if covdata is True:
+        cov353=[[TT,TQ,TU],[TQ,QQ,QU],[TU,QU,UU]]
         value_names = ["T", "Q", "U"]
     else:
-        value_names = ["T", "Q", "U"]
+        value_names = ["TT", "TQ", "TU", "TQ", "QQ", "QU", "TU", "QU", "UU"]
     
     column_names = " FLOAT DEFAULT 0.0,".join(value_names)
 
@@ -469,7 +474,10 @@ def planck_data_to_database(Nside = 2048, covdata = True):
     
     # Instantiate database
     #conn = sqlite3.connect(":memory:")
-    conn = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+    if covdata is True:
+        conn = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
+    else:
+        conn = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
     c = conn.cursor()
     c.execute(createstatement)
     conn.commit()
