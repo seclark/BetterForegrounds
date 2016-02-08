@@ -435,7 +435,7 @@ def store_weights_as_dict():
 
     #return total_weights
     
-def planck_data_to_database(Nside = 2048):
+def planck_data_to_database(Nside = 2048, covdata = True):
 
     # This is in RING order.
     map353Gal, cov353Gal = get_Planck_data(Nside = Nside)
@@ -451,10 +451,17 @@ def planck_data_to_database(Nside = 2048):
     # Should also do this for covariance matrix data...
     
     # map353Gal contains T, Q, U information
-    tablename = "Planck_Nside_2048_TQU_Galactic"
+    if covdata is True:
+        tablename = "Planck_Nside_2048_cov_Galactic"
+    else:
+        tablename = "Planck_Nside_2048_TQU_Galactic"
     
     # Comma separated list of nthets column names
-    value_names = ["T", "Q", "U"]
+    if covdata is True:
+        value_names = ["T", "Q", "U"]
+    else:
+        value_names = ["T", "Q", "U"]
+    
     column_names = " FLOAT DEFAULT 0.0,".join(value_names)
 
     # Statement for creation of SQL database
