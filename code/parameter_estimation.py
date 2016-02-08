@@ -300,7 +300,7 @@ def Planck_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000, p
     if plotrandomsample == True:
         plot_randomsample_posteriors(pmeas, psimeas, p0_all, psi0_all, outfast, cmap = "jet", overplotmeas = True, sigpGsq = sigpGsq)
     
-    return outfast
+    return outfast, rharrbig, lharrbig, sigpGsq, invsig, i
 
 def project_angles(firstnpoints = 1000):
     """
@@ -578,6 +578,11 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     Npix = 12*Nside**2
     #if map353Gal is None:
     #    map353Gal, cov353Gal = get_Planck_data(Nside = Nside)
+    
+    # Create grid of psi0's and p0's to sample
+    nsample = 165
+    psi0_all = np.linspace(0, np.pi, nsample)
+    p0_all = np.linspace(0, 1.0, nsample)
         
     # Get Planck data from database
     planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
@@ -587,7 +592,7 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     planck_cov_cursor = planck_cov_db.cursor()
 
     # likelihood = planck-only posterior
-    likelihood = Planck_posteriors(map353Gal = map353Gal, cov353Gal = cov353Gal, firstnpoints = firstnpoints)
+    #likelihood = Planck_posteriors(map353Gal = map353Gal, cov353Gal = cov353Gal, firstnpoints = firstnpoints)
 
     # Planck-projected RHT data for prior stored as SQL db
     rht_db = sqlite3.connect("allweights_db.sqlite")
@@ -650,21 +655,21 @@ class Likelihood(BayesianComponent):
     Class for building Planck-based likelihood
     """
     
-    def __init__(self, hp_index, planck_tqu_cursor, planck_cov_cursor):
+    def __init__(self, hp_index, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all):
         BayesianComponent.__init__(self, hp_index)      
         (self.hp_index, self.T, self.Q, self.U) = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (self.hp_index,)).fetchone()
         (self.hp_index, self.TT, self.TQ, self.TU, self.TQa, self.QQ, self.QU, self.TUa, self.QUa, self.UU) = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (self.hp_index,)).fetchone()
         
         # sigma_p as defined in arxiv:1407.0178v1 Eqn 3.
-        sigma_p = np.zeros((2, 2), np.float_) # [sig_Q^2, sig_QU // sig_QU, UU]
-        sigma_p[0, 0] = (1.0/self.T**2)*self.QQ #QQ
-        sigma_p[0, 1] = (1.0/self.T**2)*self.QU #QU
-        sigma_p[1, 0] = (1.0/self.T**2)*self.QU #QU
-        sigma_p[1, 1] = (1.0/self.T**2)*self.UU #UU
+        self.sigma_p = np.zeros((2, 2), np.float_) # [sig_Q^2, sig_QU // sig_QU, UU]
+        self.sigma_p[0, 0] = (1.0/self.T**2)*self.QQ #QQ
+        self.sigma_p[0, 1] = (1.0/self.T**2)*self.QU #QU
+        self.sigma_p[1, 0] = (1.0/self.T**2)*self.QU #QU
+        self.sigma_p[1, 1] = (1.0/self.T**2)*self.UU #UU
           
         # det(sigma_p) = sigma_p,G^4
-        det_sigma_p = np.linalg.det(sigma_p)
-        sigpGsq = np.sqrt(det_sigma_p)
+        det_sigma_p = np.linalg.det(self.sigma_p)
+        self.sigpGsq = np.sqrt(det_sigma_p)
     
         # measured polarization angle (psi_i = arctan(U_i/Q_i))
         psimeas = np.mod(0.5*np.arctan2(self.U, self.Q), np.pi)
@@ -673,47 +678,40 @@ class Likelihood(BayesianComponent):
         pmeas = np.sqrt(self.Q**2 + self.U**2)/self.T
     
         # invert sigma_p
-        invsig = np.linalg.inv(sigma_p)
+        invsig = np.linalg.inv(self.sigma_p)
     
+        # Sample grid
+        nsample = len(p0_all)
+        p0_psi0_grid = np.asarray(np.meshgrid(p0_all, psi0_all))
 
-    """
-    # Create grid of psi0's and p0's to sample
-    nsample = 100
-    psi0_all = np.linspace(0, np.pi, nsample)
-    p0_all = np.linspace(0, 1.0, nsample)
+        # isig array of size (2, 2, nsample*nsample)
+        time0 = time.time()
+        outfast = np.zeros(nsample*nsample, np.float_)
+    
+        # Construct measured part
+        measpart0 = pmeas*np.cos(2*psimeas)
+        measpart1 = pmeas*np.sin(2*psimeas)
+    
+        p0pairs = p0_psi0_grid[0, ...].ravel()
+        psi0pairs = p0_psi0_grid[1, ...].ravel()
+    
+        # These have length nsample*nsample
+        truepart0 = p0pairs*np.cos(2*psi0pairs)
+        truepart1 = p0pairs*np.sin(2*psi0pairs)
+    
+        rharrbig = np.zeros((2, 1, nsample*nsample), np.float_)
+        lharrbig = np.zeros((1, 2, nsample*nsample), np.float_)
+    
+        rharrbig[0, 0, :] = measpart0 - truepart0
+        rharrbig[1, 0, :] = measpart1 - truepart1
+        lharrbig[0, 0, :] = measpart0 - truepart0
+        lharrbig[0, 1, :] = measpart1 - truepart1
 
-    p0_psi0_grid = np.asarray(np.meshgrid(p0_all, psi0_all))
-
-    # Testing new "fast way" that works for isig array of size (2, 2, nsample*nsample) s.t. loop is over Npix
-    print("starting fast way")
-    time0 = time.time()
-    outfast = np.zeros((Npix, nsample*nsample), np.float_)
+        print(lharrbig.shape, invsig.shape, rharrbig.shape)
+        self.outfast = (1/(np.pi*self.sigpGsq))*np.exp(-0.5*np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', invsig, rharrbig)))
+        time1 = time.time()
+        print("posterior creation took ", time1 - time0, "seconds")
     
-    # These have length Npix
-    measpart0 = pmeas*np.cos(2*psimeas)
-    measpart1 = pmeas*np.sin(2*psimeas)
-    
-    p0pairs = p0_psi0_grid[0, ...].ravel()
-    psi0pairs = p0_psi0_grid[1, ...].ravel()
-    
-    # These have length nsample*nsample
-    truepart0 = p0pairs*np.cos(2*psi0pairs)
-    truepart1 = p0pairs*np.sin(2*psi0pairs)
-    
-    rharrbig = np.zeros((2, 1, nsample*nsample), np.float_)
-    lharrbig = np.zeros((1, 2, nsample*nsample), np.float_)
-    
-    print("entering loop")
-    for i in xrange(Npix):
-        rharrbig[0, 0, :] = measpart0[i] - truepart0
-        rharrbig[1, 0, :] = measpart1[i] - truepart1
-        lharrbig[0, 0, :] = measpart0[i] - truepart0
-        lharrbig[0, 1, :] = measpart1[i] - truepart1
-    
-        outfast[i, :] = (1/(np.pi*sigpGsq[i]))*np.exp(-0.5*np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', invsig[i, :, :], rharrbig)))
-    time1 = time.time()
-    print("fast version took ", time1 - time0, "seconds")
-    """
     
 #if __name__ == "__main__":
 #    planck_data_to_database(Nside = 2048, covdata = True)
