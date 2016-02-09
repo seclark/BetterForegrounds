@@ -635,7 +635,7 @@ class Prior(BayesianComponent):
         
         try:
             # Add 0.7 because that was the RHT threshold 
-            self.prior = np.array([self.rht_data[1:]]*npsample).T + 0.7
+            self.prior = np.array([self.rht_data[1:]]*npsample).T + 0.7#*75
             
             self.integrated_over_psi = self.integrate_highest_dimension(self.prior, dx = np.pi/npsisample)
             self.integrated_over_p_and_psi = self.integrate_highest_dimension(self.integrated_over_psi, dx = 1.0/npsample)
@@ -722,7 +722,8 @@ class Posterior(BayesianComponent):
         prior = Prior(hp_index, rht_cursor, npsample = npsample, npsisample = npsisample)
         likelihood = Likelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all)
         
-        self.normed_prior = prior.normed_prior/np.max(prior.normed_prior)
+        self.prior = prior.prior
+        self.normed_prior = prior.normed_prior#/np.max(prior.normed_prior)
         self.planck_likelihood = likelihood.likelihood
         
         #self.posterior = np.einsum('ij,jk->ik', self.planck_likelihood, self.normed_prior)
