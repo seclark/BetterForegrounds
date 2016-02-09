@@ -628,7 +628,7 @@ class Prior(BayesianComponent):
     Class for building RHT priors
     """
     
-    def __init__(self, hp_index, c, psibins = None, npsample = 165, npsisample = 165):
+    def __init__(self, hp_index, c, npsample = 165, npsisample = 165):
     
         BayesianComponent.__init__(self, hp_index)
         self.rht_data = c.execute("SELECT * FROM RHT_weights WHERE id = ?", (self.hp_index,)).fetchone()
@@ -708,14 +708,30 @@ class Likelihood(BayesianComponent):
         lharrbig[0, 1, :] = measpart1 - truepart1
 
         self.likelihood = (1/(np.pi*self.sigpGsq))*np.exp(-0.5*np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', invsig, rharrbig)))
+        self.likelihood = self.likelihood.reshape(nsample, nsample)
 
 class Posterior(BayesianComponent):
     """
     Class for building a posterior composed of a Planck-based likelihood and an RHT prior
     """
     
-    def __init__(self, hp_index):
+    def __init__(self, hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165):
         BayesianComponent.__init__(self, hp_index)  
+        
+        # Instantiate posterior components
+        prior = Prior(hp_index, rht_cursor, npsample = npsample, npsisample = npsisample)
+        likelihood = Likelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all)
+        
+        self.normed_prior = prior.normed_prior/np.max(prior.normed_prior)
+        self.planck_likelihood = likelihood.likelihood
+        
+        #self.posterior = np.einsum('ij,jk->ik', self.planck_likelihood, self.normed_prior)
+        self.posterior = self.planck_likelihood*self.normed_prior
+        
+        self.posterior_integrated_over_psi = self.integrate_highest_dimension(self.posterior, dx = np.pi/npsisample)
+        self.posterior_integrated_over_p_and_psi = self.integrate_highest_dimension(self.posterior_integrated_over_psi, dx = 1.0/npsample)
+        
+        self.normed_posterior = self.posterior/self.posterior_integrated_over_p_and_psi
     
 #if __name__ == "__main__":
 #    planck_data_to_database(Nside = 2048, covdata = True)
