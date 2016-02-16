@@ -356,12 +356,10 @@ def project_angle0_db(wlen = 75):
     
     insertstatement = "INSERT INTO "+tablename+" VALUES (?, ?)"
     
-    # One-liner that == Colin's loop in rht_to_planck.py
-    #thets_EquinGal = np.mod(np.asarray(zero_thetas[:Npix]).reshape(Npix, 1).astype(np.float_) - thets, np.pi)
-    
     for _hp_index in xrange(Npix):
         c.execute(insertstatement, [_hp_index, zero_thetas[_hp_index]])    
     
+    conn.commit()
     return c
         
 def add_hthets(data1, data2):
@@ -647,10 +645,28 @@ def plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov
     
     plt.subplots_adjust(wspace = 0.8)
     
-def single_posterior(hp_index):
+def single_posterior(hp_index, wlen = 75):
+    
+    # Planck covariance database
+    planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
+    planck_cov_cursor = planck_cov_db.cursor()
+    
+    # Planck TQU database
+    planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+    planck_tqu_cursor = planck_tqu_db.cursor()
+    
+    # Planck-projected RHT database
+    rht_db = sqlite3.connect("allweights_db.sqlite")
+    rht_cursor = rht_db.cursor()
 
     # Create psi0 sampling grid
-    #psi0_sample_cursor = 
+    psi0_sample_db = sqlite3.connect("theta_bin_0_wlen"+str(wlen)+"_db.sqlite")
+    psi0_sample_cursor = psi0_sample_db.cursor()    
+    zero_theta = psi0_sample_cursor.execute("SELECT zerotheta FROM theta_bin_0_wlen75 WHERE id = ?", (hp_index,)).fetchone()
+
+    # Create array of projected thetas from theta = 0
+    thets = RHT_tools.get_thets(wlen)
+    psi0_all = np.mod(zero_theta - thets, np.pi)
 
     posterior = Posterior(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165)
     
