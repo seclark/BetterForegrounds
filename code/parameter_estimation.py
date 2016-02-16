@@ -9,6 +9,9 @@ import cPickle as pickle
 import itertools
 import string
 import sqlite3
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import matplotlib as mpl
+import matplotlib.ticker as ticker
 
 # Local repo imports
 import debias
@@ -321,51 +324,45 @@ def project_angles(firstnpoints = 1000):
     
     return thets_EquinGal
     
-def project_angles_db(wlen = 75):
+def project_angle0_db(wlen = 75):
     """
     Project angles from Equatorial, B-field, IAU Definition -> Galactic, Polarization Angle, Planck Definition
-    Store in SQL Database by healpix id
+    Store only 0-angle in SQL Database by healpix id. Will create other angles on the fly.
     Note: projected angles are still equally spaced -- no need to re-interpolate
     """
     
-    zero_thetas = fits.getdata("/Volumes/DataDavy/Planck/projected_angles/theta_0.0_Equ_inGal.fits")
-    thets = RHT_tools.get_thets(wlen)
-    nthets = len(thets)
+    # Note that fits.getdata reads this map in incorrectly. 
+    zero_thetas = hp.fitsfunc.read_map("/Volumes/DataDavy/Planck/projected_angles/theta_0.0_Equ_inGal.fits")
     
-    # Arbitrary 2-letter SQL storage value names
-    value_names = [''.join(i) for i in itertools.permutations(string.lowercase,2)]
-
-    # Remove protected words from value names
-    if "as" in value_names: value_names.remove("as")
-    if "is" in value_names: value_names.remove("is")
-
-    # Comma separated list of nthets column names
-    column_names = " FLOAT DEFAULT 0.0,".join(value_names[:nthets])
+    # resolution
+    Nside = 2048
+    Npix = 12*Nside**2
+    
+    # Convert to NESTED ordering
+    zero_thetas_nested = hp.pixelfunc.reorder(zero_thetas, r2n = True)
 
     # Name table
-    tablename = "theta_bins_wlen"+str(wlen)
+    tablename = "theta_bin_0_wlen"+str(wlen)
 
     # Statement for creation of SQL database
-    createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+" FLOAT DEFAULT 0.0);"
+    createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY, zerotheta FLOAT DEFAULT 0.0);"
 
     # Instantiate database
-    conn = sqlite3.connect(":memory:")
-    #conn = sqlite3.connect("theta_bins_wlen75_db.sqlite")
+    #conn = sqlite3.connect(":memory:")
+    conn = sqlite3.connect("theta_bin_0_wlen75_db.sqlite")
     c = conn.cursor()
     c.execute(createstatement)
     conn.commit()
     
-    insertstatement = "INSERT INTO "+tablename+" VALUES ("+",".join('?'*nthets)+")"
+    insertstatement = "INSERT INTO "+tablename+" VALUES (?, ?)"
     
-    Npix = 10
     # One-liner that == Colin's loop in rht_to_planck.py
-    thets_EquinGal = np.mod(np.asarray(zero_thetas[:Npix]).reshape(Npix, 1).astype(np.float_) - thets, np.pi)
+    #thets_EquinGal = np.mod(np.asarray(zero_thetas[:Npix]).reshape(Npix, 1).astype(np.float_) - thets, np.pi)
     
     for _hp_index in xrange(Npix):
-        thets_EquinGal = np.mod(np.asarray(zero_thetas[_hpindex]).reshape(nthets, 1).astype(np.float_) - thets, np.pi)
-        c.execute(insertstatement, itertools.chain([_hp_index], thets_EquinGal))    
+        c.execute(insertstatement, [_hp_index, zero_thetas[_hp_index]])    
     
-    return thets_EquinGal
+    return c
         
 def add_hthets(data1, data2):
     """
@@ -566,6 +563,11 @@ def projected_thetaweights_to_database():
 
     conn.close()
     
+def get_largest_rht_id(rht_cursor):
+    max_id = rht_cursor.execute("SELECT id from RHT_weights ORDER BY ab DESC LIMIT 1").fetchone()
+    
+    return max_id
+    
 def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     """
     Calculate 2D Bayesian posteriors for Planck data.
@@ -604,6 +606,55 @@ def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     
     return likelihood
     
+def latex_formatter(x, pos):
+    return "${0:.1f}$".format(x)
+
+def plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165):
+    fig = plt.figure(figsize = (14, 4), facecolor = "white")
+    ax1 = fig.add_subplot(131)
+    ax2 = fig.add_subplot(132)
+    ax3 = fig.add_subplot(133)
+    
+    pp = Posterior(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = npsample, npsisample = npsisample)
+    
+    cmap = "cubehelix"
+    im1 = ax1.imshow(pp.planck_likelihood, cmap = cmap)
+    ax1.set_title(r"$\mathrm{Planck}$ $\mathrm{Likelihood}$", size = 20)
+    div = make_axes_locatable(ax1)
+    cax = div.append_axes("right", size="15%", pad=0.05)
+    cbar = plt.colorbar(im1, cax=cax, format=ticker.FuncFormatter(latex_formatter))
+
+    im2 = ax2.imshow(pp.normed_prior, cmap = cmap)
+    ax2.set_title(r"$\mathrm{RHT}$ $\mathrm{Prior}$", size = 20)
+    div = make_axes_locatable(ax2)
+    cax = div.append_axes("right", size="15%", pad=0.05)
+    cbar = plt.colorbar(im2, cax=cax, format=ticker.FuncFormatter(latex_formatter))
+
+    im3 = ax3.imshow(pp.normed_posterior, cmap = cmap)
+    ax3.set_title(r"$\mathrm{Posterior}$", size = 20)
+    div = make_axes_locatable(ax3)
+    cax = div.append_axes("right", size="15%", pad=0.05)
+    cbar = plt.colorbar(im3, cax=cax, format=ticker.FuncFormatter(latex_formatter))
+    
+    axs = [ax1, ax2, ax3]
+    for ax in axs:
+        ax.set_xlabel(r"$\mathrm{p}$", size = 20)
+        ax.set_ylabel(r"$\psi$", size = 20)
+        ax.set_xticks(np.arange(len(p0_all))[::20])
+        ax.set_xticklabels([r"${0:.1f}$".format(p0) for p0 in np.round(p0_all[::20], decimals = 2)])
+        ax.set_yticks(np.arange(len(psi0_all))[::20])
+        ax.set_yticklabels([r"${0:.1f}$".format(psi0) for psi0 in np.round(np.degrees(psi0_all[::20]), decimals = 2)])
+    
+    plt.subplots_adjust(wspace = 0.8)
+    
+def single_posterior(hp_index):
+
+    # Create psi0 sampling grid
+    #psi0_sample_cursor = 
+
+    posterior = Posterior(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165)
+    
+    
 class BayesianComponent():
     """
     Base class for building Bayesian pieces
@@ -635,7 +686,7 @@ class Prior(BayesianComponent):
         
         try:
             # Add 0.7 because that was the RHT threshold 
-            self.prior = np.array([self.rht_data[1:]]*npsample).T + 0.7#*75
+            self.prior = (np.array([self.rht_data[1:]]*npsample).T + 0.7)*75
             
             self.integrated_over_psi = self.integrate_highest_dimension(self.prior, dx = np.pi/npsisample)
             self.integrated_over_p_and_psi = self.integrate_highest_dimension(self.integrated_over_psi, dx = 1.0/npsample)
@@ -733,6 +784,7 @@ class Posterior(BayesianComponent):
         self.posterior_integrated_over_p_and_psi = self.integrate_highest_dimension(self.posterior_integrated_over_psi, dx = 1.0/npsample)
         
         self.normed_posterior = self.posterior/self.posterior_integrated_over_p_and_psi
+    
     
 #if __name__ == "__main__":
 #    planck_data_to_database(Nside = 2048, covdata = True)
