@@ -429,6 +429,23 @@ def store_weights_as_dict():
     pickle.dump( total_weights, open( projected_data_dictionary_fn, "wb" ) )
 
     #return total_weights
+
+def plasz_P_to_database(Nside = 2048):
+    """
+    Puts Colin's implementation of debiased P from Plaszczynski et al into an SQL db
+    Indexed using NESTED healpix indices
+    """
+    Npix = 12*Nside**2
+    
+    # Place data into array
+    usedata = np.zeros((2, Npix), np.float_)
+    
+    data_root = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/"
+    usedata[0, :] = hp.fitsfunc.read_map(data_root + "HFI_SkyMap_353_2048_R2.00_full_PdebiasPlasz_RING.fits")
+    usedata[1, :] = hp.fitsfunc.read_map(data_root + "HFI_SkyMap_353_2048_R2.00_full_sigPdebiasPlasz_RING.fits")
+    
+    # Reorder data to NEST ordering
+    usedata_nest = hp.pixelfunc.reorder(usedata, r2n = True)
     
 def planck_data_to_database(Nside = 2048, covdata = True):
 
@@ -664,6 +681,10 @@ def single_posterior(hp_index, wlen = 75):
     psi0_sample_cursor = psi0_sample_db.cursor()    
     zero_theta = psi0_sample_cursor.execute("SELECT zerotheta FROM theta_bin_0_wlen75 WHERE id = ?", (hp_index,)).fetchone()
 
+    # Grab debiased P, sigma_P from Colin's implementation of Plaszczynski et al
+    
+    # We will sample P on a grid from -7 sigma to +7 sigma. Current implementation assumes sigma_I = 0
+
     # Create array of projected thetas from theta = 0
     thets = RHT_tools.get_thets(wlen)
     psi0_all = np.mod(zero_theta - thets, np.pi)
@@ -720,6 +741,7 @@ class Prior(BayesianComponent):
 class Likelihood(BayesianComponent):
     """
     Class for building Planck-based likelihood
+    Currently assumes I = I_0, and sigma_I = 0
     """
     
     def __init__(self, hp_index, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all):
