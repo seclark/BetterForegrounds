@@ -447,6 +447,29 @@ def plasz_P_to_database(Nside = 2048):
     # Reorder data to NEST ordering
     usedata_nest = hp.pixelfunc.reorder(usedata, r2n = True)
     
+    tablename = "P_sigP_Plasz_debias_Nside_2048_Galactic"
+    
+    value_names = ["Pdebias", "sigPdebias"]
+    
+    # Statement for creation of SQL database
+    createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY, Pdebias FLOAT DEFAULT 0.0, sigPdebias FLOAT DEFAULT 0.0);"
+    
+    #conn = sqlite3.connect(":memory:")
+    conn = sqlite3.connect("P_sigP_Plasz_debias_Nside_2048_Galactic_db.sqlite")
+    
+    c = conn.cursor()
+    c.execute(createstatement)
+    conn.commit()
+    
+    insertstatement = "INSERT INTO "+tablename+" VALUES (?, ?, ?)"
+    
+    print("Beginning database creation")
+    for _hp_index in xrange(10):
+        c.execute(insertstatement, [i for i in itertools.chain([_hp_index], usedata[:, _hp_index])])    
+    
+    conn.commit()
+    
+    
 def planck_data_to_database(Nside = 2048, covdata = True):
 
     # This is in RING order.
