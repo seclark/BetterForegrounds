@@ -464,7 +464,7 @@ def plasz_P_to_database(Nside = 2048):
     insertstatement = "INSERT INTO "+tablename+" VALUES (?, ?, ?)"
     
     print("Beginning database creation")
-    for _hp_index in xrange(10):
+    for _hp_index in xrange(Npix):
         c.execute(insertstatement, [i for i in itertools.chain([_hp_index], usedata[:, _hp_index])])    
     
     conn.commit()
@@ -705,6 +705,8 @@ def single_posterior(hp_index, wlen = 75):
     zero_theta = psi0_sample_cursor.execute("SELECT zerotheta FROM theta_bin_0_wlen75 WHERE id = ?", (hp_index,)).fetchone()
 
     # Grab debiased P, sigma_P from Colin's implementation of Plaszczynski et al
+    (pdebias, pdebiassig) = psi0_sample_cursor.execute("SELECT * FROM P_sigP_Plasz_debias_Nside_2048_Galactic WHERE id = ?", (hp_index,)).fetchone()
+
     
     # We will sample P on a grid from -7 sigma to +7 sigma. Current implementation assumes sigma_I = 0
 
