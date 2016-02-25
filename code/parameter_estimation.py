@@ -606,6 +606,11 @@ def get_largest_rht_id(rht_cursor):
     
     return max_id
     
+def get_all_rht_ids(rht_cursor):
+    all_ids = rht_cursor.execute("SELECT id from RHT_weights").fetchall()
+    
+    return all_ids
+    
 def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     """
     Calculate 2D Bayesian posteriors for Planck data.
@@ -678,8 +683,8 @@ def plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov
     for ax in axs:
         ax.set_xlabel(r"$\mathrm{p}$", size = 20)
         ax.set_ylabel(r"$\psi$", size = 20)
-        ax.set_xticks(np.arange(len(p0_all))[::20])
-        ax.set_xticklabels([r"${0:.1f}$".format(p0) for p0 in np.round(p0_all[::20], decimals = 2)])
+        ax.set_xticks(np.arange(len(p0_all))[::30])
+        ax.set_xticklabels([r"${0:.2f}$".format(p0) for p0 in np.round(p0_all[::20], decimals = 2)])
         ax.set_yticks(np.arange(len(psi0_all))[::20])
         ax.set_yticklabels([r"${0:.1f}$".format(psi0) for psi0 in np.round(np.degrees(psi0_all[::20]), decimals = 2)])
     
@@ -709,14 +714,25 @@ def single_posterior(hp_index, wlen = 75):
     psi0_all = np.mod(zero_theta - thets, np.pi)
     
     # Grab debiased P, sigma_P from Colin's implementation of Plaszczynski et al
-    (Pdebias, Pdebiassig) = psi0_sample_cursor.execute("SELECT * FROM P_sigP_Plasz_debias_Nside_2048_Galactic WHERE id = ?", (hp_index,)).fetchone()
+    plasz_P_db = sqlite3.connect("P_sigP_Plasz_debias_Nside_2048_Galactic_db.sqlite")
+    plasz_P_cursor = plasz_P_db.cursor()
+    (Pdebias, Pdebiassig) = plasz_P_cursor.execute("SELECT Pdebias, sigPdebias FROM P_sigP_Plasz_debias_Nside_2048_Galactic WHERE id = ?", (hp_index,)).fetchone()
     
     # We will sample P on a grid from -7 sigma to +7 sigma. Current implementation assumes sigma_I = 0
     numsig = 7
     sample_P = np.linspace(-numsig*Pdebiassig + Pdebias, numsig*Pdebiassig + Pdebias, len(psi0_all))
+    
+    # Turn sample of P into sample of p by dividing by I (p = P/I)
+    I0 = planck_tqu_cursor.execute("SELECT T FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
+    p0_all = sample_P/I0
+
+    print(I0, p0_all)
 
     posterior = Posterior(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165)
     
+    plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165)
+    
+    return posterior
     
 class BayesianComponent():
     """
