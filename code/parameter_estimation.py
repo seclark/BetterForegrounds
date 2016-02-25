@@ -611,6 +611,12 @@ def get_all_rht_ids(rht_cursor):
     
     return all_ids
     
+def get_all_P_sigP_debias(plasz_P_cursor):
+    all_Pdebias = plasz_P_cursor.execute("SELECT Pdebias FROM P_sigP_Plasz_debias_Nside_2048_Galactic").fetchall()
+    all_Pdebiassig = plasz_P_cursor.execute("SELECT sigPdebias FROM P_sigP_Plasz_debias_Nside_2048_Galactic").fetchall()
+    
+    return all_Pdebias, all_Pdebiassig
+    
 def SC_241_posteriors(map353Gal = None, cov353Gal = None, firstnpoints = 1000):
     """
     Calculate 2D Bayesian posteriors for Planck data.
