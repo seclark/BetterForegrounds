@@ -726,19 +726,37 @@ def single_posterior(hp_index, wlen = 75):
     
     # We will sample P on a grid from -7 sigma to +7 sigma. Current implementation assumes sigma_I = 0
     numsig = 7
-    sample_P = np.linspace(-numsig*Pdebiassig + Pdebias, numsig*Pdebiassig + Pdebias, len(psi0_all))
+    beginP = Pdebias - numsig*Pdebiassig
+    endP = Pdebias + numsig*Pdebiassig
+    print(beginP, endP, Pdebias, Pdebiassig)
+    sample_P = np.linspace(beginP, endP, len(psi0_all))
     
     # Turn sample of P into sample of p by dividing by I (p = P/I)
     I0 = planck_tqu_cursor.execute("SELECT T FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
     p0_all = sample_P/I0
-
-    print(I0, p0_all)
+    
+    print(I0)
+    
+    # Also get naive P
+    Qmeas = planck_tqu_cursor.execute("SELECT Q FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
+    Umeas = planck_tqu_cursor.execute("SELECT U FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
+    Pnaive = np.sqrt(Qmeas[0]**2 + Umeas[0]**2)
+    
+    beginP = Pnaive - numsig*Pdebiassig
+    endP = Pnaive + numsig*Pdebiassig
+    print(beginP, endP, Pnaive, Pdebiassig)
+    sample_P = np.linspace(beginP, endP, len(psi0_all))
+    p0_all_naive = sample_P/I0
 
     posterior = Posterior(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165)
     
+    posterior_naive = Posterior(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all_naive, psi0_all, npsample = 165, npsisample = 165)
+    
     plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165)
     
-    return posterior
+    plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all_naive, psi0_all, npsample = 165, npsisample = 165)
+    
+    return posterior, posterior_naive
     
 class BayesianComponent():
     """
@@ -754,7 +772,7 @@ class BayesianComponent():
         Integrates over highest-dimension axis.
         """
         axis_num = field.ndim - 1
-        integrated_field = np.trapz(field, dx = dx)
+        integrated_field = np.trapz(field, dx = dx, axis = axis_num)
         
         return integrated_field
     
