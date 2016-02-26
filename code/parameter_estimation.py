@@ -747,13 +747,12 @@ def single_posterior(hp_index, wlen = 75):
     print(beginP, endP, Pnaive, Pdebiassig)
     sample_P = np.linspace(beginP, endP, len(psi0_all))
     p0_all_naive = sample_P/I0
+    
+    # Sampling should cover naive as well as debiased P in range
 
     posterior = Posterior(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165)
-    
     posterior_naive = Posterior(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all_naive, psi0_all, npsample = 165, npsisample = 165)
-    
     plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165)
-    
     plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all_naive, psi0_all, npsample = 165, npsisample = 165)
     
     return posterior, posterior_naive
