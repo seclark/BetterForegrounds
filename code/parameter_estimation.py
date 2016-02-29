@@ -759,13 +759,23 @@ def single_posterior(hp_index, wlen = 75):
     plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165)
     plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all_naive, psi0_all, npsample = 165, npsisample = 165)
     
-    return posterior, posterior_naive
+    return posterior, posterior_naive, p0_all_naive, psi0_all
     
 def mean_bayesian_posterior(posterior, sample_p0 = None, sample_psi0 = None):
     """
     First order moments of the posterior PDF
     """
     
+    grid_sample_p0 = np.tile(sample_p0, (len(sample_psi0), 1))
+    
+    moment1 = grid_sample_p0*posterior
+    
+    pMB = np.trapz(moment1, dx = sample_p0[1] - sample_p0[0], axis = 1)
+    
+    
+    pMB = np.trapz(pMB, dx = sample_psi0[1] - sample_psi0[0])
+    
+    return pMB
     
 class BayesianComponent():
     """
