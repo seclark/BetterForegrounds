@@ -742,9 +742,13 @@ def single_posterior(hp_index, wlen = 75):
     Umeas = planck_tqu_cursor.execute("SELECT U FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
     Pnaive = np.sqrt(Qmeas[0]**2 + Umeas[0]**2)
     
-    beginP = Pnaive - numsig*Pdebiassig
-    endP = Pnaive + numsig*Pdebiassig
-    print(beginP, endP, Pnaive, Pdebiassig)
+    minPnaive = Pnaive - numsig*Pdebiassig
+    maxPnaive = Pnaive + numsig*Pdebiassig
+    
+    beginP = max((0.0, minPnaive))
+    endP = min((1.0, maxPnaive))
+    print(beginP, endP, maxPnaive, minPnaive, Pdebiassig)
+    
     sample_P = np.linspace(beginP, endP, len(psi0_all))
     p0_all_naive = sample_P/I0
     
@@ -867,7 +871,7 @@ class Likelihood(BayesianComponent):
         lharrbig[0, 0, :] = measpart0 - truepart0
         lharrbig[0, 1, :] = measpart1 - truepart1
 
-        self.likelihood = (1/(np.pi*self.sigpGsq))*np.exp(-0.5*np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', invsig, rharrbig)))
+        self.likelihood = (1.0/(np.pi*self.sigpGsq))*np.exp(-0.5*np.einsum('ij...,jk...->ik...', lharrbig, np.einsum('ij...,jk...->ik...', invsig, rharrbig)))
         self.likelihood = self.likelihood.reshape(nsample, nsample)
 
 class Posterior(BayesianComponent):
