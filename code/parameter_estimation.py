@@ -757,6 +757,12 @@ def single_posterior(hp_index, wlen = 75):
     
     return posterior, posterior_naive
     
+def mean_bayesian_posterior(posterior, sample_p0 = None, sample_psi0 = None):
+    """
+    First order moments of the posterior PDF
+    """
+    
+    
 class BayesianComponent():
     """
     Base class for building Bayesian pieces
