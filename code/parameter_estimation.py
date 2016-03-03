@@ -816,10 +816,23 @@ def single_posterior(hp_index, wlen = 75):
     plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all_naive, psi0_all, npsample = 165, npsisample = 165)
     
     return posterior, posterior_naive, p0_all_naive, psi0_all
+
+def center_psi_measurement(array, sample_psi, psi_meas):
+
+    # Find index of value closest to psi_meas - pi/2
+    psi_meas_indx = np.abs(sample_psi - np.mod(psi_meas - np.pi/2, np.pi)).argmin()
+    
+    print(psi_meas_indx, sample_psi[psi_meas_indx])
+    
+    rolled_sample_psi = np.roll(sample_psi, -psi_meas_indx)
+    rolled_array = np.roll(array, -psi_meas_indx, axis = 0)
+    
+    return rolled_array, rolled_sample_psi
+    
     
 def mean_bayesian_posterior(posterior, sample_p0 = None, sample_psi0 = None):
     """
-    First order moments of the posterior PDF
+    Integrated first order moments of the posterior PDF
     """
     
     grid_sample_p0 = np.tile(sample_p0, (len(sample_p0), 1))
@@ -848,17 +861,19 @@ def mean_bayesian_posterior(posterior, sample_p0 = None, sample_psi0 = None):
     psi0moment1 = grid_sample_psi0*posterior
     
     # Integrate over p
-    psiMB = np.trapz(psi0moment1, dx = pdx, axis = 0)
+    psiMB1 = np.trapz(psi0moment1, dx = pdx, axis = 0)
     
     # Find index of value closest to pi/2
-    piover2_indx = np.abs(sample_psi0 - np.pi/2).argmin()
-    psiMB = np.roll(psiMB, -piover2_indx, axis = 0)
-    sample_psi0 = np.roll(sample_psi0, -piover2_indx)
+    #piover2_indx = np.abs(sample_psi0 - np.pi/2).argmin()
+    #psiMB1 = np.roll(psiMB1, -piover2_indx, axis = 0)
+    #sample_psi0 = np.roll(sample_psi0, -piover2_indx)
+    
+    rolled_array, rolled_sample_psi = center_psi_measurement(psiMB1, sample_psi0, posterior.naive_psi)
     
     # Integrate over psi
-    psiMB = np.trapz(psiMB, dx = psidx)
+    psiMB = np.trapz(psiMB1, dx = psidx)
     
-    return pMB, psiMB
+    return pMB, psiMB, psiMB1, sample_psi0
     
 def plot_sampled_posterior(hp_index):
     posterior, posterior_naive, p0_all_naive, psi0_all = single_posterior(hp_index)
@@ -923,6 +938,9 @@ class Likelihood(BayesianComponent):
         BayesianComponent.__init__(self, hp_index)      
         (self.hp_index, self.T, self.Q, self.U) = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (self.hp_index,)).fetchone()
         (self.hp_index, self.TT, self.TQ, self.TU, self.TQa, self.QQ, self.QU, self.TUa, self.QUa, self.UU) = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (self.hp_index,)).fetchone()
+        
+        # Naive psi
+        self.naive_psi = np.mod(0.5*np.arctan2(self.U, self.Q), np.pi)
         
         # sigma_p as defined in arxiv:1407.0178v1 Eqn 3.
         self.sigma_p = np.zeros((2, 2), np.float_) # [sig_Q^2, sig_QU // sig_QU, UU]
@@ -989,6 +1007,8 @@ class Posterior(BayesianComponent):
         # Instantiate posterior components
         prior = Prior(hp_index, rht_cursor, npsample = npsample, npsisample = npsisample)
         likelihood = Likelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all)
+        
+        self.naive_psi = likelihood.naive_psi
         
         self.prior = prior.prior
         self.normed_prior = prior.normed_prior#/np.max(prior.normed_prior)
