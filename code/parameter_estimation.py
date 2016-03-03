@@ -825,10 +825,10 @@ def mean_bayesian_posterior(posterior, sample_p0 = None, sample_psi0 = None):
     grid_sample_p0 = np.tile(sample_p0, (len(sample_p0), 1))
     grid_sample_psi0 = np.tile(np.reshape(sample_psi0, (len(sample_psi0), 1)), (1, len(sample_psi0)))
     
-    print(posterior.shape)
-    
+    # First moment of p0 map
     p0moment1 = grid_sample_p0*posterior
     
+    # Sampling width for p
     pdx = sample_p0[1] - sample_p0[0]
     
     # Reverse psi's so that they monotonically ascend
@@ -838,14 +838,16 @@ def mean_bayesian_posterior(posterior, sample_p0 = None, sample_psi0 = None):
     # Reverse posterior in the psi dimension as well
     posterior = posterior[::-1, :]
     
-    print(pdx, psidx, "psidx")
+    # Integrate over p
     pMB1 = np.trapz(p0moment1, dx = pdx, axis = 1)
     
+    # Integrate over psi
     pMB = np.trapz(pMB1, dx = psidx)
     
-    print(grid_sample_psi0.shape, posterior.shape)
+    # First moment of psi0 map
     psi0moment1 = grid_sample_psi0*posterior
     
+    # Integrate over p
     psiMB = np.trapz(psi0moment1, dx = pdx, axis = 0)
     
     # Find index of value closest to pi/2
@@ -853,6 +855,7 @@ def mean_bayesian_posterior(posterior, sample_p0 = None, sample_psi0 = None):
     psiMB = np.roll(psiMB, -piover2_indx, axis = 0)
     sample_psi0 = np.roll(sample_psi0, -piover2_indx)
     
+    # Integrate over psi
     psiMB = np.trapz(psiMB, dx = psidx)
     
     return pMB, psiMB
