@@ -770,17 +770,17 @@ def mean_bayesian_posterior(posterior, sample_p0 = None, sample_psi0 = None):
     
     moment1 = grid_sample_p0*posterior
     
-    pMB = np.trapz(moment1, dx = sample_p0[1] - sample_p0[0], axis = 1)
+    pMB = np.trapz(moment1, dx = sample_psi0[1] - sample_psi0[0], axis = 0)
     
     # Find index of value closest to pi/2
     piover2_indx = np.abs(sample_psi0 - np.pi/2).argmin()
-    
     pMB = np.roll(pMB, -piover2_indx, axis = 0)
+    sample_psi0 = np.roll(sample_psi0, -piover2_indx)
     
     pMB = np.trapz(pMB, dx = sample_psi0[1] - sample_psi0[0])
     
     
-    return pMB, moment1
+    return pMB, moment1, grid_sample_p0
     
 class BayesianComponent():
     """
