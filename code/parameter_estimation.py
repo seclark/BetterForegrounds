@@ -696,6 +696,56 @@ def plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov
     
     plt.subplots_adjust(wspace = 0.8)
     
+def plot_bayesian_components_from_posterior(pp):
+    fig = plt.figure(figsize = (14, 4), facecolor = "white")
+    ax1 = fig.add_subplot(131)
+    ax2 = fig.add_subplot(132)
+    ax3 = fig.add_subplot(133)
+    
+    psi0_all = pp.sample_psi0
+    p0_all = pp.sample_p0
+    
+    cmap = "cubehelix"
+    im1 = ax1.imshow(pp.planck_likelihood, cmap = cmap)
+    ax1.set_title(r"$\mathrm{Planck}$ $\mathrm{Likelihood}$", size = 20)
+    div = make_axes_locatable(ax1)
+    cax = div.append_axes("right", size="15%", pad=0.05)
+    cbar = plt.colorbar(im1, cax=cax, format=ticker.FuncFormatter(latex_formatter))
+
+    im2 = ax2.imshow(pp.normed_prior, cmap = cmap)
+    ax2.set_title(r"$\mathrm{RHT}$ $\mathrm{Prior}$", size = 20)
+    div = make_axes_locatable(ax2)
+    cax = div.append_axes("right", size="15%", pad=0.05)
+    cbar = plt.colorbar(im2, cax=cax, format=ticker.FuncFormatter(latex_formatter))
+
+    im3 = ax3.pcolor(p0_all, psi0_all, pp.normed_posterior, cmap = cmap)
+
+    #im3 = ax3.imshow(pp.normed_posterior, cmap = cmap)
+    ax3.set_title(r"$\mathrm{Posterior}$", size = 20)
+    div = make_axes_locatable(ax3)
+    cax = div.append_axes("right", size="15%", pad=0.05)
+    cbar = plt.colorbar(im3, cax=cax, format=ticker.FuncFormatter(latex_formatter))
+    
+    
+    #maxval = np.nanmax(B2D)
+    #levels = np.asarray([0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 0.7, 0.9])*maxval
+    #obj = ax.contour(p0s, psi0s, B2D, levels, extend = "both", colors = "gray")
+    #ax3.set_xlim(p0_all[0], p0_all[-1])
+    #ax3.set_ylim(psi0_all[0], psi0_all[-1])
+    
+    axs = [ax1, ax2]#, ax3]
+    for ax in axs:
+        ax.set_xlabel(r"$\mathrm{p}$", size = 20)
+        ax.set_ylabel(r"$\psi$", size = 20)
+        ax.set_xticks(np.arange(len(p0_all))[::30])
+        ax.set_xticklabels([r"${0:.2f}$".format(p0) for p0 in np.round(p0_all[::20], decimals = 2)])
+        ax.set_yticks(np.arange(len(psi0_all))[::20])
+        ax.set_yticklabels([r"${0:.1f}$".format(psi0) for psi0 in np.round(np.degrees(psi0_all[::20]), decimals = 2)])
+    
+    plt.subplots_adjust(wspace = 0.8)
+    
+    return ax1, ax2, ax3
+    
 def single_posterior(hp_index, wlen = 75):
     
     # Planck covariance database
@@ -742,6 +792,12 @@ def single_posterior(hp_index, wlen = 75):
     Umeas = planck_tqu_cursor.execute("SELECT U FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
     Pnaive = np.sqrt(Qmeas[0]**2 + Umeas[0]**2)
     
+    print("Naive P is {}".format(Pnaive))
+    print("Naive p is {}".format(Pnaive/I0))
+    print("Debiased P is {}".format(Pdebias))
+    print("Debiased p is {}".format(Pdebias/I0[0]))
+    print("Naive psi is {}".format(np.mod(0.5*np.arctan2(Umeas, Qmeas), np.pi)))
+    
     minPnaive = Pnaive - numsig*Pdebiassig
     maxPnaive = Pnaive + numsig*Pdebiassig
     
@@ -766,21 +822,47 @@ def mean_bayesian_posterior(posterior, sample_p0 = None, sample_psi0 = None):
     First order moments of the posterior PDF
     """
     
-    grid_sample_p0 = np.tile(sample_p0, (len(sample_psi0), 1))
+    grid_sample_p0 = np.tile(sample_p0, (len(sample_p0), 1))
+    grid_sample_psi0 = np.tile(np.reshape(sample_psi0, (len(sample_psi0), 1)), (1, len(sample_psi0)))
     
-    moment1 = grid_sample_p0*posterior
+    print(posterior.shape)
     
-    pMB = np.trapz(moment1, dx = sample_psi0[1] - sample_psi0[0], axis = 0)
+    p0moment1 = grid_sample_p0*posterior
+    
+    pdx = sample_p0[1] - sample_p0[0]
+    
+    # Reverse psi's so that they monotonically ascend
+    sample_psi0 = sample_psi0[::-1]
+    psidx = sample_psi0[1] - sample_psi0[0]
+    
+    # Reverse posterior in the psi dimension as well
+    posterior = posterior[::-1, :]
+    
+    print(pdx, psidx, "psidx")
+    pMB1 = np.trapz(p0moment1, dx = pdx, axis = 1)
+    
+    pMB = np.trapz(pMB1, dx = psidx)
+    
+    print(grid_sample_psi0.shape, posterior.shape)
+    psi0moment1 = grid_sample_psi0*posterior
+    
+    psiMB = np.trapz(psi0moment1, dx = pdx, axis = 0)
     
     # Find index of value closest to pi/2
     piover2_indx = np.abs(sample_psi0 - np.pi/2).argmin()
-    pMB = np.roll(pMB, -piover2_indx, axis = 0)
+    psiMB = np.roll(psiMB, -piover2_indx, axis = 0)
     sample_psi0 = np.roll(sample_psi0, -piover2_indx)
     
-    pMB = np.trapz(pMB, dx = sample_psi0[1] - sample_psi0[0])
+    psiMB = np.trapz(psiMB, dx = psidx)
     
+    return pMB, psiMB
     
-    return pMB, moment1, grid_sample_p0
+def plot_sampled_posterior(hp_index):
+    posterior, posterior_naive, p0_all_naive, psi0_all = single_posterior(hp_index)
+    pMB, psiMB = mean_bayesian_posterior(posterior_naive.normed_posterior, sample_psi0 = psi0_all, sample_p0 = p0_all_naive)
+    
+    ax1, ax2, ax3 = plot_bayesian_components_from_posterior(posterior_naive)
+    ax3.plot(pMB, np.degrees(psiMB), '+', ms = 20, color = "white")
     
 class BayesianComponent():
     """
@@ -896,6 +978,10 @@ class Posterior(BayesianComponent):
     
     def __init__(self, hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165):
         BayesianComponent.__init__(self, hp_index)  
+        
+        # Sample arrays
+        self.sample_p0 = p0_all
+        self.sample_psi0 = psi0_all
         
         # Instantiate posterior components
         prior = Prior(hp_index, rht_cursor, npsample = npsample, npsisample = npsisample)
