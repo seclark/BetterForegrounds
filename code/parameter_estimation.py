@@ -828,12 +828,24 @@ def center_psi_measurement(array, sample_psi, psi_meas):
     rolled_array = np.roll(array, -psi_meas_indx, axis = 0)
     
     return rolled_array, rolled_sample_psi
+
+def wrap_to_pi_over_2(angles):
+    while np.nanmax(angles) > np.pi/2:
+        angles[np.where(angles > np.pi/2)] = angles[np.where(angles > np.pi/2)] - np.pi
+    while np.nanmin(angles) < -np.pi/2:
+        angles[np.where(angles < -np.pi/2)] = angles[np.where(angles < -np.pi/2)] + np.pi
     
+    return angles
     
-def mean_bayesian_posterior(posterior, sample_p0 = None, sample_psi0 = None):
+def mean_bayesian_posterior(posterior_obj, sample_p0 = None, sample_psi0 = None):
     """
     Integrated first order moments of the posterior PDF
     """
+    
+    posterior = posterior_obj.normed_posterior
+    
+    # Wrap to [-pi/2, pi/2] domain
+    sample_psi0 = wrap_to_pi_over_2(sample_psi0)
     
     grid_sample_p0 = np.tile(sample_p0, (len(sample_p0), 1))
     grid_sample_psi0 = np.tile(np.reshape(sample_psi0, (len(sample_psi0), 1)), (1, len(sample_psi0)))
@@ -844,21 +856,25 @@ def mean_bayesian_posterior(posterior, sample_p0 = None, sample_psi0 = None):
     # Sampling width for p
     pdx = sample_p0[1] - sample_p0[0]
     
-    # Reverse psi's so that they monotonically ascend
-    sample_psi0 = sample_psi0[::-1]
+    # Reverse psi's so that they ascend
+    #sample_psi0 = sample_psi0[::-1]
     psidx = sample_psi0[1] - sample_psi0[0]
     
     # Reverse posterior in the psi dimension as well
-    posterior = posterior[::-1, :]
+    #posterior = posterior[::-1, :]
     
     # Integrate over p
-    pMB1 = np.trapz(p0moment1, dx = pdx, axis = 1)
+    pMB1 = np.trapz(p0moment1, dx = pdx, axis = 0)
     
     # Integrate over psi
     pMB = np.trapz(pMB1, dx = psidx)
     
+    rolled_posterior, rolled_sample_psi = center_psi_measurement(posterior, sample_psi0, posterior_obj.naive_psi)
+    
+    rolled_grid_sample_psi0 = np.tile(np.reshape(rolled_sample_psi, (len(rolled_sample_psi), 1)), (1, len(rolled_sample_psi)))
+    
     # First moment of psi0 map
-    psi0moment1 = grid_sample_psi0*posterior
+    psi0moment1 = rolled_grid_sample_psi0*rolled_posterior
     
     # Integrate over p
     psiMB1 = np.trapz(psi0moment1, dx = pdx, axis = 0)
@@ -868,12 +884,10 @@ def mean_bayesian_posterior(posterior, sample_p0 = None, sample_psi0 = None):
     #psiMB1 = np.roll(psiMB1, -piover2_indx, axis = 0)
     #sample_psi0 = np.roll(sample_psi0, -piover2_indx)
     
-    rolled_array, rolled_sample_psi = center_psi_measurement(psiMB1, sample_psi0, posterior.naive_psi)
-    
     # Integrate over psi
     psiMB = np.trapz(psiMB1, dx = psidx)
     
-    return pMB, psiMB, psiMB1, sample_psi0
+    return pMB, psiMB, pMB1, psiMB1, sample_psi0, rolled_grid_sample_psi0, rolled_posterior
     
 def plot_sampled_posterior(hp_index):
     posterior, posterior_naive, p0_all_naive, psi0_all = single_posterior(hp_index)
