@@ -837,6 +837,28 @@ def wrap_to_pi_over_2(angles):
     
     return angles
     
+def test_estimator():
+
+    tp0, tp, p0_all, psi0_all = single_posterior(24066112)
+    test_posterior = np.zeros((165, 165), np.float_)
+    test_posterior[5, 100] = 100
+    
+    test_sample_psi = np.linspace(0, np.pi, 165)
+    test_sample_p = np.linspace(0, 1, 165)
+    print("test naive p is {}".format(test_sample_p[100]))
+    print("test naive psi is {}".format(test_sample_psi[5]))
+    
+    tp.posterior = test_posterior
+    norm_factor = tp.integrate_highest_dimension(test_posterior, dx = np.pi/165)
+    norm_factor = tp.integrate_highest_dimension(norm_factor, dx = 1.0/165)
+    print("norm factor is {}".format(norm_factor))
+    tp.normed_posterior = tp.posterior/norm_factor
+    
+    testpMB, testpsiMB, testpMB1, testpsiMB1, testsample_psi0, testrolled_grid_sample_psi0, testrolled_posterior = mean_bayesian_posterior(tp, sample_psi0 = test_sample_psi, sample_p0 = test_sample_p)
+    
+    print("pMB is {}".format(testpMB))
+    print("psiMB is {}".format(testpsiMB))
+    
 def mean_bayesian_posterior(posterior_obj, sample_p0 = None, sample_psi0 = None):
     """
     Integrated first order moments of the posterior PDF
