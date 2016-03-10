@@ -664,7 +664,7 @@ def plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov
     ax2 = fig.add_subplot(132)
     ax3 = fig.add_subplot(133)
     
-    pp = Posterior(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = npsample, npsisample = npsisample)
+    pp = Posterior(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all)
     
     cmap = "cubehelix"
     im1 = ax1.imshow(pp.planck_likelihood, cmap = cmap)
@@ -792,10 +792,10 @@ def single_posterior(hp_index, wlen = 75):
     Umeas = planck_tqu_cursor.execute("SELECT U FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
     Pnaive = np.sqrt(Qmeas[0]**2 + Umeas[0]**2)
     
-    print("Naive P is {}".format(Pnaive))
+    #print("Naive P is {}".format(Pnaive))
     print("Naive p is {}".format(Pnaive/I0))
-    print("Debiased P is {}".format(Pdebias))
-    print("Debiased p is {}".format(Pdebias/I0[0]))
+    #print("Debiased P is {}".format(Pdebias))
+    #print("Debiased p is {}".format(Pdebias/I0[0]))
     print("Naive psi is {}".format(np.mod(0.5*np.arctan2(Umeas, Qmeas), np.pi)))
     
     minPnaive = Pnaive - numsig*Pdebiassig
@@ -810,12 +810,12 @@ def single_posterior(hp_index, wlen = 75):
     
     # Sampling should cover naive as well as debiased P in range
 
-    posterior = Posterior(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165)
-    posterior_naive = Posterior(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all_naive, psi0_all, npsample = 165, npsisample = 165)
-    plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165)
+    #posterior = Posterior(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all)
+    posterior_naive = Posterior(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all_naive, psi0_all)
+    #plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165)
     plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all_naive, psi0_all, npsample = 165, npsisample = 165)
     
-    return posterior, posterior_naive, p0_all_naive, psi0_all
+    return posterior_naive, p0_all_naive, psi0_all
 
 def center_psi_measurement(array, sample_psi, psi_meas):
 
@@ -837,28 +837,59 @@ def wrap_to_pi_over_2(angles):
     
     return angles
     
-def test_estimator():
+def test_estimator(fakeit = True):
 
-    tp0, tp, p0_all, psi0_all = single_posterior(24066112)
-    test_posterior = np.zeros((165, 165), np.float_)
-    test_posterior[5, 100] = 100
+    tp, p0_all, psi0_all = single_posterior(24066112)
     
-    test_sample_psi = np.linspace(0, np.pi, 165)
-    test_sample_p = np.linspace(0, 1, 165)
-    print("test naive p is {}".format(test_sample_p[100]))
-    print("test naive psi is {}".format(test_sample_psi[5]))
+    print("TEST BEGINS")
     
-    tp.posterior = test_posterior
-    norm_factor = tp.integrate_highest_dimension(test_posterior, dx = np.pi/165)
-    norm_factor = tp.integrate_highest_dimension(norm_factor, dx = 1.0/165)
-    print("norm factor is {}".format(norm_factor))
-    tp.normed_posterior = tp.posterior/norm_factor
+    if fakeit is True:
+        test_posterior = np.ones((165, 165), np.float_)
+        test_posterior[5, 100] = 100
     
-    testpMB, testpsiMB, testpMB1, testpsiMB1, testsample_psi0, testrolled_grid_sample_psi0, testrolled_posterior = mean_bayesian_posterior(tp, sample_psi0 = test_sample_psi, sample_p0 = test_sample_p)
+        test_sample_psi = np.linspace(0, np.pi, 165)
+        test_sample_p = np.linspace(0, 1, 165)
+        
+        print("test naive p is {}".format(test_sample_p[100]))
+        print("test naive psi is {}".format(test_sample_psi[5]))
+        
+        test_sample_psi = test_sample_psi[::-1]
+        test_posterior = test_posterior[::-1, :]
+        
+        tp.sample_p0 = test_sample_p
+        tp.sample_psi0 = test_sample_psi
+        
+        tp.psi_dx = test_sample_psi[1] - test_sample_psi[0]
+        tp.p_dx = test_sample_p[1] - test_sample_p[0]
+        
+        if tp.psi_dx < 0:
+            tp.psi_dx *= -1
+            
+        tp.posterior = test_posterior
+        norm_factor = tp.integrate_highest_dimension(test_posterior, dx = tp.psi_dx)
+        norm_factor = tp.integrate_highest_dimension(norm_factor, dx = tp.p_dx)
+        print("norm factor is {}".format(norm_factor))
+        tp.normed_posterior = tp.posterior/norm_factor
+        
+    else:
+        test_sample_psi = psi0_all
+        test_sample_p = p0_all
+    
+    testpMB, testpsiMB, testpMB1, testpsiMB1, testsample_psi0, testrolled_grid_sample_psi0, testrolled_posterior, p0moment1, psi0moment1 = mean_bayesian_posterior(tp, sample_psi0 = test_sample_psi, sample_p0 = test_sample_p)
     
     print("pMB is {}".format(testpMB))
     print("psiMB is {}".format(testpsiMB))
     
+    return testpMB, testpsiMB, testpMB1, testpsiMB1, testsample_psi0, testrolled_grid_sample_psi0, testrolled_posterior, p0moment1, psi0moment1
+
+def test_normalization(posterior_obj, pdx, psidx):
+    norm_posterior_test = posterior_obj.integrate_highest_dimension(posterior_obj.normed_posterior, dx = psidx)
+    norm_posterior_test = posterior_obj.integrate_highest_dimension(norm_posterior_test, dx = pdx)
+    
+    print("Normalized posterior is {}".format(norm_posterior_test))
+    
+    return norm_posterior_test
+
 def mean_bayesian_posterior(posterior_obj, sample_p0 = None, sample_psi0 = None):
     """
     Integrated first order moments of the posterior PDF
@@ -866,8 +897,11 @@ def mean_bayesian_posterior(posterior_obj, sample_p0 = None, sample_psi0 = None)
     
     posterior = posterior_obj.normed_posterior
     
+    sample_p0 = posterior_obj.sample_p0
+    sample_psi0 = posterior_obj.sample_psi0
+    
     # Wrap to [-pi/2, pi/2] domain
-    sample_psi0 = wrap_to_pi_over_2(sample_psi0)
+    #sample_psi0 = wrap_to_pi_over_2(sample_psi0)
     
     grid_sample_p0 = np.tile(sample_p0, (len(sample_p0), 1))
     grid_sample_psi0 = np.tile(np.reshape(sample_psi0, (len(sample_psi0), 1)), (1, len(sample_psi0)))
@@ -876,11 +910,23 @@ def mean_bayesian_posterior(posterior_obj, sample_p0 = None, sample_psi0 = None)
     p0moment1 = grid_sample_p0*posterior
     
     # Sampling width for p
-    pdx = sample_p0[1] - sample_p0[0]
+    pdx = posterior_obj.p_dx
+    #pdx = sample_p0[1] - sample_p0[0]
     
     # Reverse psi's so that they ascend
     #sample_psi0 = sample_psi0[::-1]
-    psidx = sample_psi0[1] - sample_psi0[0]
+    #psidx = sample_psi0[1] - sample_psi0[0]
+    psidx = posterior_obj.psi_dx
+    
+    # Test that normed posterior is normed
+    norm_posterior_test = test_normalization(posterior_obj, pdx, psidx)
+    if norm_posterior_test < 1.0:
+        print("")
+    
+    #if psidx < 0:
+    #    psidx *= -1
+    
+    print("Sampling pdx is {}, psidx is {}".format(pdx, psidx))
     
     # Reverse posterior in the psi dimension as well
     #posterior = posterior[::-1, :]
@@ -891,7 +937,12 @@ def mean_bayesian_posterior(posterior_obj, sample_p0 = None, sample_psi0 = None)
     # Integrate over psi
     pMB = np.trapz(pMB1, dx = psidx)
     
-    rolled_posterior, rolled_sample_psi = center_psi_measurement(posterior, sample_psi0, posterior_obj.naive_psi)
+    center_psi = False
+    if center_psi is True:
+        rolled_posterior, rolled_sample_psi = center_psi_measurement(posterior, sample_psi0, posterior_obj.naive_psi)
+    else:
+        rolled_posterior = posterior
+        rolled_sample_psi = sample_psi0
     
     rolled_grid_sample_psi0 = np.tile(np.reshape(rolled_sample_psi, (len(rolled_sample_psi), 1)), (1, len(rolled_sample_psi)))
     
@@ -909,7 +960,10 @@ def mean_bayesian_posterior(posterior_obj, sample_p0 = None, sample_psi0 = None)
     # Integrate over psi
     psiMB = np.trapz(psiMB1, dx = psidx)
     
-    return pMB, psiMB, pMB1, psiMB1, sample_psi0, rolled_grid_sample_psi0, rolled_posterior
+    print("pMB is {}".format(pMB))
+    print("psiMB is {}".format(psiMB))
+    
+    return pMB, psiMB, pMB1, psiMB1, sample_psi0, rolled_grid_sample_psi0, rolled_posterior, p0moment1, psi0moment1
     
 def plot_sampled_posterior(hp_index):
     posterior, posterior_naive, p0_all_naive, psi0_all = single_posterior(hp_index)
@@ -942,17 +996,37 @@ class Prior(BayesianComponent):
     Class for building RHT priors
     """
     
-    def __init__(self, hp_index, c, npsample = 165, npsisample = 165):
+    def __init__(self, hp_index, c, p0_all, psi0_all, reverse_RHT = False):
     
         BayesianComponent.__init__(self, hp_index)
         self.rht_data = c.execute("SELECT * FROM RHT_weights WHERE id = ?", (self.hp_index,)).fetchone()
         
+        # Discard first element because it is the healpix id
+        self.rht_data = self.rht_data[1:]
+        
+        self.sample_psi0 = psi0_all
+        self.sample_p0 = p0_all
+        
         try:
             # Add 0.7 because that was the RHT threshold 
-            self.prior = (np.array([self.rht_data[1:]]*npsample).T + 0.7)*75
+            npsample = len(self.sample_p0)
             
-            self.integrated_over_psi = self.integrate_highest_dimension(self.prior, dx = np.pi/npsisample)
-            self.integrated_over_p_and_psi = self.integrate_highest_dimension(self.integrated_over_psi, dx = 1.0/npsample)
+            if reverse_RHT is True:
+                print("Reversing RHT data")
+                self.rht_data = self.rht_data[::-1]
+            
+            self.prior = (np.array([self.rht_data]*npsample).T + 0.7)*75
+            
+            self.psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
+            self.p_dx = self.sample_p0[1] - self.sample_p0[0]
+            
+            if self.psi_dx < 0:
+                self.psi_dx *= -1
+            
+            print("psi dx is {}, p dx is {}".format(self.psi_dx, self.p_dx))
+            
+            self.integrated_over_psi = self.integrate_highest_dimension(self.prior, dx = self.psi_dx)
+            self.integrated_over_p_and_psi = self.integrate_highest_dimension(self.integrated_over_psi, dx = self.p_dx)
     
             # Normalize prior over domain
             self.normed_prior = self.prior/self.integrated_over_p_and_psi
@@ -1033,15 +1107,31 @@ class Posterior(BayesianComponent):
     Class for building a posterior composed of a Planck-based likelihood and an RHT prior
     """
     
-    def __init__(self, hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, npsample = 165, npsisample = 165):
+    def __init__(self, hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, reverse_RHT = False):
         BayesianComponent.__init__(self, hp_index)  
         
         # Sample arrays
         self.sample_p0 = p0_all
         self.sample_psi0 = psi0_all
         
+        p_dx = p0_all[1] - p0_all[0]
+        psi_dx = psi0_all[1] - psi0_all[0]
+        
+        if psi_dx < 0:
+            psi_dx *= -1
+        
+        self.p_dx = p_dx
+        self.psi_dx = psi_dx    
+        
+        #    psi0_all = psi0_all[::-1]
+        #    psi_dx = psi0_all[1] - psi0_all[0]
+        #    reverse_RHT = True
+        
+        print("Posterior psi dx is {}, p dx is {}".format(psi_dx, p_dx))
+        self.reverse_RHT = reverse_RHT
+        
         # Instantiate posterior components
-        prior = Prior(hp_index, rht_cursor, npsample = npsample, npsisample = npsisample)
+        prior = Prior(hp_index, rht_cursor, p0_all, psi0_all, reverse_RHT = reverse_RHT)
         likelihood = Likelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all)
         
         self.naive_psi = likelihood.naive_psi
@@ -1053,8 +1143,8 @@ class Posterior(BayesianComponent):
         #self.posterior = np.einsum('ij,jk->ik', self.planck_likelihood, self.normed_prior)
         self.posterior = self.planck_likelihood*self.normed_prior
         
-        self.posterior_integrated_over_psi = self.integrate_highest_dimension(self.posterior, dx = np.pi/npsisample)
-        self.posterior_integrated_over_p_and_psi = self.integrate_highest_dimension(self.posterior_integrated_over_psi, dx = 1.0/npsample)
+        self.posterior_integrated_over_psi = self.integrate_highest_dimension(self.posterior, dx = psi_dx)
+        self.posterior_integrated_over_p_and_psi = self.integrate_highest_dimension(self.posterior_integrated_over_psi, dx = p_dx)
         
         self.normed_posterior = self.posterior/self.posterior_integrated_over_p_and_psi
     
