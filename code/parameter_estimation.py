@@ -687,8 +687,8 @@ def plot_bayesian_components(hp_index, rht_cursor, planck_tqu_cursor, planck_cov
     
     axs = [ax1, ax2, ax3]
     for ax in axs:
-        ax.set_xlabel(r"$\mathrm{p}$", size = 20)
-        ax.set_ylabel(r"$\psi$", size = 20)
+        ax.set_xlabel(r"$\mathrm{p_0}$", size = 20)
+        ax.set_ylabel(r"$\psi_0$", size = 20)
         ax.set_xticks(np.arange(len(p0_all))[::30])
         ax.set_xticklabels([r"${0:.2f}$".format(p0) for p0 in np.round(p0_all[::20], decimals = 2)])
         ax.set_yticks(np.arange(len(psi0_all))[::20])
@@ -735,8 +735,8 @@ def plot_bayesian_components_from_posterior(pp):
     
     axs = [ax1, ax2]#, ax3]
     for ax in axs:
-        ax.set_xlabel(r"$\mathrm{p}$", size = 20)
-        ax.set_ylabel(r"$\psi$", size = 20)
+        ax.set_xlabel(r"$\mathrm{p_0}$", size = 20)
+        ax.set_ylabel(r"$\psi_0$", size = 20)
         ax.set_xticks(np.arange(len(p0_all))[::30])
         ax.set_xticklabels([r"${0:.2f}$".format(p0) for p0 in np.round(p0_all[::20], decimals = 2)])
         ax.set_yticks(np.arange(len(psi0_all))[::20])
@@ -839,13 +839,13 @@ def wrap_to_pi_over_2(angles):
     
 def test_estimator(fakeit = True):
 
-    tp, p0_all, psi0_all = single_posterior(24066112)
+    tp, p0_all, psi0_all = single_posterior(24066112)#3643649)#3173221)#24066112)
     
     print("TEST BEGINS")
     
     if fakeit is True:
-        test_posterior = np.ones((165, 165), np.float_)
-        test_posterior[5, 100] = 100
+        test_posterior = np.zeros((165, 165), np.float_) + 0.00001
+        test_posterior[5, 100] = 1000.
     
         test_sample_psi = np.linspace(0, np.pi, 165)
         test_sample_p = np.linspace(0, 1, 165)
@@ -880,7 +880,7 @@ def test_estimator(fakeit = True):
     print("pMB is {}".format(testpMB))
     print("psiMB is {}".format(testpsiMB))
     
-    return testpMB, testpsiMB, testpMB1, testpsiMB1, testsample_psi0, testrolled_grid_sample_psi0, testrolled_posterior, p0moment1, psi0moment1
+    return tp, testpMB, testpsiMB, testpMB1, testpsiMB1, testsample_psi0, testrolled_grid_sample_psi0, testrolled_posterior, p0moment1, psi0moment1
 
 def test_normalization(posterior_obj, pdx, psidx):
     norm_posterior_test = posterior_obj.integrate_highest_dimension(posterior_obj.normed_posterior, dx = psidx)
