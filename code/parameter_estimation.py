@@ -25,6 +25,12 @@ import RHT_tools
  Simple psi, p estimation routines.
 """
 
+def plot_p(tp):
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
+    
+    ax_posterior(ax1, tp.sample_p0, tp.sample_psi0, tp.normed_posterior)
+
 def ax_posterior(ax, p0s, psi0s, B2D, cmap = "hsv", colorbar = False):
     """
     Plot 2D posterior distribution on given axes instance
