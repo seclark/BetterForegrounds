@@ -61,10 +61,10 @@ def roll_RHT_zero_to_pi(rht_data, sample_psi):
     
     print("rolling data by", psi_0_indx, sample_psi[psi_0_indx])
     
-    rolled_sample_psi = np.roll(sample_psi, -psi_0_indx)
-    rolled_array = np.roll(rht_data, -psi_0_indx)
+    rolled_sample_psi = np.roll(sample_psi, -psi_0_indx -1)
+    rolled_rht = np.roll(rht_data, -psi_0_indx -1)
     
-    return rolled_array, rolled_sample_psi
+    return rolled_rht, rolled_sample_psi
 
 class Prior(BayesianComponent):
     """
