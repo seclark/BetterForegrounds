@@ -751,6 +751,25 @@ def plot_bayesian_components_from_posterior(pp):
     plt.subplots_adjust(wspace = 0.8)
     
     return ax1, ax2, ax3
+
+def plot_bayesian_posterior_from_posterior(pp, ax, cmap = "cubehelix"):
+    psi0_all = pp.sample_psi0
+    p0_all = pp.sample_p0
+    
+    #im1 = ax.imshow(pp.planck_likelihood, cmap = cmap)
+    im1 = ax.pcolor(p0_all, psi0_all, pp.planck_likelihood, cmap = cmap)
+    ax.set_title(r"$\mathrm{Planck}$ $\mathrm{Likelihood}$", size = 20)
+    div = make_axes_locatable(ax)
+    cax = div.append_axes("right", size="15%", pad=0.05)
+    cbar = plt.colorbar(im1, cax=cax, format=ticker.FuncFormatter(latex_formatter))
+
+    ax.set_xlabel(r"$\mathrm{p_0}$", size = 20)
+    ax.set_ylabel(r"$\psi_0$", size = 20)
+    ax.set_xticks(np.arange(len(p0_all))[::30])
+    ax.set_xticklabels([r"${0:.2f}$".format(p0) for p0 in np.round(p0_all[::20], decimals = 2)])
+    ax.set_yticks(np.arange(len(psi0_all))[::20])
+    ax.set_yticklabels([r"${0:.1f}$".format(psi0) for psi0 in np.round(np.degrees(psi0_all[::20]), decimals = 2)])
+    
     
 def single_posterior(hp_index, wlen = 75):
     
@@ -856,7 +875,39 @@ def make_gaussian(len, fwhm = 3, center = None):
     
     return np.exp(-4*np.log(2) * ((x-x0)**2 + (y-y0)**2) / fwhm**2)
     
-def test_estimator(fakeit = True):
+def test_estimator_gaussians():
+
+    fig = plt.figure()
+    ax1 = fig.add_subplot(131)
+    ax2 = fig.add_subplot(132)
+    ax3 = fig.add_subplot(133)
+    
+    axs = [ax1, ax2, ax3]
+    fwhms = [3, 8, 15]
+    for i, fwhm in enumerate(fwhms):
+        tp, testpMB, testpsiMB, testpMB1, testpsiMB1, testsample_psi0, testrolled_grid_sample_psi0, testrolled_posterior, p0moment1, psi0moment1 = test_estimator(fakeit = True, fwhm = fwhm)
+        
+        plot_bayesian_posterior_from_posterior(tp, axs[i])
+        
+        """
+        im = axs[i].imshow(testrolled_posterior, cmap = "cubehelix")
+        axs[i].plot(testpMB, np.degrees(testpsiMB), '+', ms = 20, color = "white")
+        
+        axs[i].set_title(r"$\mathrm{Posterior}$", size = 20)
+        div = make_axes_locatable(axs[i])
+        cax = div.append_axes("right", size="15%", pad=0.05)
+        cbar = plt.colorbar(im, cax=cax, format=ticker.FuncFormatter(latex_formatter))
+            
+        axs[i].set_xlabel(r"$\mathrm{p_0}$", size = 20)
+        axs[i].set_ylabel(r"$\psi_0$", size = 20)
+        axs[i].set_xticks(np.arange(len(tp.sample_p0))[::30])
+        axs[i].set_xticklabels([r"${0:.2f}$".format(p0) for p0 in np.round(tp.sample_p0[::20], decimals = 2)])
+        axs[i].set_yticks(np.arange(len(tp.sample_psi0))[::20])
+        axs[i].set_yticklabels([r"${0:.1f}$".format(psi0) for psi0 in np.round(np.degrees(tp.sample_psi0[::20]), decimals = 2)])
+        """
+        
+    plt.subplots_adjust(wspace = 0.8)
+def test_estimator(fakeit = True, fwhm = 3):
 
     tp, p0_all, psi0_all = single_posterior(24066112)#3643649)#3173221)#24066112)
     
@@ -866,7 +917,7 @@ def test_estimator(fakeit = True):
         #test_posterior = np.zeros((165, 165), np.float_) + 0.00001
         #test_posterior[5, 100] = 1000.
         
-        test_posterior = make_gaussian(165, center = [100, 5])
+        test_posterior = make_gaussian(165, fwhm = fwhm, center = [100, 5])
     
         test_sample_psi = np.linspace(0, np.pi, 165)
         test_sample_p = np.linspace(0, 1, 165)
