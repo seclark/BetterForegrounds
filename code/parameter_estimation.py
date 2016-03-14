@@ -843,6 +843,19 @@ def wrap_to_pi_over_2(angles):
     
     return angles
     
+def make_gaussian(len, fwhm = 3, center = None):
+
+    x = np.arange(0, len, 1, float)
+    y = x[:, np.newaxis]
+    
+    if center is None:
+        x0 = y0 = size // 2
+    else:
+        x0 = center[0]
+        y0 = center[1]
+    
+    return np.exp(-4*np.log(2) * ((x-x0)**2 + (y-y0)**2) / fwhm**2)
+    
 def test_estimator(fakeit = True):
 
     tp, p0_all, psi0_all = single_posterior(24066112)#3643649)#3173221)#24066112)
@@ -850,8 +863,10 @@ def test_estimator(fakeit = True):
     print("TEST BEGINS")
     
     if fakeit is True:
-        test_posterior = np.zeros((165, 165), np.float_) + 0.00001
-        test_posterior[5, 100] = 1000.
+        #test_posterior = np.zeros((165, 165), np.float_) + 0.00001
+        #test_posterior[5, 100] = 1000.
+        
+        test_posterior = make_gaussian(165, center = [100, 5])
     
         test_sample_psi = np.linspace(0, np.pi, 165)
         test_sample_p = np.linspace(0, 1, 165)
