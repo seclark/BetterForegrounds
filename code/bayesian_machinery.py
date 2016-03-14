@@ -44,7 +44,7 @@ class BayesianComponent():
         
         return integrated_field
     
-    def get_psi0_sampling_grid(self):
+    def get_psi0_sampling_grid(self, hp_index):
         # Create psi0 sampling grid
         wlen = 75
         psi0_sample_db = sqlite3.connect("theta_bin_0_wlen"+str(wlen)+"_db.sqlite")
@@ -84,22 +84,23 @@ class Prior(BayesianComponent):
         rht_cursor = rht_db.cursor()
         self.rht_data = rht_cursor.execute("SELECT * FROM RHT_weights WHERE id = ?", (self.hp_index,)).fetchone()
         
-        # Discard first element because it is the healpix id
-        self.rht_data = self.rht_data[1:]
-        
-        # Get sample psi data
-        self.sample_psi0 = self.get_psi0_sampling_grid()
-        
-        # Roll RHT data to [0, pi)
-        self.rht_data, self.sample_psi0 = roll_RHT_zero_to_pi(self.rht_data, self.sample_psi0)
-        
         try:
+            # Discard first element because it is the healpix id
+            self.rht_data = self.rht_data[1:]
+        
+            # Get sample psi data
+            self.sample_psi0 = self.get_psi0_sampling_grid(hp_index)
+        
+            # Roll RHT data to [0, pi)
+            self.rht_data, self.sample_psi0 = roll_RHT_zero_to_pi(self.rht_data, self.sample_psi0)
+        
             # Add 0.7 because that was the RHT threshold 
             npsample = len(self.sample_p0)
             
             if reverse_RHT is True:
                 print("Reversing RHT data")
                 self.rht_data = self.rht_data[::-1]
+                self.sample_psi0 = self.sample_psi0[::-1]
             
             self.prior = (np.array([self.rht_data]*npsample).T + 0.7)*75
             
@@ -107,6 +108,7 @@ class Prior(BayesianComponent):
             self.p_dx = self.sample_p0[1] - self.sample_p0[0]
             
             if self.psi_dx < 0:
+                print("Multiplying psi_dx by -1")
                 self.psi_dx *= -1
             
             print("psi dx is {}, p dx is {}".format(self.psi_dx, self.p_dx))
@@ -121,7 +123,7 @@ class Prior(BayesianComponent):
             if self.rht_data is None:
                 print("Index {} not found".format(hp_index))
             else:
-                print("Unknown TypeError")
+                print("Unknown TypeError when constructing RHT prior")
                 
                     
 class Likelihood(BayesianComponent):
@@ -193,16 +195,31 @@ class Posterior(BayesianComponent):
     Class for building a posterior composed of a Planck-based likelihood and an RHT prior
     """
     
-    def __init__(self, hp_index, rht_cursor, planck_tqu_cursor, planck_cov_cursor):
+    def __init__(self, hp_index, sample_p0 = None):
         BayesianComponent.__init__(self, hp_index)  
         
         # Instantiate posterior components
-        prior = Prior(hp_index, rht_cursor, p0_all, psi0_all, reverse_RHT = reverse_RHT)
-        likelihood = Likelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all)
+        prior = Prior(hp_index, reverse_RHT = True)
+        self.sample_psi0 = prior.sample_psi0
+        
+        if sample_p0 is None:
+            self.sample_p0 = np.linspace(0, 1, len(self.sample_psi0))
+        else:
+            self.sample_p0 = sample_p0
+        
+        # Planck covariance database
+        planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
+        planck_cov_cursor = planck_cov_db.cursor()
+    
+        # Planck TQU database
+        planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+        planck_tqu_cursor = planck_tqu_db.cursor()
+        
+        # Planck-based likelihood
+        likelihood = Likelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, self.sample_p0, self.sample_psi0)
         
         self.naive_psi = likelihood.naive_psi
         
-        self.prior = prior.prior
         self.normed_prior = prior.normed_prior#/np.max(prior.normed_prior)
         self.planck_likelihood = likelihood.likelihood
         
