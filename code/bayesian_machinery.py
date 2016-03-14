@@ -31,8 +31,9 @@ class BayesianComponent():
     Instantiated by healpix index
     """
     
-    def __init__(self, hp_index):
+    def __init__(self, hp_index, verbose = True):
         self.hp_index = hp_index
+        self.verbose = verbose
     
     def integrate_highest_dimension(self, field, dx = 1):
         """
@@ -54,24 +55,27 @@ class BayesianComponent():
         thets = RHT_tools.get_thets(wlen)
         self.sample_psi0 = np.mod(zero_theta - thets, np.pi)
         
-def roll_RHT_zero_to_pi(rht_data, sample_psi):
-
-    # Find index of value closest to 0
-    psi_0_indx = np.abs(sample_psi).argmin()
+        return self.sample_psi0
     
-    print("rolling data by", psi_0_indx, sample_psi[psi_0_indx])
+    def roll_RHT_zero_to_pi(self, rht_data, sample_psi):
+        # Find index of value closest to 0
+        psi_0_indx = np.abs(sample_psi).argmin()
+        
+        if self.verbose is True:    
+            print("rolling data by", psi_0_indx, sample_psi[psi_0_indx])
     
-    rolled_sample_psi = np.roll(sample_psi, -psi_0_indx -1)
-    rolled_rht = np.roll(rht_data, -psi_0_indx -1)
-    
-    return rolled_rht, rolled_sample_psi
+        # Needs 1 extra roll element to be monotonic
+        rolled_sample_psi = np.roll(sample_psi, -psi_0_indx - 1)
+        rolled_rht = np.roll(rht_data, -psi_0_indx - 1)
+        
+        return rolled_rht, rolled_sample_psi
 
 class Prior(BayesianComponent):
     """
     Class for building RHT priors
     """
     
-    def __init__(self, hp_index, p0_all, psi0_all, reverse_RHT = False):
+    def __init__(self, hp_index, reverse_RHT = False):
     
         BayesianComponent.__init__(self, hp_index)
         
@@ -83,9 +87,10 @@ class Prior(BayesianComponent):
         # Discard first element because it is the healpix id
         self.rht_data = self.rht_data[1:]
         
-        self.sample_psi0 = psi0_all
-        self.sample_p0 = p0_all
+        # Get sample psi data
+        self.sample_psi0 = self.get_psi0_sampling_grid()
         
+        # Roll RHT data to [0, pi)
         self.rht_data, self.sample_psi0 = roll_RHT_zero_to_pi(self.rht_data, self.sample_psi0)
         
         try:
