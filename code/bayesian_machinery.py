@@ -281,3 +281,90 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     plot_bayesian_component_from_posterior(posterior_obj, component = "posterior", ax = ax3, cmap = cmap)
     
     plt.subplots_adjust(wspace = 0.8)
+    
+    pMB, psiMB = mean_bayesian_posterior(posterior_obj)
+    ax3.plot(pMB, psiMB, '+', ms = 20, color = "white")
+    
+def naive_planck_measurements(hp_index):
+    
+    # Planck TQU database
+    planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+    planck_tqu_cursor = planck_tqu_db.cursor()
+    
+    # Get I0, Q0, U0 measurements
+    I0 = planck_tqu_cursor.execute("SELECT T FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
+    Qmeas = planck_tqu_cursor.execute("SELECT Q FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
+    Umeas = planck_tqu_cursor.execute("SELECT U FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
+    
+    Pnaive = np.sqrt(Qmeas[0]**2 + Umeas[0]**2)
+    pnaive = Pnaive/I0
+    psinaive = np.mod(0.5*np.arctan2(Umeas, Qmeas), np.pi)
+
+    print("Naive p is {}".format(pnaive))
+    print("Naive psi is {}".format(psinaive))
+    
+    return pnaive, psinaive
+    
+def mean_bayesian_posterior(posterior_obj):
+    """
+    Integrated first order moments of the posterior PDF
+    """
+    
+    posterior = posterior_obj.normed_posterior
+    
+    sample_p0 = posterior_obj.sample_p0
+    sample_psi0 = posterior_obj.sample_psi0
+    
+    grid_sample_p0 = np.tile(sample_p0, (len(sample_p0), 1))
+    grid_sample_psi0 = np.tile(np.reshape(sample_psi0, (len(sample_psi0), 1)), (1, len(sample_psi0)))
+    
+    # First moment of p0 map
+    p0moment1 = grid_sample_p0*posterior
+    
+    # Sampling widths
+    pdx = sample_p0[1] - sample_p0[0]
+    psidx = sample_psi0[1] - sample_psi0[0]
+    
+    # Test that normed posterior is normed
+    norm_posterior_test = test_normalization(posterior_obj, pdx, psidx)
+    
+    print("Sampling pdx is {}, psidx is {}".format(pdx, psidx))
+    
+    # Integrate over p
+    pMB1 = np.trapz(p0moment1, dx = pdx, axis = 0)
+    
+    # Integrate over psi
+    pMB = np.trapz(pMB1, dx = psidx)
+    
+    center_psi = False
+    if center_psi is True:
+        rolled_posterior, rolled_sample_psi = center_psi_measurement(posterior, sample_psi0, posterior_obj.naive_psi)
+    else:
+        rolled_posterior = posterior
+        rolled_sample_psi = sample_psi0
+    
+    rolled_grid_sample_psi0 = np.tile(np.reshape(rolled_sample_psi, (len(rolled_sample_psi), 1)), (1, len(rolled_sample_psi)))
+    
+    # First moment of psi0 map
+    psi0moment1 = rolled_grid_sample_psi0*rolled_posterior
+    
+    # Integrate over p
+    psiMB1 = np.trapz(psi0moment1, dx = pdx, axis = 0)
+    
+    # Integrate over psi
+    psiMB = np.trapz(psiMB1, dx = psidx)
+    
+    print("pMB is {}".format(pMB))
+    print("psiMB is {}".format(psiMB))
+    
+    return pMB, psiMB
+
+def test_normalization(posterior_obj, pdx, psidx):
+    norm_posterior_test = posterior_obj.integrate_highest_dimension(posterior_obj.normed_posterior, dx = psidx)
+    norm_posterior_test = posterior_obj.integrate_highest_dimension(norm_posterior_test, dx = pdx)
+    
+    print("Normalized posterior is {}".format(norm_posterior_test))
+    
+    return norm_posterior_test
+    
+    
