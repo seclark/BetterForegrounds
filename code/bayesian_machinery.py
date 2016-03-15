@@ -288,6 +288,10 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     pnaive, psinaive = naive_planck_measurements(posterior_obj.hp_index)
     ax1.plot(pnaive, psinaive, '+', ms = 20, color = "white")
     
+    axs = [ax1, ax2, ax3]
+    for ax in axs:
+        ax.set_ylim(posterior_obj.sample_psi0[0], posterior_obj.sample_psi0[-1])
+    
 def naive_planck_measurements(hp_index):
     
     # Planck TQU database
@@ -307,6 +311,36 @@ def naive_planck_measurements(hp_index):
     print("Naive psi is {}".format(psinaive))
     
     return pnaive, psinaive
+    
+def center_naive_measurements(hp_index, sample_p0, center_on_p, sample_psi0, center_on_psi):
+
+    pnaive, psinaive = naive_planck_measurements(hp_index)
+
+    # Find index of value closest to pnaive and psinaive
+    pnaive_indx = np.abs(sample_p0 - pnaive).argmin()
+    psinaive_indx = np.abs(sample_psi0 - psinaive).argmin()
+    
+    rolled_sample_p0 = np.roll(sample_p0, - pnaive_indx)
+    rolled_weights_p0 = np.roll(center_on_p, - pnaive_indx)
+    
+    rolled_sample_psi0 = np.roll(sample_psi0, - psinaive_indx)
+    rolled_weights_psi0 = np.roll(center_on_psi, - psinaive_indx)
+    
+    return rolled_sample_p0, rolled_weights_p0, rolled_sample_psi0, rolled_weights_psi0
+    
+def center_posterior_naive_psi(hp_index, sample_psi0, posterior):
+
+    pnaive, psinaive = naive_planck_measurements(hp_index)
+
+    # Find index of value closest to pnaive and psinaive
+    psinaive_indx = np.abs(sample_psi0 - (psinaive - np.pi/2)).argmin()
+    
+    rolled_posterior = np.roll(posterior, - psinaive_indx, axis = 0)
+    
+    rolled_sample_psi0 = np.roll(sample_psi0, - psinaive_indx)
+    rolled_sample_psi0[rolled_sample_psi0 < psinaive - np.pi/2] += np.pi
+    
+    return rolled_sample_psi0, rolled_posterior 
     
 def mean_bayesian_posterior(posterior_obj):
     """
@@ -335,6 +369,12 @@ def mean_bayesian_posterior(posterior_obj):
     
     # Axis 0 integrates over psi
     
+    # Test
+    rolled_sample_psi0, rolled_posterior = center_posterior_naive_psi(posterior_obj.hp_index, sample_psi0, posterior)
+    posterior = rolled_posterior
+    sample_psi0 = rolled_sample_psi0
+    
+    
     # Integrate over p
     #pMB1 = np.trapz(p0moment1, dx = pdx, axis = 0)
     pMB1 = np.trapz(posterior, dx = psidx, axis = 0)
@@ -356,14 +396,20 @@ def mean_bayesian_posterior(posterior_obj):
     #psiMB1 = np.trapz(psi0moment1, dx = pdx, axis = 0)
     psiMB1 = np.trapz(posterior, dx = pdx, axis = 1)
     
+    #test
+    #rolled_sample_p0, rolled_pMB1, rolled_sample_psi0, rolled_psiMB1 = center_naive_measurements(posterior_obj.hp_index, sample_p0, pMB1, sample_psi0, psiMB1)
+    #pMB = np.trapz(rolled_pMB1*rolled_sample_p0, dx = pdx) #test
+    
     # Integrate over psi
     #psiMB = np.trapz(psiMB1, dx = psidx)
     psiMB = np.trapz(psiMB1*sample_psi0, dx = psidx)
     
+    #psiMB = np.trapz(rolled_psiMB1*rolled_sample_psi0, dx = psidx) #test
+    
     print("pMB is {}".format(pMB))
     print("psiMB is {}".format(psiMB))
     
-    return pMB, psiMB, pMB1, psiMB1
+    return pMB, psiMB#, pMB1, psiMB1, sample_psi0, sample_p0
 
 def test_normalization(posterior_obj, pdx, psidx):
     norm_posterior_test = posterior_obj.integrate_highest_dimension(posterior_obj.normed_posterior, dx = psidx)
