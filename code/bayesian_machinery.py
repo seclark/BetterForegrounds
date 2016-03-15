@@ -160,6 +160,9 @@ class Likelihood(BayesianComponent):
 
         # measured polarization fraction
         pmeas = np.sqrt(self.Q**2 + self.U**2)/self.T
+        
+        self.psimeas = psimeas
+        self.pmeas = pmeas
     
         # invert sigma_p
         invsig = np.linalg.inv(self.sigma_p)
@@ -223,6 +226,8 @@ class Posterior(BayesianComponent):
         likelihood = Likelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, self.sample_p0, self.sample_psi0)
         
         self.naive_psi = likelihood.naive_psi
+        self.psimeas = likelihood.psimeas
+        self.pmeas = likelihood.pmeas
         
         self.normed_prior = prior.normed_prior#/np.max(prior.normed_prior)
         self.planck_likelihood = likelihood.likelihood
@@ -250,7 +255,6 @@ def plot_bayesian_component_from_posterior(posterior_obj, component = "posterior
     extent = [posterior_obj.sample_p0[0], posterior_obj.sample_p0[-1], posterior_obj.sample_psi0[0], posterior_obj.sample_psi0[-1]]
     
     aspect = (posterior_obj.sample_p0[1] - posterior_obj.sample_p0[0])/(posterior_obj.sample_psi0[1] - posterior_obj.sample_psi0[0])
-    aspect2 = 0.15*(posterior_obj.sample_p0[1] - posterior_obj.sample_p0[0])/(posterior_obj.sample_psi0[1] - posterior_obj.sample_psi0[0])
     
     if component == "posterior":
         plotarr = posterior_obj.normed_posterior
@@ -285,7 +289,9 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     pMB, psiMB = mean_bayesian_posterior(posterior_obj)
     ax3.plot(pMB, psiMB, '+', ms = 20, color = "white")
     
-    pnaive, psinaive = naive_planck_measurements(posterior_obj.hp_index)
+    #pnaive, psinaive = naive_planck_measurements(posterior_obj.hp_index)
+    pnaive = posterior_obj.pmeas
+    psinaive = posterior_obj.psimeas
     ax1.plot(pnaive, psinaive, '+', ms = 20, color = "white")
     
     axs = [ax1, ax2, ax3]
@@ -332,13 +338,21 @@ def center_posterior_naive_psi(hp_index, sample_psi0, posterior):
 
     pnaive, psinaive = naive_planck_measurements(hp_index)
 
-    # Find index of value closest to pnaive and psinaive
+    # Find index of value closest to psinaive - pi/2
     psinaive_indx = np.abs(sample_psi0 - (psinaive - np.pi/2)).argmin()
+    
+    print("difference between psinaive - pi/2 and closest values is {} - {} = {}".format(psinaive - np.pi/2, sample_psi0[psinaive_indx], np.abs((psinaive - np.pi/2) - sample_psi0[psinaive_indx])))
+    if np.abs((psinaive - np.pi/2) - sample_psi0[psinaive_indx]) > (sample_psi0[1] - sample_psi0[0]):
+        print("Subtracting pi from all")
+        sample_psi0 -= np.pi
+        psinaive_indx = np.abs(sample_psi0 - (psinaive - np.pi/2)).argmin()
+        print("Redefining psinaive_indx")
     
     rolled_posterior = np.roll(posterior, - psinaive_indx, axis = 0)
     
     rolled_sample_psi0 = np.roll(sample_psi0, - psinaive_indx)
     rolled_sample_psi0[rolled_sample_psi0 < psinaive - np.pi/2] += np.pi
+    rolled_sample_psi0[rolled_sample_psi0 > psinaive + np.pi/2] -= np.pi
     
     return rolled_sample_psi0, rolled_posterior 
     
