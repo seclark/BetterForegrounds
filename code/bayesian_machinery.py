@@ -285,6 +285,9 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     pMB, psiMB = mean_bayesian_posterior(posterior_obj)
     ax3.plot(pMB, psiMB, '+', ms = 20, color = "white")
     
+    pnaive, psinaive = naive_planck_measurements(posterior_obj.hp_index)
+    ax1.plot(pnaive, psinaive, '+', ms = 20, color = "white")
+    
 def naive_planck_measurements(hp_index):
     
     # Planck TQU database
@@ -316,7 +319,7 @@ def mean_bayesian_posterior(posterior_obj):
     sample_psi0 = posterior_obj.sample_psi0
     
     grid_sample_p0 = np.tile(sample_p0, (len(sample_p0), 1))
-    grid_sample_psi0 = np.tile(np.reshape(sample_psi0, (len(sample_psi0), 1)), (1, len(sample_psi0)))
+    grid_sample_psi0 = np.tile(np.reshape(sample_psi0[::-1], (len(sample_psi0), 1)), (1, len(sample_psi0)))
     
     # First moment of p0 map
     p0moment1 = grid_sample_p0*posterior
@@ -330,34 +333,37 @@ def mean_bayesian_posterior(posterior_obj):
     
     print("Sampling pdx is {}, psidx is {}".format(pdx, psidx))
     
+    # Axis 0 integrates over psi
+    
     # Integrate over p
-    pMB1 = np.trapz(p0moment1, dx = pdx, axis = 0)
+    #pMB1 = np.trapz(p0moment1, dx = pdx, axis = 0)
+    pMB1 = np.trapz(posterior, dx = psidx, axis = 0)
     
     # Integrate over psi
-    pMB = np.trapz(pMB1, dx = psidx)
-    
-    center_psi = False
-    if center_psi is True:
-        rolled_posterior, rolled_sample_psi = center_psi_measurement(posterior, sample_psi0, posterior_obj.naive_psi)
-    else:
-        rolled_posterior = posterior
-        rolled_sample_psi = sample_psi0
-    
-    rolled_grid_sample_psi0 = np.tile(np.reshape(rolled_sample_psi, (len(rolled_sample_psi), 1)), (1, len(rolled_sample_psi)))
+    #pMB = np.trapz(pMB1, dx = psidx)
+    pMB = np.trapz(pMB1*sample_p0, dx = pdx)
     
     # First moment of psi0 map
-    psi0moment1 = rolled_grid_sample_psi0*rolled_posterior
+    psi0moment1 = grid_sample_psi0*posterior
+    
+    # Normalize first moment map
+    #integrated_psi0moment1 = np.trapz(psi0moment1, dx = psidx, axis = 1)
+    #integrated_psi0moment1 = np.trapz(integrated_psi0moment1, dx = pdx, axis = 0)
+    #print(integrated_psi0moment1)
+    #psi0moment1 = psi0moment1/integrated_psi0moment1
     
     # Integrate over p
-    psiMB1 = np.trapz(psi0moment1, dx = pdx, axis = 0)
+    #psiMB1 = np.trapz(psi0moment1, dx = pdx, axis = 0)
+    psiMB1 = np.trapz(posterior, dx = pdx, axis = 1)
     
     # Integrate over psi
-    psiMB = np.trapz(psiMB1, dx = psidx)
+    #psiMB = np.trapz(psiMB1, dx = psidx)
+    psiMB = np.trapz(psiMB1*sample_psi0, dx = psidx)
     
     print("pMB is {}".format(pMB))
     print("psiMB is {}".format(psiMB))
     
-    return pMB, psiMB
+    return pMB, psiMB, pMB1, psiMB1
 
 def test_normalization(posterior_obj, pdx, psidx):
     norm_posterior_test = posterior_obj.integrate_highest_dimension(posterior_obj.normed_posterior, dx = psidx)
