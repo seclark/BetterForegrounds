@@ -9,9 +9,11 @@ import cPickle as pickle
 import itertools
 import string
 import sqlite3
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
 import matplotlib as mpl
 import matplotlib.ticker as ticker
+from matplotlib import rc
+rc('text', usetex=True)
 
 # Local repo imports
 import debias
@@ -75,7 +77,7 @@ class Prior(BayesianComponent):
     Class for building RHT priors
     """
     
-    def __init__(self, hp_index, reverse_RHT = False):
+    def __init__(self, hp_index, sample_p0, reverse_RHT = False):
     
         BayesianComponent.__init__(self, hp_index)
         
@@ -83,6 +85,8 @@ class Prior(BayesianComponent):
         rht_db = sqlite3.connect("allweights_db.sqlite")
         rht_cursor = rht_db.cursor()
         self.rht_data = rht_cursor.execute("SELECT * FROM RHT_weights WHERE id = ?", (self.hp_index,)).fetchone()
+        
+        self.sample_p0 = sample_p0
         
         try:
             # Discard first element because it is the healpix id
@@ -92,7 +96,7 @@ class Prior(BayesianComponent):
             self.sample_psi0 = self.get_psi0_sampling_grid(hp_index)
         
             # Roll RHT data to [0, pi)
-            self.rht_data, self.sample_psi0 = roll_RHT_zero_to_pi(self.rht_data, self.sample_psi0)
+            self.rht_data, self.sample_psi0 = self.roll_RHT_zero_to_pi(self.rht_data, self.sample_psi0)
         
             # Add 0.7 because that was the RHT threshold 
             npsample = len(self.sample_p0)
@@ -198,14 +202,14 @@ class Posterior(BayesianComponent):
     def __init__(self, hp_index, sample_p0 = None):
         BayesianComponent.__init__(self, hp_index)  
         
-        # Instantiate posterior components
-        prior = Prior(hp_index, reverse_RHT = True)
-        self.sample_psi0 = prior.sample_psi0
-        
         if sample_p0 is None:
-            self.sample_p0 = np.linspace(0, 1, len(self.sample_psi0))
+            self.sample_p0 = np.linspace(0, 1, 165)
         else:
             self.sample_p0 = sample_p0
+        
+        # Instantiate posterior components
+        prior = Prior(hp_index, self.sample_p0, reverse_RHT = True)
+        self.sample_psi0 = prior.sample_psi0
         
         # Planck covariance database
         planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
@@ -226,8 +230,54 @@ class Posterior(BayesianComponent):
         #self.posterior = np.einsum('ij,jk->ik', self.planck_likelihood, self.normed_prior)
         self.posterior = self.planck_likelihood*self.normed_prior
         
+        psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
+        p_dx = self.sample_p0[1] - self.sample_p0[0]
+        
         self.posterior_integrated_over_psi = self.integrate_highest_dimension(self.posterior, dx = psi_dx)
         self.posterior_integrated_over_p_and_psi = self.integrate_highest_dimension(self.posterior_integrated_over_psi, dx = p_dx)
         
         self.normed_posterior = self.posterior/self.posterior_integrated_over_p_and_psi
+
+def latex_formatter(x, pos):
+    return "${0:.1f}$".format(x)
+
+def plot_bayesian_component_from_posterior(posterior_obj, component = "posterior", ax = None, cmap = "cubehelix"):
     
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+    extent = [posterior_obj.sample_p0[0], posterior_obj.sample_p0[-1], posterior_obj.sample_psi0[0], posterior_obj.sample_psi0[-1]]
+    
+    aspect = (posterior_obj.sample_p0[1] - posterior_obj.sample_p0[0])/(posterior_obj.sample_psi0[1] - posterior_obj.sample_psi0[0])
+    aspect2 = 0.15*(posterior_obj.sample_p0[1] - posterior_obj.sample_p0[0])/(posterior_obj.sample_psi0[1] - posterior_obj.sample_psi0[0])
+    
+    if component == "posterior":
+        plotarr = posterior_obj.normed_posterior
+        title = r"$\mathrm{Posterior}$"
+    if component == "likelihood":
+        plotarr = posterior_obj.planck_likelihood
+        title = r"$\mathrm{Planck}$ $\mathrm{Likelihood}$"
+    if component == "prior":
+        plotarr = posterior_obj.normed_prior
+        title = r"$\mathrm{RHT}$ $\mathrm{Prior}$"
+    
+    im = ax.imshow(plotarr, cmap = cmap, extent = extent, aspect = aspect)
+    
+    ax.set_title(title, size = 20)
+    div = make_axes_locatable(ax)
+    cax = div.append_axes("right", size="15%", pad=0.05, aspect = 100./15)
+    cbar = plt.colorbar(im, cax=cax, format=ticker.FuncFormatter(latex_formatter))
+    
+def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix"):
+    
+    fig = plt.figure(figsize = (10, 4), facecolor = "white")
+    ax1 = fig.add_subplot(131)
+    ax2 = fig.add_subplot(132)
+    ax3 = fig.add_subplot(133)
+    
+    plot_bayesian_component_from_posterior(posterior_obj, component = "likelihood", ax = ax1, cmap = cmap)
+    plot_bayesian_component_from_posterior(posterior_obj, component = "prior", ax = ax2, cmap = cmap)
+    plot_bayesian_component_from_posterior(posterior_obj, component = "posterior", ax = ax3, cmap = cmap)
+    
+    plt.subplots_adjust(wspace = 0.8)
