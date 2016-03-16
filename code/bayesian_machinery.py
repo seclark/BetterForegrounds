@@ -270,11 +270,11 @@ def plot_bayesian_component_from_posterior(posterior_obj, component = "posterior
         title = r"$\mathrm{RHT}$ $\mathrm{Prior}$"
     
     #im = ax.imshow(plotarr, cmap = cmap, extent = extent, aspect = aspect)
-    im = ax.pcolor(posterior_obj.sample_p0, posterior_obj.sample_psi0, plotarr, cmap = cmap)
+    im = ax.pcolor(posterior_obj.sample_p0, np.mod(posterior_obj.sample_psi0, np.pi), plotarr, cmap = cmap)
     
     ax.set_title(title, size = 15)
     div = make_axes_locatable(ax)
-    cax = div.append_axes("right", size="15%", pad=0.05, aspect = 100./15)
+    cax = div.append_axes("right", size="15%", pad=0.05)#, aspect = 100./15)
     cbar = plt.colorbar(im, cax=cax, format=ticker.FuncFormatter(latex_formatter))
     
 def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix"):
@@ -284,7 +284,7 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     ax1 = plt.subplot(gs[0])#fig.add_subplot(131)
     ax2 = plt.subplot(gs[1])#fig.add_subplot(132)
     ax3 = plt.subplot(gs[2])#fig.add_subplot(133)
-    gs.update(left=0.05, right=0.95, wspace=0.05, hspace = 0.0001)
+    gs.update(left=0.05, right=0.95, wspace=0.3, hspace = 0.3, bottom = 0.15)
     
     plot_bayesian_component_from_posterior(posterior_obj, component = "likelihood", ax = ax1, cmap = cmap)
     plot_bayesian_component_from_posterior(posterior_obj, component = "prior", ax = ax2, cmap = cmap)
@@ -302,8 +302,10 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     
     axs = [ax1, ax2, ax3]
     for ax in axs:
-        ax.set_ylim(posterior_obj.sample_psi0[0], posterior_obj.sample_psi0[-1])
-    
+        ax.set_ylim(np.mod(posterior_obj.sample_psi0[0], np.pi), np.mod(posterior_obj.sample_psi0[-1], np.pi))
+        ax.set_ylabel(r"$\psi_0$", size = 15)
+        ax.set_xlabel(r"$p_0$", size = 15)
+        
 def naive_planck_measurements(hp_index):
     
     # Planck TQU database
@@ -353,6 +355,7 @@ def center_posterior_naive_psi(hp_index, sample_psi0, posterior):
         sample_psi0 -= np.pi
         psinaive_indx = np.abs(sample_psi0 - (psinaive - np.pi/2)).argmin()
         print("Redefining psinaive_indx")
+        print("difference between psinaive - pi/2 and closest values is {} - {} = {}".format(psinaive - np.pi/2, sample_psi0[psinaive_indx], np.abs((psinaive - np.pi/2) - sample_psi0[psinaive_indx])))
     
     rolled_posterior = np.roll(posterior, - psinaive_indx, axis = 0)
     
