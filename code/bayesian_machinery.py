@@ -375,59 +375,33 @@ def mean_bayesian_posterior(posterior_obj):
     sample_p0 = posterior_obj.sample_p0
     sample_psi0 = posterior_obj.sample_psi0
     
-    grid_sample_p0 = np.tile(sample_p0, (len(sample_p0), 1))
-    grid_sample_psi0 = np.tile(np.reshape(sample_psi0[::-1], (len(sample_psi0), 1)), (1, len(sample_psi0)))
-    
-    # First moment of p0 map
-    p0moment1 = grid_sample_p0*posterior
-    
     # Sampling widths
     pdx = sample_p0[1] - sample_p0[0]
     psidx = sample_psi0[1] - sample_psi0[0]
     
+    print("Sampling pdx is {}, psidx is {}".format(pdx, psidx))
+    
     # Test that normed posterior is normed
     norm_posterior_test = test_normalization(posterior_obj, pdx, psidx)
     
-    print("Sampling pdx is {}, psidx is {}".format(pdx, psidx))
-    
     # Axis 0 integrates over psi
     
-    # Test
+    # Center on the naive psi
     rolled_sample_psi0, rolled_posterior = center_posterior_naive_psi(posterior_obj.hp_index, sample_psi0, posterior)
     posterior = rolled_posterior
     sample_psi0 = rolled_sample_psi0
     
-    
     # Integrate over p
-    #pMB1 = np.trapz(p0moment1, dx = pdx, axis = 0)
     pMB1 = np.trapz(posterior, dx = psidx, axis = 0)
     
     # Integrate over psi
-    #pMB = np.trapz(pMB1, dx = psidx)
     pMB = np.trapz(pMB1*sample_p0, dx = pdx)
     
-    # First moment of psi0 map
-    psi0moment1 = grid_sample_psi0*posterior
-    
-    # Normalize first moment map
-    #integrated_psi0moment1 = np.trapz(psi0moment1, dx = psidx, axis = 1)
-    #integrated_psi0moment1 = np.trapz(integrated_psi0moment1, dx = pdx, axis = 0)
-    #print(integrated_psi0moment1)
-    #psi0moment1 = psi0moment1/integrated_psi0moment1
-    
     # Integrate over p
-    #psiMB1 = np.trapz(psi0moment1, dx = pdx, axis = 0)
     psiMB1 = np.trapz(posterior, dx = pdx, axis = 1)
     
-    #test
-    #rolled_sample_p0, rolled_pMB1, rolled_sample_psi0, rolled_psiMB1 = center_naive_measurements(posterior_obj.hp_index, sample_p0, pMB1, sample_psi0, psiMB1)
-    #pMB = np.trapz(rolled_pMB1*rolled_sample_p0, dx = pdx) #test
-    
     # Integrate over psi
-    #psiMB = np.trapz(psiMB1, dx = psidx)
     psiMB = np.trapz(psiMB1*sample_psi0, dx = psidx)
-    
-    #psiMB = np.trapz(rolled_psiMB1*rolled_sample_psi0, dx = psidx) #test
     
     print("pMB is {}".format(pMB))
     print("psiMB is {}".format(psiMB))
