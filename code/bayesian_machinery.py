@@ -4,11 +4,13 @@ import healpy as hp
 from numpy.linalg import lapack_lite
 import time
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 from astropy.io import fits
 import cPickle as pickle
 import itertools
 import string
 import sqlite3
+import copy
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
 import matplotlib as mpl
 import matplotlib.ticker as ticker
@@ -252,9 +254,10 @@ def plot_bayesian_component_from_posterior(posterior_obj, component = "posterior
         fig = plt.figure()
         ax = fig.add_subplot(111)
         
-    extent = [posterior_obj.sample_p0[0], posterior_obj.sample_p0[-1], posterior_obj.sample_psi0[0], posterior_obj.sample_psi0[-1]]
+    #extent = [posterior_obj.sample_p0[0], posterior_obj.sample_p0[-1], posterior_obj.sample_psi0[0], posterior_obj.sample_psi0[-1]]
+    #aspect = (posterior_obj.sample_p0[1] - posterior_obj.sample_p0[0])/(posterior_obj.sample_psi0[1] - posterior_obj.sample_psi0[0])
     
-    aspect = (posterior_obj.sample_p0[1] - posterior_obj.sample_p0[0])/(posterior_obj.sample_psi0[1] - posterior_obj.sample_psi0[0])
+    ax.set_aspect("auto")
     
     if component == "posterior":
         plotarr = posterior_obj.normed_posterior
@@ -266,33 +269,36 @@ def plot_bayesian_component_from_posterior(posterior_obj, component = "posterior
         plotarr = posterior_obj.normed_prior
         title = r"$\mathrm{RHT}$ $\mathrm{Prior}$"
     
-    im = ax.imshow(plotarr, cmap = cmap, extent = extent, aspect = aspect)
+    #im = ax.imshow(plotarr, cmap = cmap, extent = extent, aspect = aspect)
+    im = ax.pcolor(posterior_obj.sample_p0, posterior_obj.sample_psi0, plotarr, cmap = cmap)
     
-    ax.set_title(title, size = 20)
+    ax.set_title(title, size = 15)
     div = make_axes_locatable(ax)
     cax = div.append_axes("right", size="15%", pad=0.05, aspect = 100./15)
     cbar = plt.colorbar(im, cax=cax, format=ticker.FuncFormatter(latex_formatter))
     
 def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix"):
     
-    fig = plt.figure(figsize = (10, 4), facecolor = "white")
-    ax1 = fig.add_subplot(131)
-    ax2 = fig.add_subplot(132)
-    ax3 = fig.add_subplot(133)
+    fig = plt.figure(figsize = (14, 4), facecolor = "white")
+    gs = gridspec.GridSpec(1, 3)
+    ax1 = plt.subplot(gs[0])#fig.add_subplot(131)
+    ax2 = plt.subplot(gs[1])#fig.add_subplot(132)
+    ax3 = plt.subplot(gs[2])#fig.add_subplot(133)
+    gs.update(left=0.05, right=0.95, wspace=0.05, hspace = 0.0001)
     
     plot_bayesian_component_from_posterior(posterior_obj, component = "likelihood", ax = ax1, cmap = cmap)
     plot_bayesian_component_from_posterior(posterior_obj, component = "prior", ax = ax2, cmap = cmap)
     plot_bayesian_component_from_posterior(posterior_obj, component = "posterior", ax = ax3, cmap = cmap)
     
-    plt.subplots_adjust(wspace = 0.8)
+    #plt.subplots_adjust(wspace = 0.2)
     
     pMB, psiMB = mean_bayesian_posterior(posterior_obj)
-    ax3.plot(pMB, psiMB, '+', ms = 20, color = "white")
+    ax3.plot(pMB, psiMB, '+', ms = 10, mew = 2, color = "gray")
     
     #pnaive, psinaive = naive_planck_measurements(posterior_obj.hp_index)
     pnaive = posterior_obj.pmeas
     psinaive = posterior_obj.psimeas
-    ax1.plot(pnaive, psinaive, '+', ms = 20, color = "white")
+    ax1.plot(pnaive, psinaive, '+', ms = 10, mew = 2, color = "gray")
     
     axs = [ax1, ax2, ax3]
     for ax in axs:
@@ -361,7 +367,7 @@ def mean_bayesian_posterior(posterior_obj):
     Integrated first order moments of the posterior PDF
     """
     
-    posterior = posterior_obj.normed_posterior
+    posterior = copy.copy(posterior_obj.normed_posterior)
     
     sample_p0 = posterior_obj.sample_p0
     sample_psi0 = posterior_obj.sample_psi0
