@@ -10,6 +10,7 @@ import cPickle as pickle
 import itertools
 import string
 import sqlite3
+import scipy
 import copy
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
 import matplotlib as mpl
@@ -295,6 +296,9 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     pMB, psiMB = mean_bayesian_posterior(posterior_obj)
     ax3.plot(pMB, psiMB, '+', ms = 10, mew = 2, color = "gray")
     
+    p_map, psi_map = maximum_a_posteriori(posterior_obj)
+    ax3.plot(p_map, psi_map, '+', ms = 10, mew = 2, color = "red")
+    
     #pnaive, psinaive = naive_planck_measurements(posterior_obj.hp_index)
     pnaive = posterior_obj.pmeas
     psinaive = posterior_obj.psimeas
@@ -364,6 +368,22 @@ def center_posterior_naive_psi(hp_index, sample_psi0, posterior):
     rolled_sample_psi0[rolled_sample_psi0 > psinaive + np.pi/2] -= np.pi
     
     return rolled_sample_psi0, rolled_posterior 
+    
+def maximum_a_posteriori(posterior_obj):
+    """
+    MAP estimator
+    """
+    
+    psi_map_indx = scipy.stats.mode(np.argmax(posterior_obj.normed_posterior, axis=0))[0][0]
+    p_map_indx = scipy.stats.mode(np.argmax(posterior_obj.normed_posterior, axis=1))[0][0]
+    
+    psi_map = posterior_obj.sample_psi0[psi_map_indx]
+    p_map = posterior_obj.sample_p0[p_map_indx]
+    
+    print("pMAP is {}".format(p_map))
+    print("psiMAP is {}".format(psi_map))
+    
+    return p_map, psi_map
     
 def mean_bayesian_posterior(posterior_obj):
     """
