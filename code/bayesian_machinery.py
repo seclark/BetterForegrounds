@@ -513,8 +513,10 @@ def mean_bayesian_posterior(posterior_obj, center = "naive"):
     
     # Center on the naive psi
     if center == "naive":
+        print("Centering initial integral on naive psi")
         rolled_sample_psi0, rolled_posterior = center_posterior_naive_psi(posterior_obj, sample_psi0, posterior)
     elif center == "MAP":
+        print("Centering initial integral on psi_MAP")
         rolled_sample_psi0, rolled_posterior = center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior)
     posterior = rolled_posterior
     sample_psi0 = rolled_sample_psi0
@@ -533,6 +535,29 @@ def mean_bayesian_posterior(posterior_obj, center = "naive"):
     
     print("pMB is {}".format(pMB))
     print("psiMB is {}".format(psiMB))
+    
+    # Set parameters for convergence
+    psi_last = psiMB + np.pi/2
+    tol = 0.1
+    print("Have I converged?", np.abs(np.mod(psi_last - psiMB, np.pi)))
+    while np.abs(np.mod(psi_last - psiMB, np.pi)) < tol:
+        psi_last = psiMB
+    
+        rolled_sample_psi0, rolled_posterior = center_posterior_psi_given(sample_psi0, posterior, psiMB)
+        # Integrate over p
+        pMB1 = np.trapz(rolled_posterior, dx = psidx, axis = 0)
+    
+        # Integrate over psi
+        pMB = np.trapz(pMB1*sample_p0, dx = pdx)
+    
+        # Integrate over p
+        psiMB1 = np.trapz(rolled_posterior, dx = pdx, axis = 1)
+    
+        # Integrate over psi
+        psiMB = np.trapz(psiMB1*rolled_sample_psi0, dx = psidx)
+        
+        print("Iterating. New pMB is {}".format(pMB))
+        print("Iterating. New psiMB is {}".format(psiMB))
     
     return pMB, psiMB#, pMB1, psiMB1, sample_psi0, sample_p0
 
