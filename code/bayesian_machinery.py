@@ -332,7 +332,7 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     plot_bayesian_component_from_posterior(posterior_obj, component = "posterior", ax = ax3, cmap = cmap)
     
     #plt.subplots_adjust(wspace = 0.2)
-    
+    """
     pMB, psiMB = mean_bayesian_posterior(posterior_obj, center = "naive")
     ax3.plot(pMB, np.mod(psiMB, np.pi), '+', ms = 10, mew = 2, color = "gray")
     
@@ -346,10 +346,13 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     pnaive = posterior_obj.pmeas
     psinaive = posterior_obj.psimeas
     ax1.plot(pnaive, psinaive, '+', ms = 10, mew = 2, color = "gray")
-    
+    """
     axs = [ax1, ax2, ax3]
     for ax in axs:
-        ax.set_ylim(np.mod(posterior_obj.sample_psi0[0], np.pi), np.mod(posterior_obj.sample_psi0[-1], np.pi))
+        if np.mod(posterior_obj.sample_psi0[-1], np.pi) == 0:
+            ax.set_ylim(np.mod(posterior_obj.sample_psi0[0], np.pi), np.pi)
+        else:
+            ax.set_ylim(np.mod(posterior_obj.sample_psi0[0], np.pi), np.mod(posterior_obj.sample_psi0[-1], np.pi))
         ax.set_ylabel(r"$\psi_0$", size = 15)
         ax.set_xlabel(r"$p_0$", size = 15)
         
