@@ -283,7 +283,7 @@ class DummyPosterior(BayesianComponent):
         
         self.normed_posterior = self.planck_likelihood/self.integrated_over_p_and_psi
         
-        self.prior = np.ones(self.normed_posterior.shape, np.float_)
+        self.normed_prior = np.ones(self.normed_posterior.shape, np.float_)
       
 
 def latex_formatter(x, pos):
@@ -389,10 +389,15 @@ def center_naive_measurements(hp_index, sample_p0, center_on_p, sample_psi0, cen
     
     return rolled_sample_p0, rolled_weights_p0, rolled_sample_psi0, rolled_weights_psi0
     
-def center_posterior_naive_psi(hp_index, sample_psi0, posterior):
+def center_posterior_naive_psi(posterior_obj, sample_psi0, posterior):
 
-    pnaive, psinaive = naive_planck_measurements(hp_index)
-
+    try:
+        pnaive = posterior_obj.pmeas
+        psinaive = posterior_obj.psimeas
+    except AttributeError:
+        print("Obtaining naive measurements from posterior object")
+        pnaive, psinaive = naive_planck_measurements(posterior_obj.hp_index)
+    
     # Find index of value closest to psinaive - pi/2
     psinaive_indx = np.abs(sample_psi0 - (psinaive - np.pi/2)).argmin()
     
@@ -478,7 +483,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive"):
     
     # Center on the naive psi
     if center == "naive":
-        rolled_sample_psi0, rolled_posterior = center_posterior_naive_psi(posterior_obj.hp_index, sample_psi0, posterior)
+        rolled_sample_psi0, rolled_posterior = center_posterior_naive_psi(posterior_obj, sample_psi0, posterior)
     elif center == "MAP":
         rolled_sample_psi0, rolled_posterior = center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior)
     posterior = rolled_posterior
