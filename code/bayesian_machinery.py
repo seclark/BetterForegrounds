@@ -269,10 +269,10 @@ class DummyPosterior(BayesianComponent):
         psi_y = self.sample_psi0[:, np.newaxis]
         p_x = self.sample_p0
         
-        self.psimeas = np.pi/2
-        self.pmeas = 0.1
+        self.psimeas = np.pi/3
+        self.pmeas = 0.2
         
-        self.fwhm = 3
+        self.fwhm = 1.3
         
         gaussian = np.exp(-4*np.log(2) * ((p_x-self.pmeas)**2 + (psi_y-self.psimeas)**2) / self.fwhm**2)
         
