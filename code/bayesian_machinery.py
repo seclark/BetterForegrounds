@@ -310,8 +310,11 @@ def plot_bayesian_component_from_posterior(posterior_obj, component = "posterior
         plotarr = posterior_obj.normed_prior
         title = r"$\mathrm{RHT}$ $\mathrm{Prior}$"
     
-    #im = ax.imshow(plotarr, cmap = cmap, extent = extent, aspect = aspect)
-    im = ax.pcolor(posterior_obj.sample_p0, np.mod(posterior_obj.sample_psi0, np.pi), plotarr, cmap = cmap)
+    # Plotting grid needs to be mod pi unless it's exactly 0 to pi
+    if posterior_obj.sample_psi0[-1] == np.pi: 
+        im = ax.pcolor(posterior_obj.sample_p0, posterior_obj.sample_psi0, plotarr, cmap = cmap)
+    else:
+        im = ax.pcolor(posterior_obj.sample_p0, np.mod(posterior_obj.sample_psi0, np.pi), plotarr, cmap = cmap)
     
     ax.set_title(title, size = 15)
     div = make_axes_locatable(ax)
@@ -332,7 +335,7 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     plot_bayesian_component_from_posterior(posterior_obj, component = "posterior", ax = ax3, cmap = cmap)
     
     #plt.subplots_adjust(wspace = 0.2)
-    """
+    
     pMB, psiMB = mean_bayesian_posterior(posterior_obj, center = "naive")
     ax3.plot(pMB, np.mod(psiMB, np.pi), '+', ms = 10, mew = 2, color = "gray")
     
@@ -346,7 +349,7 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     pnaive = posterior_obj.pmeas
     psinaive = posterior_obj.psimeas
     ax1.plot(pnaive, psinaive, '+', ms = 10, mew = 2, color = "gray")
-    """
+    
     axs = [ax1, ax2, ax3]
     for ax in axs:
         if np.mod(posterior_obj.sample_psi0[-1], np.pi) == 0:
