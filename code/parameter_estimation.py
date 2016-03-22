@@ -757,7 +757,7 @@ def plot_bayesian_posterior_from_posterior(pp, ax, cmap = "cubehelix"):
     p0_all = pp.sample_p0
     
     #im1 = ax.imshow(pp.planck_likelihood, cmap = cmap)
-    im1 = ax.pcolor(p0_all, psi0_all, pp.planck_likelihood, cmap = cmap)
+    im1 = ax.pcolor(p0_all, psi0_all, pp.normed_posterior, cmap = cmap)
     ax.set_title(r"$\mathrm{Planck}$ $\mathrm{Likelihood}$", size = 20)
     div = make_axes_locatable(ax)
     cax = div.append_axes("right", size="15%", pad=0.05)
@@ -765,10 +765,10 @@ def plot_bayesian_posterior_from_posterior(pp, ax, cmap = "cubehelix"):
 
     ax.set_xlabel(r"$\mathrm{p_0}$", size = 20)
     ax.set_ylabel(r"$\psi_0$", size = 20)
-    ax.set_xticks(np.arange(len(p0_all))[::30])
-    ax.set_xticklabels([r"${0:.2f}$".format(p0) for p0 in np.round(p0_all[::20], decimals = 2)])
-    ax.set_yticks(np.arange(len(psi0_all))[::20])
-    ax.set_yticklabels([r"${0:.1f}$".format(psi0) for psi0 in np.round(np.degrees(psi0_all[::20]), decimals = 2)])
+    #ax.set_xticks(np.arange(len(p0_all))[::30])
+    #ax.set_xticklabels([r"${0:.2f}$".format(p0) for p0 in np.round(p0_all[::20], decimals = 2)])
+    #ax.set_yticks(np.arange(len(psi0_all))[::20])
+    #ax.set_yticklabels([r"${0:.1f}$".format(psi0) for psi0 in np.round(np.degrees(psi0_all[::20]), decimals = 2)])
     
     
 def single_posterior(hp_index, wlen = 75):
@@ -853,6 +853,30 @@ def center_psi_measurement(array, sample_psi, psi_meas):
     rolled_array = np.roll(array, -psi_meas_indx, axis = 0)
     
     return rolled_array, rolled_sample_psi
+    
+def roll_zero_to_pi(array, sample_psi):
+
+    # Find index of value closest to 0
+    psi_0_indx = np.abs(sample_psi).argmin()
+    
+    print(psi_0_indx, sample_psi[psi_0_indx])
+    
+    rolled_sample_psi = np.roll(sample_psi, -psi_0_indx)
+    rolled_array = np.roll(array, -psi_0_indx, axis = 0)
+    
+    return rolled_array, rolled_sample_psi
+
+def roll_RHT_zero_to_pi(rht_data, sample_psi):
+
+    # Find index of value closest to 0
+    psi_0_indx = np.abs(sample_psi).argmin()
+    
+    print("rolling data by", psi_0_indx, sample_psi[psi_0_indx])
+    
+    rolled_sample_psi = np.roll(sample_psi, -psi_0_indx)
+    rolled_array = np.roll(rht_data, -psi_0_indx)
+    
+    return rolled_array, rolled_sample_psi
 
 def wrap_to_pi_over_2(angles):
     while np.nanmax(angles) > np.pi/2:
@@ -887,6 +911,8 @@ def test_estimator_gaussians():
     for i, fwhm in enumerate(fwhms):
         tp, testpMB, testpsiMB, testpMB1, testpsiMB1, testsample_psi0, testrolled_grid_sample_psi0, testrolled_posterior, p0moment1, psi0moment1 = test_estimator(fakeit = True, fwhm = fwhm)
         
+        tp.normed_posterior, tp.sample_psi0 = roll_zero_to_pi(tp.normed_posterior, tp.sample_psi0)
+        
         plot_bayesian_posterior_from_posterior(tp, axs[i])
         
         """
@@ -909,7 +935,7 @@ def test_estimator_gaussians():
     plt.subplots_adjust(wspace = 0.8)
 def test_estimator(fakeit = True, fwhm = 3):
 
-    tp, p0_all, psi0_all = single_posterior(24066112)#3643649)#3173221)#24066112)
+    tp, p0_all, psi0_all = single_posterior(24066112)#3643649)#3173221)
     
     print("TEST BEGINS")
     
@@ -1078,6 +1104,8 @@ class Prior(BayesianComponent):
         
         self.sample_psi0 = psi0_all
         self.sample_p0 = p0_all
+        
+        self.rht_data, self.sample_psi0 = roll_RHT_zero_to_pi(self.rht_data, self.sample_psi0)
         
         try:
             # Add 0.7 because that was the RHT threshold 
