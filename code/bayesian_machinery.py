@@ -272,7 +272,7 @@ class DummyPosterior(BayesianComponent):
         self.psimeas = np.pi/3
         self.pmeas = 0.2
         
-        self.fwhm = 1.3
+        self.fwhm = 0.3
         
         gaussian = np.exp(-4*np.log(2) * ((p_x-self.pmeas)**2 + (psi_y-self.psimeas)**2) / self.fwhm**2)
         
@@ -443,6 +443,30 @@ def center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior):
     rolled_sample_psi0 = np.roll(sample_psi0, - psiMAP_indx)
     rolled_sample_psi0[rolled_sample_psi0 < psiMAP - np.pi/2] += np.pi
     rolled_sample_psi0[rolled_sample_psi0 > psiMAP + np.pi/2] -= np.pi
+    
+    return rolled_sample_psi0, rolled_posterior
+    
+def center_posterior_psi_given(sample_psi0, posterior, given_psi):
+    """
+    Center posterior on given psi
+    """
+
+    # Find index of value closest to given_psi - pi/2
+    given_psi_indx = np.abs(sample_psi0 - (given_psi - np.pi/2)).argmin()
+    
+    print("difference between given_psi - pi/2 and closest values is {} - {} = {}".format(given_psi - np.pi/2, sample_psi0[given_psi_indx], np.abs((given_psi - np.pi/2) - sample_psi0[given_psi_indx])))
+    if np.abs((given_psi - np.pi/2) - sample_psi0[given_psi_indx]) > (sample_psi0[1] - sample_psi0[0]):
+        print("Subtracting pi from all")
+        sample_psi0 -= np.pi
+        given_psi_indx = np.abs(sample_psi0 - (given_psi - np.pi/2)).argmin()
+        print("Redefining given_psi_indx")
+        print("difference between given_psi - pi/2 and closest values is {} - {} = {}".format(given_psi - np.pi/2, sample_psi0[given_psi_indx], np.abs((given_psi - np.pi/2) - sample_psi0[given_psi_indx])))
+    
+    rolled_posterior = np.roll(posterior, - given_psi_indx, axis = 0)
+    
+    rolled_sample_psi0 = np.roll(sample_psi0, - given_psi_indx)
+    rolled_sample_psi0[rolled_sample_psi0 < given_psi - np.pi/2] += np.pi
+    rolled_sample_psi0[rolled_sample_psi0 > given_psi + np.pi/2] -= np.pi
     
     return rolled_sample_psi0, rolled_posterior
     
