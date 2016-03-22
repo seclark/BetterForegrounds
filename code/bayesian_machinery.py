@@ -256,6 +256,31 @@ class DummyPosterior(BayesianComponent):
         
         self.sample_p0 = np.linspace(0, 1, 165)
         self.sample_psi0 = np.linspace(0, np.pi, 165)
+    
+        self.psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
+        self.p_dx = self.sample_p0[1] - self.sample_p0[0]
+        
+        if self.psi_dx < 0:
+            print("Multiplying psi_dx by -1")
+            self.psi_dx *= -1
+        
+        print("psi dx is {}, p dx is {}".format(self.psi_dx, self.p_dx))
+        
+        self.integrated_over_psi = self.integrate_highest_dimension(self.prior, dx = self.psi_dx)
+        self.integrated_over_p_and_psi = self.integrate_highest_dimension(self.integrated_over_psi, dx = self.p_dx)
+        
+        psi_y = self.sample_psi0[:, np.newaxis]
+        p_x = self.sample_p0
+        
+        self.psimeas = np.pi/2
+        self.pmeas = 0.1
+        
+        self.fwhm = 3
+        
+        gaussian = np.exp(-4*np.log(2) * ((p_x-self.pmeas)**2 + (psi_y-self.psimeas)**2) / self.fwhm**2)
+        
+        self.planck_likelihood = gaussian
+        self.normed_prior = 
       
 
 def latex_formatter(x, pos):
