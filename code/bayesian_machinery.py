@@ -245,6 +245,18 @@ class Posterior(BayesianComponent):
         self.posterior_integrated_over_p_and_psi = self.integrate_highest_dimension(self.posterior_integrated_over_psi, dx = p_dx)
         
         self.normed_posterior = self.posterior/self.posterior_integrated_over_p_and_psi
+        
+class DummyPosterior(BayesianComponent):
+      """
+      Class for testing posterior estimation methods. 
+      """
+      
+      def __init__(self):
+        BayesianComponent.__init__(self, 0)  
+        
+        self.sample_p0 = np.linspace(0, 1, 165)
+        self.sample_psi0 = np.linspace(0, np.pi, 165)
+      
 
 def latex_formatter(x, pos):
     return "${0:.1f}$".format(x)
@@ -293,11 +305,14 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     
     #plt.subplots_adjust(wspace = 0.2)
     
-    pMB, psiMB = mean_bayesian_posterior(posterior_obj)
-    ax3.plot(pMB, psiMB, '+', ms = 10, mew = 2, color = "gray")
+    pMB, psiMB = mean_bayesian_posterior(posterior_obj, center = "naive")
+    ax3.plot(pMB, np.mod(psiMB, np.pi), '+', ms = 10, mew = 2, color = "gray")
+    
+    pMB, psiMB = mean_bayesian_posterior(posterior_obj, center = "MAP")
+    ax3.plot(pMB, np.mod(psiMB, np.pi), '+', ms = 10, mew = 2, color = "teal")
     
     p_map, psi_map = maximum_a_posteriori(posterior_obj)
-    ax3.plot(p_map, psi_map, '+', ms = 10, mew = 2, color = "red")
+    ax3.plot(p_map, np.mod(psi_map, np.pi), '+', ms = 10, mew = 2, color = "red")
     
     #pnaive, psinaive = naive_planck_measurements(posterior_obj.hp_index)
     pnaive = posterior_obj.pmeas
@@ -369,13 +384,40 @@ def center_posterior_naive_psi(hp_index, sample_psi0, posterior):
     
     return rolled_sample_psi0, rolled_posterior 
     
+def center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior):
+
+    pMAP, psiMAP = maximum_a_posteriori(posterior_obj)
+
+    # Find index of value closest to psiMAP - pi/2
+    psiMAP_indx = np.abs(sample_psi0 - (psiMAP - np.pi/2)).argmin()
+    
+    print("difference between psiMAP - pi/2 and closest values is {} - {} = {}".format(psiMAP - np.pi/2, sample_psi0[psiMAP_indx], np.abs((psiMAP - np.pi/2) - sample_psi0[psiMAP_indx])))
+    if np.abs((psiMAP - np.pi/2) - sample_psi0[psiMAP_indx]) > (sample_psi0[1] - sample_psi0[0]):
+        print("Subtracting pi from all")
+        sample_psi0 -= np.pi
+        psiMAP_indx = np.abs(sample_psi0 - (psiMAP - np.pi/2)).argmin()
+        print("Redefining psiMAP_indx")
+        print("difference between psiMAP - pi/2 and closest values is {} - {} = {}".format(psiMAP - np.pi/2, sample_psi0[psiMAP_indx], np.abs((psiMAP - np.pi/2) - sample_psi0[psiMAP_indx])))
+    
+    rolled_posterior = np.roll(posterior, - psiMAP_indx, axis = 0)
+    
+    rolled_sample_psi0 = np.roll(sample_psi0, - psiMAP_indx)
+    rolled_sample_psi0[rolled_sample_psi0 < psiMAP - np.pi/2] += np.pi
+    rolled_sample_psi0[rolled_sample_psi0 > psiMAP + np.pi/2] -= np.pi
+    
+    return rolled_sample_psi0, rolled_posterior
+    
 def maximum_a_posteriori(posterior_obj):
     """
     MAP estimator
     """
     
-    psi_map_indx = scipy.stats.mode(np.argmax(posterior_obj.normed_posterior, axis=0))[0][0]
-    p_map_indx = scipy.stats.mode(np.argmax(posterior_obj.normed_posterior, axis=1))[0][0]
+    #psi_map_indx = scipy.stats.mode(np.argmax(posterior_obj.normed_posterior, axis=0))[0][0]
+    #p_map_indx = scipy.stats.mode(np.argmax(posterior_obj.normed_posterior, axis=1))[0][0]
+    
+    psi_map_indx, p_map_indx = np.where(posterior_obj.normed_posterior == np.nanmax(posterior_obj.normed_posterior))
+    psi_map_indx = psi_map_indx[0]
+    p_map_indx = p_map_indx[0]
     
     psi_map = posterior_obj.sample_psi0[psi_map_indx]
     p_map = posterior_obj.sample_p0[p_map_indx]
@@ -385,7 +427,7 @@ def maximum_a_posteriori(posterior_obj):
     
     return p_map, psi_map
     
-def mean_bayesian_posterior(posterior_obj):
+def mean_bayesian_posterior(posterior_obj, center = "naive"):
     """
     Integrated first order moments of the posterior PDF
     """
@@ -407,7 +449,10 @@ def mean_bayesian_posterior(posterior_obj):
     # Axis 0 integrates over psi
     
     # Center on the naive psi
-    rolled_sample_psi0, rolled_posterior = center_posterior_naive_psi(posterior_obj.hp_index, sample_psi0, posterior)
+    if center == "naive":
+        rolled_sample_psi0, rolled_posterior = center_posterior_naive_psi(posterior_obj.hp_index, sample_psi0, posterior)
+    elif center == "MAP":
+        rolled_sample_psi0, rolled_posterior = center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior)
     posterior = rolled_posterior
     sample_psi0 = rolled_sample_psi0
     
@@ -435,5 +480,8 @@ def test_normalization(posterior_obj, pdx, psidx):
     print("Normalized posterior is {}".format(norm_posterior_test))
     
     return norm_posterior_test
+
+def gaussian_test():
+    
     
     
