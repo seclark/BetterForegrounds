@@ -509,7 +509,4 @@ def test_normalization(posterior_obj, pdx, psidx):
     
     return norm_posterior_test
 
-def gaussian_test():
-    
-    
     
