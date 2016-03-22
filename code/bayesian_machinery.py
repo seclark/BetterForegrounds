@@ -266,9 +266,6 @@ class DummyPosterior(BayesianComponent):
         
         print("psi dx is {}, p dx is {}".format(self.psi_dx, self.p_dx))
         
-        self.integrated_over_psi = self.integrate_highest_dimension(self.prior, dx = self.psi_dx)
-        self.integrated_over_p_and_psi = self.integrate_highest_dimension(self.integrated_over_psi, dx = self.p_dx)
-        
         psi_y = self.sample_psi0[:, np.newaxis]
         p_x = self.sample_p0
         
@@ -280,7 +277,13 @@ class DummyPosterior(BayesianComponent):
         gaussian = np.exp(-4*np.log(2) * ((p_x-self.pmeas)**2 + (psi_y-self.psimeas)**2) / self.fwhm**2)
         
         self.planck_likelihood = gaussian
-        self.normed_prior = 
+        
+        self.integrated_over_psi = self.integrate_highest_dimension(self.planck_likelihood, dx = self.psi_dx)
+        self.integrated_over_p_and_psi = self.integrate_highest_dimension(self.integrated_over_psi, dx = self.p_dx)
+        
+        self.normed_posterior = self.planck_likelihood/self.integrated_over_p_and_psi
+        
+        self.prior = np.ones(self.normed_posterior.shape, np.float_)
       
 
 def latex_formatter(x, pos):
