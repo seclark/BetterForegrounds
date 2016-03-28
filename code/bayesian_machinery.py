@@ -537,13 +537,13 @@ def mean_bayesian_posterior(posterior_obj, center = "naive"):
     print("psiMB is {}".format(psiMB))
     
     # Set parameters for convergence
-    psi_last = psiMB + np.pi/2
-    tol = 0.1
-    print("Have I converged?", np.abs(np.mod(psi_last - psiMB, np.pi)))
-    while np.abs(np.mod(psi_last - psiMB, np.pi)) < tol:
+    psi_last = psiMB - np.pi/2
+    tol = 0.001
+    while np.abs(np.mod(psi_last, np.pi) - np.mod(psiMB, np.pi)) > tol:
+        print("Convergence at {}".format(np.abs(np.mod(psi_last - psiMB, np.pi))))
         psi_last = psiMB
     
-        rolled_sample_psi0, rolled_posterior = center_posterior_psi_given(sample_psi0, posterior, psiMB)
+        rolled_sample_psi0, rolled_posterior = center_posterior_psi_given(rolled_sample_psi0, rolled_posterior, np.mod(psiMB, np.pi))
         # Integrate over p
         pMB1 = np.trapz(rolled_posterior, dx = psidx, axis = 0)
     
@@ -568,5 +568,18 @@ def test_normalization(posterior_obj, pdx, psidx):
     print("Normalized posterior is {}".format(norm_posterior_test))
     
     return norm_posterior_test
+    
+def get_all_rht_ids(rht_cursor):
+    all_ids = rht_cursor.execute("SELECT id from RHT_weights").fetchall()
+    
+    return all_ids
+    
+def get_rht_cursor():
+    # Planck-projected RHT data for prior stored as SQL db
+    rht_db = sqlite3.connect("allweights_db.sqlite")
+    rht_cursor = rht_db.cursor()
+    tablename = "RHT_weights"
+    
+    return rht_cursor
 
     
