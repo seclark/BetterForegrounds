@@ -80,9 +80,9 @@ class Prior(BayesianComponent):
     Class for building RHT priors
     """
     
-    def __init__(self, hp_index, sample_p0, reverse_RHT = False):
+    def __init__(self, hp_index, sample_p0, reverse_RHT = False, verbose = False):
     
-        BayesianComponent.__init__(self, hp_index)
+        BayesianComponent.__init__(self, hp_index, verbose = verbose)
         
         # Planck-projected RHT database
         rht_db = sqlite3.connect("allweights_db.sqlite")
@@ -105,7 +105,8 @@ class Prior(BayesianComponent):
             npsample = len(self.sample_p0)
             
             if reverse_RHT is True:
-                print("Reversing RHT data")
+                if verbose is True:
+                    print("Reversing RHT data")
                 self.rht_data = self.rht_data[::-1]
                 self.sample_psi0 = self.sample_psi0[::-1]
             
@@ -118,7 +119,8 @@ class Prior(BayesianComponent):
                 print("Multiplying psi_dx by -1")
                 self.psi_dx *= -1
             
-            print("psi dx is {}, p dx is {}".format(self.psi_dx, self.p_dx))
+            if verbose is True:
+                print("psi dx is {}, p dx is {}".format(self.psi_dx, self.p_dx))
             
             self.integrated_over_psi = self.integrate_highest_dimension(self.prior, dx = self.psi_dx)
             self.integrated_over_p_and_psi = self.integrate_highest_dimension(self.integrated_over_psi, dx = self.p_dx)
@@ -395,7 +397,7 @@ def center_naive_measurements(hp_index, sample_p0, center_on_p, sample_psi0, cen
     
     return rolled_sample_p0, rolled_weights_p0, rolled_sample_psi0, rolled_weights_psi0
     
-def center_posterior_naive_psi(posterior_obj, sample_psi0, posterior):
+def center_posterior_naive_psi(posterior_obj, sample_psi0, posterior, verbose = True):
 
     try:
         pnaive = posterior_obj.pmeas
@@ -407,13 +409,16 @@ def center_posterior_naive_psi(posterior_obj, sample_psi0, posterior):
     # Find index of value closest to psinaive - pi/2
     psinaive_indx = np.abs(sample_psi0 - (psinaive - np.pi/2)).argmin()
     
-    print("difference between psinaive - pi/2 and closest values is {} - {} = {}".format(psinaive - np.pi/2, sample_psi0[psinaive_indx], np.abs((psinaive - np.pi/2) - sample_psi0[psinaive_indx])))
+    if verbose is True:
+        print("difference between psinaive - pi/2 and closest values is {} - {} = {}".format(psinaive - np.pi/2, sample_psi0[psinaive_indx], np.abs((psinaive - np.pi/2) - sample_psi0[psinaive_indx])))
     if np.abs((psinaive - np.pi/2) - sample_psi0[psinaive_indx]) > (sample_psi0[1] - sample_psi0[0]):
-        print("Subtracting pi from all")
+        if verbose is True:
+            print("Subtracting pi from all")
         sample_psi0 -= np.pi
         psinaive_indx = np.abs(sample_psi0 - (psinaive - np.pi/2)).argmin()
-        print("Redefining psinaive_indx")
-        print("difference between psinaive - pi/2 and closest values is {} - {} = {}".format(psinaive - np.pi/2, sample_psi0[psinaive_indx], np.abs((psinaive - np.pi/2) - sample_psi0[psinaive_indx])))
+        if verbose is True:
+            print("Redefining psinaive_indx")
+            print("difference between psinaive - pi/2 and closest values is {} - {} = {}".format(psinaive - np.pi/2, sample_psi0[psinaive_indx], np.abs((psinaive - np.pi/2) - sample_psi0[psinaive_indx])))
     
     rolled_posterior = np.roll(posterior, - psinaive_indx, axis = 0)
     
@@ -459,7 +464,8 @@ def center_posterior_psi_given(sample_psi0, posterior, given_psi, verbose = True
     # Find index of value closest to given_psi - pi/2
     given_psi_indx = np.abs(sample_psi0 - (given_psi - np.pi/2)).argmin()
     
-    print("difference between given_psi - pi/2 and closest values is {} - {} = {}".format(given_psi - np.pi/2, sample_psi0[given_psi_indx], np.abs((given_psi - np.pi/2) - sample_psi0[given_psi_indx])))
+    if verbose is True:
+        print("difference between given_psi - pi/2 and closest values is {} - {} = {}".format(given_psi - np.pi/2, sample_psi0[given_psi_indx], np.abs((given_psi - np.pi/2) - sample_psi0[given_psi_indx])))
     if np.abs((given_psi - np.pi/2) - sample_psi0[given_psi_indx]) > (sample_psi0[1] - sample_psi0[0]):
         if verbose is True:
             print("Subtracting pi from all")
@@ -516,16 +522,19 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True):
         print("Sampling pdx is {}, psidx is {}".format(pdx, psidx))
     
     # Test that normed posterior is normed
-    norm_posterior_test = test_normalization(posterior_obj, pdx, psidx)
+    if verbose is True:
+        norm_posterior_test = test_normalization(posterior_obj, pdx, psidx)
     
     # Axis 0 integrates over psi
     
     # Center on the naive psi
     if center == "naive":
-        print("Centering initial integral on naive psi")
+        if verbose is True:
+            print("Centering initial integral on naive psi")
         rolled_sample_psi0, rolled_posterior = center_posterior_naive_psi(posterior_obj, sample_psi0, posterior, verbose = verbose)
     elif center == "MAP":
-        print("Centering initial integral on psi_MAP")
+        if verbose is True:
+            print("Centering initial integral on psi_MAP")
         rolled_sample_psi0, rolled_posterior = center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior, verbose = verbose)
     posterior = rolled_posterior
     sample_psi0 = rolled_sample_psi0
@@ -542,14 +551,16 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True):
     # Integrate over psi
     psiMB = np.trapz(psiMB1*sample_psi0, dx = psidx)
     
-    print("pMB is {}".format(pMB))
-    print("psiMB is {}".format(psiMB))
+    if verbose is True:
+        print("pMB is {}".format(pMB))
+        print("psiMB is {}".format(psiMB))
     
     # Set parameters for convergence
     psi_last = psiMB - np.pi/2
     tol = 0.001
     while np.abs(np.mod(psi_last, np.pi) - np.mod(psiMB, np.pi)) > tol:
-        print("Convergence at {}".format(np.abs(np.mod(psi_last - psiMB, np.pi))))
+        if verbose is True:
+            print("Convergence at {}".format(np.abs(np.mod(psi_last - psiMB, np.pi))))
         psi_last = psiMB
     
         rolled_sample_psi0, rolled_posterior = center_posterior_psi_given(rolled_sample_psi0, rolled_posterior, np.mod(psiMB, np.pi), verbose = verbose)
