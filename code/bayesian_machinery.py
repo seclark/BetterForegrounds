@@ -582,4 +582,17 @@ def get_rht_cursor():
     
     return rht_cursor
 
+def sample_all_rht_points():
+
+    rht_cursor = get_rht_cursor()
+    all_ids = get_all_rht_ids(rht_cursor)
+    
+    all_pMB = np.zeros(len(all_ids))
+    all_psiMB = np.zeros(len(all_ids))
+    
+    for i, _id in enumerate(all_ids):
+        posterior_obj = Posterior(_id)
+        all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive")
+
+
     
