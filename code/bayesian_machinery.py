@@ -49,7 +49,7 @@ class BayesianComponent():
         
         return integrated_field
     
-    def get_psi0_sampling_grid(self, hp_index):
+    def get_psi0_sampling_grid(self, hp_index, verbose = True):
         # Create psi0 sampling grid
         wlen = 75
         psi0_sample_db = sqlite3.connect("theta_bin_0_wlen"+str(wlen)+"_db.sqlite")
@@ -57,7 +57,7 @@ class BayesianComponent():
         zero_theta = psi0_sample_cursor.execute("SELECT zerotheta FROM theta_bin_0_wlen75 WHERE id = ?", (hp_index,)).fetchone()
 
         # Create array of projected thetas from theta = 0
-        thets = RHT_tools.get_thets(wlen)
+        thets = RHT_tools.get_thets(wlen, save = False, verbose = verbose)
         self.sample_psi0 = np.mod(zero_theta - thets, np.pi)
         
         return self.sample_psi0
@@ -96,7 +96,7 @@ class Prior(BayesianComponent):
             self.rht_data = self.rht_data[1:]
         
             # Get sample psi data
-            self.sample_psi0 = self.get_psi0_sampling_grid(hp_index)
+            self.sample_psi0 = self.get_psi0_sampling_grid(hp_index, verbose = verbose)
         
             # Roll RHT data to [0, pi)
             self.rht_data, self.sample_psi0 = self.roll_RHT_zero_to_pi(self.rht_data, self.sample_psi0)
@@ -558,9 +558,10 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True):
     # Set parameters for convergence
     psi_last = psiMB - np.pi/2
     tol = 0.001
-    while np.abs(np.mod(psi_last, np.pi) - np.mod(psiMB, np.pi)) > tol:
+    while angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False) > tol:
         if verbose is True:
-            print("Convergence at {}".format(np.abs(np.mod(psi_last - psiMB, np.pi))))
+            print("Convergence at {}".format(np.abs(np.mod(psi_last, np.pi) - np.mod(psiMB, np.pi))))
+            print(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi))
         psi_last = psiMB
     
         rolled_sample_psi0, rolled_posterior = center_posterior_psi_given(rolled_sample_psi0, rolled_posterior, np.mod(psiMB, np.pi), verbose = verbose)
@@ -616,6 +617,22 @@ def sample_all_rht_points(all_ids):
         posterior_obj = Posterior(_id[0])
         all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False)
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
+        
+    return all_pMB, all_psiMB
+    
+def angle_residual(ang1, ang2, degrees = True):
+    if degrees is True:
+        ang1 = np.radians(ang1)
+        ang2 = np.radians(ang2)
+
+    dang_num = (np.sin(2*ang1)*np.cos(2*ang2) - np.cos(2*ang1)*np.sin(2*ang2))
+    dang_denom = (np.cos(2*ang1)*np.cos(2*ang2) + np.sin(2*ang1)*np.sin(2*ang2))
+    dang = 0.5*np.arctan2(dang_num, dang_denom)
+    
+    if degrees is True:
+        dang = np.degrees(dang)
+    
+    return dang
 
 def update_progress(progress, message='Progress:', final_message='Finished:'):
     # Create progress meter that looks like: 
