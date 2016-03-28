@@ -423,20 +423,25 @@ def center_posterior_naive_psi(posterior_obj, sample_psi0, posterior):
     
     return rolled_sample_psi0, rolled_posterior 
     
-def center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior):
+def center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior, verbose = True):
 
     pMAP, psiMAP = maximum_a_posteriori(posterior_obj)
 
     # Find index of value closest to psiMAP - pi/2
     psiMAP_indx = np.abs(sample_psi0 - (psiMAP - np.pi/2)).argmin()
     
-    print("difference between psiMAP - pi/2 and closest values is {} - {} = {}".format(psiMAP - np.pi/2, sample_psi0[psiMAP_indx], np.abs((psiMAP - np.pi/2) - sample_psi0[psiMAP_indx])))
+    if verbose is True:
+        print("difference between psiMAP - pi/2 and closest values is {} - {} = {}".format(psiMAP - np.pi/2, sample_psi0[psiMAP_indx], np.abs((psiMAP - np.pi/2) - sample_psi0[psiMAP_indx])))
+    
     if np.abs((psiMAP - np.pi/2) - sample_psi0[psiMAP_indx]) > (sample_psi0[1] - sample_psi0[0]):
-        print("Subtracting pi from all")
+        if verbose is True:
+            print("Subtracting pi from all")
         sample_psi0 -= np.pi
         psiMAP_indx = np.abs(sample_psi0 - (psiMAP - np.pi/2)).argmin()
-        print("Redefining psiMAP_indx")
-        print("difference between psiMAP - pi/2 and closest values is {} - {} = {}".format(psiMAP - np.pi/2, sample_psi0[psiMAP_indx], np.abs((psiMAP - np.pi/2) - sample_psi0[psiMAP_indx])))
+        
+        if verbose is True:
+            print("Redefining psiMAP_indx")
+            print("difference between psiMAP - pi/2 and closest values is {} - {} = {}".format(psiMAP - np.pi/2, sample_psi0[psiMAP_indx], np.abs((psiMAP - np.pi/2) - sample_psi0[psiMAP_indx])))
     
     rolled_posterior = np.roll(posterior, - psiMAP_indx, axis = 0)
     
@@ -446,7 +451,7 @@ def center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior):
     
     return rolled_sample_psi0, rolled_posterior
     
-def center_posterior_psi_given(sample_psi0, posterior, given_psi):
+def center_posterior_psi_given(sample_psi0, posterior, given_psi, verbose = True):
     """
     Center posterior on given psi
     """
@@ -456,11 +461,13 @@ def center_posterior_psi_given(sample_psi0, posterior, given_psi):
     
     print("difference between given_psi - pi/2 and closest values is {} - {} = {}".format(given_psi - np.pi/2, sample_psi0[given_psi_indx], np.abs((given_psi - np.pi/2) - sample_psi0[given_psi_indx])))
     if np.abs((given_psi - np.pi/2) - sample_psi0[given_psi_indx]) > (sample_psi0[1] - sample_psi0[0]):
-        print("Subtracting pi from all")
+        if verbose is True:
+            print("Subtracting pi from all")
         sample_psi0 -= np.pi
         given_psi_indx = np.abs(sample_psi0 - (given_psi - np.pi/2)).argmin()
-        print("Redefining given_psi_indx")
-        print("difference between given_psi - pi/2 and closest values is {} - {} = {}".format(given_psi - np.pi/2, sample_psi0[given_psi_indx], np.abs((given_psi - np.pi/2) - sample_psi0[given_psi_indx])))
+        if verbose is True:
+            print("Redefining given_psi_indx")
+            print("difference between given_psi - pi/2 and closest values is {} - {} = {}".format(given_psi - np.pi/2, sample_psi0[given_psi_indx], np.abs((given_psi - np.pi/2) - sample_psi0[given_psi_indx])))
     
     rolled_posterior = np.roll(posterior, - given_psi_indx, axis = 0)
     
@@ -470,7 +477,7 @@ def center_posterior_psi_given(sample_psi0, posterior, given_psi):
     
     return rolled_sample_psi0, rolled_posterior
     
-def maximum_a_posteriori(posterior_obj):
+def maximum_a_posteriori(posterior_obj, verbose = True):
     """
     MAP estimator
     """
@@ -485,12 +492,13 @@ def maximum_a_posteriori(posterior_obj):
     psi_map = posterior_obj.sample_psi0[psi_map_indx]
     p_map = posterior_obj.sample_p0[p_map_indx]
     
-    print("pMAP is {}".format(p_map))
-    print("psiMAP is {}".format(psi_map))
+    if verbose is True:
+        print("pMAP is {}".format(p_map))
+        print("psiMAP is {}".format(psi_map))
     
     return p_map, psi_map
     
-def mean_bayesian_posterior(posterior_obj, center = "naive"):
+def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True):
     """
     Integrated first order moments of the posterior PDF
     """
@@ -504,7 +512,8 @@ def mean_bayesian_posterior(posterior_obj, center = "naive"):
     pdx = sample_p0[1] - sample_p0[0]
     psidx = sample_psi0[1] - sample_psi0[0]
     
-    print("Sampling pdx is {}, psidx is {}".format(pdx, psidx))
+    if verbose is True:
+        print("Sampling pdx is {}, psidx is {}".format(pdx, psidx))
     
     # Test that normed posterior is normed
     norm_posterior_test = test_normalization(posterior_obj, pdx, psidx)
@@ -514,10 +523,10 @@ def mean_bayesian_posterior(posterior_obj, center = "naive"):
     # Center on the naive psi
     if center == "naive":
         print("Centering initial integral on naive psi")
-        rolled_sample_psi0, rolled_posterior = center_posterior_naive_psi(posterior_obj, sample_psi0, posterior)
+        rolled_sample_psi0, rolled_posterior = center_posterior_naive_psi(posterior_obj, sample_psi0, posterior, verbose = verbose)
     elif center == "MAP":
         print("Centering initial integral on psi_MAP")
-        rolled_sample_psi0, rolled_posterior = center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior)
+        rolled_sample_psi0, rolled_posterior = center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior, verbose = verbose)
     posterior = rolled_posterior
     sample_psi0 = rolled_sample_psi0
     
@@ -543,7 +552,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive"):
         print("Convergence at {}".format(np.abs(np.mod(psi_last - psiMB, np.pi))))
         psi_last = psiMB
     
-        rolled_sample_psi0, rolled_posterior = center_posterior_psi_given(rolled_sample_psi0, rolled_posterior, np.mod(psiMB, np.pi))
+        rolled_sample_psi0, rolled_posterior = center_posterior_psi_given(rolled_sample_psi0, rolled_posterior, np.mod(psiMB, np.pi), verbose = verbose)
         # Integrate over p
         pMB1 = np.trapz(rolled_posterior, dx = psidx, axis = 0)
     
@@ -556,8 +565,9 @@ def mean_bayesian_posterior(posterior_obj, center = "naive"):
         # Integrate over psi
         psiMB = np.trapz(psiMB1*rolled_sample_psi0, dx = psidx)
         
-        print("Iterating. New pMB is {}".format(pMB))
-        print("Iterating. New psiMB is {}".format(psiMB))
+        if verbose is True:
+            print("Iterating. New pMB is {}".format(pMB))
+            print("Iterating. New psiMB is {}".format(psiMB))
     
     return pMB, psiMB#, pMB1, psiMB1, sample_psi0, sample_p0
 
@@ -582,17 +592,75 @@ def get_rht_cursor():
     
     return rht_cursor
 
-def sample_all_rht_points():
+def sample_all_rht_points(all_ids):
 
-    rht_cursor = get_rht_cursor()
-    all_ids = get_all_rht_ids(rht_cursor)
+    #rht_cursor = get_rht_cursor()
+    #all_ids = get_all_rht_ids(rht_cursor)
     
     all_pMB = np.zeros(len(all_ids))
     all_psiMB = np.zeros(len(all_ids))
     
+    update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        posterior_obj = Posterior(_id)
-        all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive")
+        posterior_obj = Posterior(_id[0])
+        all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False)
+        update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
 
+def update_progress(progress, message='Progress:', final_message='Finished:'):
+    # Create progress meter that looks like: 
+    # message + ' ' + '[' + '#'*p + ' '*(length-p) + ']' + time_message
 
+    if not 0.0 <= progress <= 1.0:
+        # Fast fail for values outside the allowed range
+        raise ValueError('Progress value outside allowed value in update_progress') 
+
+    #TODO_________________Slow Global Implementation
+    global start_time
+    global stop_time 
+
+    # First call
+    if 0.0 == progress:
+        start_time = time.time()
+        stop_time = None
+        return
+
+    # Second call
+    elif stop_time is None:
+        stop_time = start_time + (time.time() - start_time)/progress
+
+    # Randomly callable re-calibration
+    elif np.random.rand() > 0.98: 
+        stop_time = start_time + (time.time() - start_time)/progress
+
+    # Normal Call with Progress
+    sec_remaining = int(stop_time - time.time())
+    if sec_remaining >= 60:
+        time_message = ' < ' + str(sec_remaining//60  +1) + 'min'
+    else:
+        time_message = ' < ' + str(sec_remaining +1) + 'sec'
+
+    TEXTWIDTH = 70
+    length = int(0.55 * TEXTWIDTH)
+    messlen = TEXTWIDTH-(length+3)-len(time_message)
+    message = string.ljust(message, messlen)[:messlen]
+
+    p = int(length*progress/1.0) 
+    sys.stdout.write('\r{2} [{0}{1}]{3}'.format('#'*p, ' '*(length-p), message, time_message))
+    sys.stdout.flush()
+
+    # Final call
+    if p == length:
+        total = int(time.time()-start_time)
+        if total > 60:
+            time_message = ' ' + str(total//60) + 'min'
+        else:
+            time_message = ' ' + str(total) + 'sec'
+        
+        final_offset = TEXTWIDTH-len(time_message)
+        final_message = string.ljust(final_message, final_offset)[:final_offset]
+        sys.stdout.write('\r{0}{1}'.format(final_message, time_message))
+        sys.stdout.flush()
+        start_time = None
+        stop_time = None
+        print("")
     
