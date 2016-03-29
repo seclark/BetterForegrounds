@@ -620,6 +620,15 @@ def sample_all_rht_points(all_ids):
         
     return all_pMB, all_psiMB
     
+def make_hp_map(data, hp_indices, Nside = 2048, nest = True):
+    
+    Npix = 12*Nside**2
+    map_data = np.zeros(Npix, np.float_)
+    map_data[hp_indices] = data
+    
+    return map_data
+
+    
 def angle_residual(ang1, ang2, degrees = True):
     if degrees is True:
         ang1 = np.radians(ang1)
