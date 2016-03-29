@@ -628,6 +628,14 @@ def make_hp_map(data, hp_indices, Nside = 2048, nest = True):
     
     return map_data
 
+def sampled_data_to_hp(psiMB, pMB, hp_indices, nest = True):
+    
+    hp_psiMB = make_hp_map(psiMB, hp_indices, Nside = 2048, nest = nest)
+    hp_pMB = make_hp_map(pMB, hp_indices, Nside = 2048, nest = nest)
+    
+    out_root = "/Users/susanclark/BetterForegrounds/data/"
+    hp.fitsfunc.write_map(out_root + "psiMB_test0.fits", hp_psiMB, coord = "C", nest = nest) 
+    hp.fitsfunc.write_map(out_root + "pMB_test0.fits", hp_pMB, coord = "C", nest = nest) 
     
 def angle_residual(ang1, ang2, degrees = True):
     if degrees is True:
