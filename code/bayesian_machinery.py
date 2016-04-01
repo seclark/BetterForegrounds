@@ -621,6 +621,9 @@ def sample_all_rht_points(all_ids):
     return all_pMB, all_psiMB
     
 def make_hp_map(data, hp_indices, Nside = 2048, nest = True):
+    """
+    Places data into array of healpix pixels by healpix index.
+    """
     
     Npix = 12*Nside**2
     map_data = np.zeros(Npix, np.float_)
@@ -629,6 +632,9 @@ def make_hp_map(data, hp_indices, Nside = 2048, nest = True):
     return map_data
 
 def sampled_data_to_hp(psiMB, pMB, hp_indices, nest = True):
+    """
+    Write data to healpix map. Wraps make_hp_map
+    """
     
     hp_psiMB = make_hp_map(psiMB, hp_indices, Nside = 2048, nest = nest)
     hp_pMB = make_hp_map(pMB, hp_indices, Nside = 2048, nest = nest)
