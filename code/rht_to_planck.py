@@ -69,8 +69,6 @@ def transform_theta_bins():
     quit()
 
 
-
-
 def interpolate_thetas(vstart = 1019, vstop = 1023, wlen = 75):     
 
     # Our analysis is run with wlen = 75
@@ -137,7 +135,7 @@ def interpolate_thetas(vstart = 1019, vstop = 1023, wlen = 75):
 
 def interpolate_data_to_hp_galactic(data, data_hdr):    
 
-    # Planck file in galactic coordinates
+    # Planck file in galactic coordinates -- NOTE these are Nested
     planck_root = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/"
     Pfile = planck_root + "HFI_SkyMap_353_2048_R2.02_full.fits"
 
@@ -286,6 +284,12 @@ def reproject_by_thetabin():
         out_hdr["VSTOP"] = vels[-1]
     
         fits.writeto(out_fn, single_theta_backprojection_galactic, out_hdr)
+        
+def reproject_by_thetabin_allsky():
+    """
+    Reproject single theta backprojections for full GALFA sky, incl. wrapped and filled data.
+    """
+    
 
 def plot_by_thetabin():
 
@@ -367,7 +371,7 @@ def plot_by_thetabin():
     im2 = ax2.imshow(np.log10(single_theta_backprojection), cmap = cmap)
     plt.colorbar(im2, orientation = "horizontal")
 
-if __name__ == "__main__":
-    plot_by_thetabin()
+#if __name__ == "__main__":
+#    plot_by_thetabin()
 
     
