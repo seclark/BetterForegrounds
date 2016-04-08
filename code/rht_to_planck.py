@@ -312,11 +312,11 @@ def reproject_by_thetabin_allsky():
         if cstart == 999:
             s_string = "S0"
             extra_0 = ""
+        
+        for num in [1, 2, 3, 4, 5]:
+            rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_"+str(num)+"_SRcorr.fits"
     
-    
-    
-    rht_fn = root + "SC_241.66_28.675.best_"+str(vels[0])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
-    ipoints16, jpoints16, rthetas16, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+        ipoints16, jpoints16, rthetas16, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
 
 def plot_by_thetabin():
 
