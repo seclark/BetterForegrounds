@@ -290,6 +290,33 @@ def reproject_by_thetabin_allsky():
     Reproject single theta backprojections for full GALFA sky, incl. wrapped and filled data.
     """
     
+    vels = np.arange(-10, 11, 1) # channels analyzed in full-sky data
+    root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/xyt_data/" 
+    out_root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/xyt_data/"
+    wlen = 75
+
+    # Get starting parameters from vels[0]
+    for v_ in vels: # Everything is in chunks of 5 channels. e.g. 1024_1028 includes [1024, 1028] inclusive.
+        cstart = 1024 + v_*5
+        cstop = cstart + cstep - 1
+
+        hdr["CSTART"] = cstart
+        hdr["CSTOP"] = cstop
+        
+        if cstart <= 999:
+            s_string = "S0"
+            extra_0 = "0"
+        else:
+            s_string = "S"
+            extra_0 = ""
+        if cstart == 999:
+            s_string = "S0"
+            extra_0 = ""
+    
+    
+    
+    rht_fn = root + "SC_241.66_28.675.best_"+str(vels[0])+"_xyt_w"+str(wlen)+"_s15_t70_galfapixcorr.fits"
+    ipoints16, jpoints16, rthetas16, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
 
 def plot_by_thetabin():
 
