@@ -310,25 +310,46 @@ def reproject_by_thetabin_allsky():
     root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/xyt_data/" 
     out_root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/xyt_data/"
     wlen = 75
-
+    
+    # This is just to get the shape of the all-sky data
+    fulldata = fits.getdata("/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/GALFA_HI_W_S1024_1028.fits")
+    nyfull, nxfull = fulldata.shape
+    
     # Loop through thetas - should be xrange(ntheta) but just testing now
     for theta_index in xrange(1):
         time0 = time.time()
-
-    # Get starting parameters from vels[0]
-    for v_ in vels: # Everything is in chunks of 5 channels. e.g. 1024_1028 includes [1024, 1028] inclusive.
-        cstart = 1024 + v_*5
-        cstop = cstart + cstep - 1
-
-        hdr["CSTART"] = cstart
-        hdr["CSTOP"] = cstop
         
-        s_string, extra_0 = get_extra0_sstring(cstart, cstop)
+        # New single theta backprojection
+        single_theta_backprojection = np.zeros(fulldata.shape)
         
-        for num in [1, 2, 3, 4, 5]:
-            rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_"+str(num)+"_SRcorr.fits"
+        # Step through velocity channels
+        for v_ in vels: # Everything is in chunks of 5 channels. e.g. 1024_1028 includes [1024, 1028] inclusive.
+            cstart = 1024 + v_*5
+            cstop = cstart + cstep - 1
+
+            hdr["CSTART"] = cstart
+            hdr["CSTOP"] = cstop
+        
+            s_string, extra_0 = get_extra0_sstring(cstart, cstop)
     
-        ipoints16, jpoints16, rthetas16, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+            for num in [1, 2, 3, 4, 5]:
+                # Start and stop for each section
+                xstart0 = max((step*num - overlap), 0)
+                xstop0 = step*(num + 1) + overlap
+        
+                # Load xyt data
+                rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_"+str(num)+"_SRcorr.fits"
+                ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+                single_theta_backprojection_chunk = single_theta_slice(theta_index, ipoints, jpoints, rthetas, naxis1, naxis2)
+              
+                single_theta_backprojection_chunk[np.where(np.isnan(single_theta_backprojection_chunk) == True)] = 0   
+        
+                single_theta_backprojection[:, xstart0:xstop0] += single_theta_backprojection_chunk
+        
+        time1 = time.time()
+        print("theta %f took %f minutes" %(theta_index, (time1 - time0)/60.))
+        
+    return single_theta_backprojection
 
 def plot_by_thetabin():
 
