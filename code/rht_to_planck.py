@@ -285,6 +285,22 @@ def reproject_by_thetabin():
     
         fits.writeto(out_fn, single_theta_backprojection_galactic, out_hdr)
         
+def get_extra0_sstring(cstart, cstop):
+    """
+    For naming convention
+    """
+    if cstart <= 999:
+        s_string = "S0"
+        extra_0 = "0"
+    else:
+        s_string = "S"
+        extra_0 = ""
+    if cstart == 999:
+        s_string = "S0"
+        extra_0 = ""
+        
+    return s_string, extra_0
+        
 def reproject_by_thetabin_allsky():
     """
     Reproject single theta backprojections for full GALFA sky, incl. wrapped and filled data.
@@ -295,6 +311,10 @@ def reproject_by_thetabin_allsky():
     out_root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/xyt_data/"
     wlen = 75
 
+    # Loop through thetas - should be xrange(ntheta) but just testing now
+    for theta_index in xrange(1):
+        time0 = time.time()
+
     # Get starting parameters from vels[0]
     for v_ in vels: # Everything is in chunks of 5 channels. e.g. 1024_1028 includes [1024, 1028] inclusive.
         cstart = 1024 + v_*5
@@ -303,15 +323,7 @@ def reproject_by_thetabin_allsky():
         hdr["CSTART"] = cstart
         hdr["CSTOP"] = cstop
         
-        if cstart <= 999:
-            s_string = "S0"
-            extra_0 = "0"
-        else:
-            s_string = "S"
-            extra_0 = ""
-        if cstart == 999:
-            s_string = "S0"
-            extra_0 = ""
+        s_string, extra_0 = get_extra0_sstring(cstart, cstop)
         
         for num in [1, 2, 3, 4, 5]:
             rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_"+str(num)+"_SRcorr.fits"
