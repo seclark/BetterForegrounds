@@ -310,6 +310,11 @@ def reproject_by_thetabin_allsky():
     root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/xyt_data/" 
     out_root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/xyt_data/"
     wlen = 75
+    cstep = 5
+    
+    # Overlapping/stepping parameters
+    step = 3600
+    overlap = 50
     
     # This is just to get the shape of the all-sky data
     fulldata = fits.getdata("/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/GALFA_HI_W_S1024_1028.fits")
@@ -324,27 +329,31 @@ def reproject_by_thetabin_allsky():
         
         # Step through velocity channels
         for v_ in vels: # Everything is in chunks of 5 channels. e.g. 1024_1028 includes [1024, 1028] inclusive.
-            cstart = 1024 + v_*5
+            cstart = 1024 + v_*cstep
             cstop = cstart + cstep - 1
-
-            hdr["CSTART"] = cstart
-            hdr["CSTOP"] = cstop
         
             s_string, extra_0 = get_extra0_sstring(cstart, cstop)
     
             for num in [1, 2, 3, 4, 5]:
+                time2 = time.time()
                 # Start and stop for each section
                 xstart0 = max((step*num - overlap), 0)
                 xstop0 = step*(num + 1) + overlap
         
                 # Load xyt data
-                rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_"+str(num)+"_SRcorr.fits"
+                rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_"+str(num)+"_SRcorr_xyt_w"+str(wlen)+"_s15_t70.fits"
                 ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
                 single_theta_backprojection_chunk = single_theta_slice(theta_index, ipoints, jpoints, rthetas, naxis1, naxis2)
               
                 single_theta_backprojection_chunk[np.where(np.isnan(single_theta_backprojection_chunk) == True)] = 0   
-        
                 single_theta_backprojection[:, xstart0:xstop0] += single_theta_backprojection_chunk
+                
+                # While we're here, also load associated filler
+                rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_filler"+str(num)+"_SRcorr_xyt_w"+str(wlen)+"_s15_t70.fits"
+                ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+                
+                time3 = time.time()
+                print("num %f took %f minutes" %(num, (time3 - time2)/60.))
         
         time1 = time.time()
         print("theta %f took %f minutes" %(theta_index, (time1 - time0)/60.))
