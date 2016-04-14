@@ -571,14 +571,14 @@ def project_allsky_thetaweights_to_database():
     column_names = " FLOAT DEFAULT 0.0,".join(value_names[:nthets])
 
     # Name table
-    tablename = "RHT_weights"
+    tablename = "RHT_weights_allsky"
 
     # Statement for creation of SQL database
     createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+" FLOAT DEFAULT 0.0);"
 
     # Instantiate database
     #conn = sqlite3.connect(":memory:")
-    conn = sqlite3.connect("allweights_db.sqlite")
+    conn = sqlite3.connect("/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/allsky_RHTweights_db.sqlite")
     c = conn.cursor()
     c.execute(createstatement)
     conn.commit()
@@ -587,11 +587,11 @@ def project_allsky_thetaweights_to_database():
         time0 = time.time()
     
         # Load in single-theta backprojection
-        unprojected_fn = projected_root + "GALFA_HI_allsky_-10_10_w75_s15_t70_thetabin_"+str(_thetabin_i)+".fits"
+        unprojected_fn = unprojected_root + "GALFA_HI_allsky_-10_10_w75_s15_t70_thetabin_"+str(_thetabin_i)+".fits"
         unprojdata = fits.getdata(unprojected_fn)
 
         # Project data to hp galactic
-        projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(single_theta_backprojection, galfa_hdr)
+        projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr)
         print("Data successfully projected")
     
         # Some data stored as -999 for 'none'
@@ -1322,7 +1322,8 @@ class Posterior(BayesianComponent):
         self.normed_posterior = self.posterior/self.posterior_integrated_over_p_and_psi
     
     
-#if __name__ == "__main__":
-#    planck_data_to_database(Nside = 2048, covdata = True)
+if __name__ == "__main__":
+    #planck_data_to_database(Nside = 2048, covdata = True)
+    project_allsky_thetaweights_to_database()
 
 
