@@ -15,6 +15,7 @@ import matplotlib.ticker as ticker
 
 # Local repo imports
 import debias
+import rht_to_planck
 
 # Other repo imports (RHT helper code)
 import sys 
@@ -548,14 +549,14 @@ def project_allsky_thetaweights_to_database():
     """
     
     # Pull in each unprojected theta bin
-    projected_root = "/Volumes/DataDavy/GALFA/SC_241/cleaned/galfapix_corrected/theta_backprojections/"
+    unprojected_root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/single_theta_backprojections/"
 
     # Output filename
-    projected_data_dictionary_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_dictionary.p"
+    projected_data_dictionary_fn = unprojected_root + "GALFA_HI_allsky_-10_10_w75_s15_t70_thetabin_dictionary.p"
 
-    # Project data to hp galactic
-    single_theta_backprojection_galactic, out_hdr = interpolate_data_to_hp_galactic(single_theta_backprojection, galfa_hdr)
-        
+    # Full GALFA file header for projection
+    galfa_fn = "/Volumes/DataDavy/GALFA/DR2/FullSkyWide/GALFA_HI_W_S1024_V0000.4kms.fits"
+    galfa_hdr = fits.getheader(galfa_fn)
 
     nthets = 165 
 
@@ -586,9 +587,13 @@ def project_allsky_thetaweights_to_database():
         time0 = time.time()
     
         # Load in single-theta backprojection
-        projected_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_"+str(_thetabin_i)+".fits"
-        projdata = fits.getdata(projected_fn)
+        unprojected_fn = projected_root + "GALFA_HI_allsky_-10_10_w75_s15_t70_thetabin_"+str(_thetabin_i)+".fits"
+        unprojdata = fits.getdata(unprojected_fn)
 
+        # Project data to hp galactic
+        projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(single_theta_backprojection, galfa_hdr)
+        print("Data successfully projected")
+    
         # Some data stored as -999 for 'none'
         projdata[projdata == -999] = 0
 
