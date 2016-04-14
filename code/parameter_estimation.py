@@ -539,7 +539,75 @@ def planck_data_to_database(Nside = 2048, covdata = True):
         #    print(_hp_index, map353Gal[:, _hp_index])
     
     conn.commit()
-            
+
+def project_allsky_thetaweights_to_database():
+    """
+    Projects allsky weights to healpix Galactic.
+    Writes all projected weights from region to an SQL database.
+    NOTE :: id = primary key, pixel index in NESTED order
+    """
+    
+    # Pull in each unprojected theta bin
+    projected_root = "/Volumes/DataDavy/GALFA/SC_241/cleaned/galfapix_corrected/theta_backprojections/"
+
+    # Output filename
+    projected_data_dictionary_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_dictionary.p"
+
+    # Project data to hp galactic
+    single_theta_backprojection_galactic, out_hdr = interpolate_data_to_hp_galactic(single_theta_backprojection, galfa_hdr)
+        
+
+    nthets = 165 
+
+    # Arbitrary 2-letter SQL storage value names
+    value_names = [''.join(i) for i in itertools.permutations(string.lowercase,2)]
+
+    # Remove protected words from value names
+    if "as" in value_names: value_names.remove("as")
+    if "is" in value_names: value_names.remove("is")
+
+    # Comma separated list of nthets column names
+    column_names = " FLOAT DEFAULT 0.0,".join(value_names[:nthets])
+
+    # Name table
+    tablename = "RHT_weights"
+
+    # Statement for creation of SQL database
+    createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+" FLOAT DEFAULT 0.0);"
+
+    # Instantiate database
+    #conn = sqlite3.connect(":memory:")
+    conn = sqlite3.connect("allweights_db.sqlite")
+    c = conn.cursor()
+    c.execute(createstatement)
+    conn.commit()
+
+    for _thetabin_i in xrange(nthets):
+        time0 = time.time()
+    
+        # Load in single-theta backprojection
+        projected_fn = projected_root + "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_"+str(_thetabin_i)+".fits"
+        projdata = fits.getdata(projected_fn)
+
+        # Some data stored as -999 for 'none'
+        projdata[projdata == -999] = 0
+
+        # The healpix indices we keep will be the ones where there is nonzero data
+        nonzero_index = np.nonzero(projdata)[0]
+        print("there are {} nonzero elements".format(len(nonzero_index)))
+
+        # Either inserts new ID with given value or ignores if id already exists 
+        c.executemany("INSERT OR IGNORE INTO "+tablename+" (id, "+value_names[_thetabin_i]+") VALUES (?, ?)", [(i, projdata[i]) for i in nonzero_index])
+    
+        # Inserts data to new ids
+        c.executemany("UPDATE "+tablename+" SET "+value_names[_thetabin_i]+"=? WHERE id=?", [(projdata[i], i) for i in nonzero_index])
+    
+        conn.commit()
+    
+        time1 = time.time()
+        print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
+
+    conn.close()            
 
 def projected_thetaweights_to_database():
     """
