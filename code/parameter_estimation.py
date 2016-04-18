@@ -585,6 +585,7 @@ def project_allsky_thetaweights_to_database(update = False):
     
     if update is True:
         print("table already created -- this is simply an update")
+    else:
         c.execute(createstatement)
         conn.commit()
 
