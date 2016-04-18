@@ -611,7 +611,7 @@ def project_allsky_thetaweights_to_database(update = False):
 
         # The healpix indices we keep will be the ones where there is nonzero data
         nonzero_index = np.nonzero(projdata)[0]
-        print("there are {} nonzero elements".format(len(nonzero_index)))
+        print("there are {} nonzero elements in thetabin {}".format(len(nonzero_index), _thetabin_i))
         
         # Try wrapping this in a transaction
         c.execute("begin")
@@ -1418,7 +1418,7 @@ class Posterior(BayesianComponent):
     
 if __name__ == "__main__":
     #planck_data_to_database(Nside = 2048, covdata = True)
-    project_allsky_thetaweights_to_database()
+    project_allsky_thetaweights_to_database(update = True)
     #reproject_allsky_data()
 
 
