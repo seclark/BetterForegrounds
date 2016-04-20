@@ -590,7 +590,7 @@ def project_allsky_thetaweights_to_database(update = False):
         conn.commit()
 
     # try setting isolation level
-    conn.isolation_level = None
+    #conn.isolation_level = None
 
     for _thetabin_i in range(23, nthets, 1):
     #for _thetabin_i in xrange(nthets):
@@ -615,13 +615,13 @@ def project_allsky_thetaweights_to_database(update = False):
         print("there are {} nonzero elements in thetabin {}".format(len(nonzero_index), _thetabin_i))
         
         # Try wrapping this in a transaction
-        c.execute("begin")
+        #c.execute("begin")
         # Either inserts new ID with given value or ignores if id already exists 
         c.executemany("INSERT OR IGNORE INTO "+tablename+" (id, "+value_names[_thetabin_i]+") VALUES (?, ?)", [(i, projdata[i]) for i in nonzero_index])
     
         # Inserts data to new ids
         c.executemany("UPDATE "+tablename+" SET "+value_names[_thetabin_i]+"=? WHERE id=?", [(projdata[i], i) for i in nonzero_index])
-        c.execute("commit")
+        #c.execute("commit")
         
         conn.commit()
     
