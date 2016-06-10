@@ -592,7 +592,7 @@ def test_normalization(posterior_obj, pdx, psidx):
     return norm_posterior_test
     
 def get_all_rht_ids(rht_cursor, tablename):
-    all_ids = rht_cursor.execute("SELECT id from "+tablename+").fetchall()
+    all_ids = rht_cursor.execute("SELECT id from "+tablename).fetchall()
     
     return all_ids
     
