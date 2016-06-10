@@ -26,6 +26,9 @@ import sys
 sys.path.insert(0, '../../RHT')
 import RHT_tools
 
+sys.path.insert(0, '../../PolarizationTools')
+import basic_functions as polarization_tools
+
 """
  Bayesian psi, p estimation routines.
 """
@@ -134,7 +137,25 @@ class Prior(BayesianComponent):
             else:
                 print("Unknown TypeError when constructing RHT prior")
                 
-                    
+class PriorThetaRHT(BayesianComponent):
+    """
+    Class for building RHT priors which are defined by theta_RHT and corresponding error
+    """
+    
+    def __init__(self, hp_index, sample_p0, reverse_RHT = False, verbose = False, region = "SC_241"):
+    
+        BayesianComponent.__init__(self, hp_index, verbose = verbose)
+        
+        # Need Q_RHT, U_RHT, and errors 
+        QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor = get_rht_QU_cursors()
+        obj_ids = ["intrht", "QRHT", "URHT", "QRHTsq", "URHTsq"]
+        self.QRHT = QRHT_cursor.execute("SELECT * FROM QRHT WHERE id = ?", (self.hp_index,)).fetchone()
+        self.URHT = URHT_cursor.execute("SELECT * FROM URHT WHERE id = ?", (self.hp_index,)).fetchone()
+        self.QRHTsq = sig_QRHT_cursor.execute("SELECT * FROM QRHTsq WHERE id = ?", (self.hp_index,)).fetchone()
+        self.URHTsq = sig_URHT_cursor.execute("SELECT * FROM URHTsq WHERE id = ?", (self.hp_index,)).fetchone()
+        
+        sig_psi, sig_P = polarization_tools.sigma_psi_P(Q, U, sig_QQ, sig_UU)
+               
 class Likelihood(BayesianComponent):
     """
     Class for building Planck-based likelihood
