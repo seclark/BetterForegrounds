@@ -149,23 +149,48 @@ class PriorThetaRHT(BayesianComponent):
         # Load Q_RHT, U_RHT, and errors 
         QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor = get_rht_QU_cursors()
         obj_ids = ["intrht", "QRHT", "URHT", "QRHTsq", "URHTsq"]
-        self.QRHT = QRHT_cursor.execute("SELECT * FROM QRHT WHERE id = ?", (self.hp_index,)).fetchone()
-        self.URHT = URHT_cursor.execute("SELECT * FROM URHT WHERE id = ?", (self.hp_index,)).fetchone()
-        self.QRHTsq = sig_QRHT_cursor.execute("SELECT * FROM QRHTsq WHERE id = ?", (self.hp_index,)).fetchone()
-        self.URHTsq = sig_URHT_cursor.execute("SELECT * FROM URHTsq WHERE id = ?", (self.hp_index,)).fetchone()
         
-        self.sig_psi, self.sig_P = polarization_tools.sigma_psi_P(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq)
+        try:
+            self.QRHT = QRHT_cursor.execute("SELECT * FROM QRHT WHERE id = ?", (self.hp_index,)).fetchone()
+            self.URHT = URHT_cursor.execute("SELECT * FROM URHT WHERE id = ?", (self.hp_index,)).fetchone()
+            self.QRHTsq = sig_QRHT_cursor.execute("SELECT * FROM QRHTsq WHERE id = ?", (self.hp_index,)).fetchone()
+            self.URHTsq = sig_URHT_cursor.execute("SELECT * FROM URHTsq WHERE id = ?", (self.hp_index,)).fetchone()
         
-        # This construction is simple because we can sample everything on [0, pi)
-        self.sample_psi0 = np.linspace(0, np.pi, 165)
-        self.sample_p0 = sample_p0
+            self.sig_psi, self.sig_P = polarization_tools.sigma_psi_P(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq)
         
-        # 1D prior will be Gaussian centered on psi_RHT
-        self.psimeas = polarization_tools.polarization_angle(self.QRHT, self.URHT, negU = True)
+            # This construction is simple because we can sample everything on [0, pi)
+            self.sample_psi0 = np.linspace(0, np.pi, 165)
+            self.sample_p0 = sample_p0
         
-        gaussian = (1.0/(self.sig_psi*np.sqrt(2*np.pi)))*np.exp(-(self.sample_psi0 - self.psimeas)**2/(2*self.sig_psi**2))
+            # 1D prior will be Gaussian centered on psi_RHT
+            self.psimeas = polarization_tools.polarization_angle(self.QRHT, self.URHT, negU = True)
+            gaussian = (1.0/(self.sig_psi*np.sqrt(2*np.pi)))*np.exp(-(self.sample_psi0 - self.psimeas)**2/(2*self.sig_psi**2))
         
+            # Create correct prior geometry
+            npsample = len(self.sample_p0)
+            self.prior = np.array([gaussian]*npsample).T
         
+            self.psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
+            self.p_dx = self.sample_p0[1] - self.sample_p0[0]
+        
+            if self.psi_dx < 0:
+                print("Multiplying psi_dx by -1")
+                self.psi_dx *= -1
+        
+            if verbose is True:
+                print("psi dx is {}, p dx is {}".format(self.psi_dx, self.p_dx))
+        
+            self.integrated_over_psi = self.integrate_highest_dimension(self.prior, dx = self.psi_dx)
+            self.integrated_over_p_and_psi = self.integrate_highest_dimension(self.integrated_over_psi, dx = self.p_dx)
+
+            # Normalize prior over domain
+            self.normed_prior = self.prior/self.integrated_over_p_and_psi
+        
+        except TypeError:
+            if self.QRHT is None:
+                print("Index {} not found".format(hp_index))
+            else:
+                print("Unknown TypeError when constructing RHT prior")
         
                
 class Likelihood(BayesianComponent):
