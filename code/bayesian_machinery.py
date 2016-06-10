@@ -631,7 +631,7 @@ def fully_sample_sky(region = "allsky"):
     """
 
     # Get ids of all pixels that contain RHT data
-    rht_cursor = get_rht_cursor(region = region)
+    rht_cursor, tablename = get_rht_cursor(region = region)
     all_ids = get_all_rht_ids(rht_cursor)
     
     # Create and sample posteriors for all pixels
