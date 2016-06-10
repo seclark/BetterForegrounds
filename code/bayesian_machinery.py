@@ -85,9 +85,9 @@ class Prior(BayesianComponent):
         BayesianComponent.__init__(self, hp_index, verbose = verbose)
         
         # Planck-projected RHT database
-        rht_cursor = get_rht_cursor(region = region)
+        rht_cursor, tablename = get_rht_cursor(region = region)
         
-        self.rht_data = rht_cursor.execute("SELECT * FROM RHT_weights WHERE id = ?", (self.hp_index,)).fetchone()
+        self.rht_data = rht_cursor.execute("SELECT * FROM "+tablename+" WHERE id = ?", (self.hp_index,)).fetchone()
         
         self.sample_p0 = sample_p0
         
@@ -599,13 +599,15 @@ def get_all_rht_ids(rht_cursor):
 def get_rht_cursor(region = "SC_241"):
     if region is "SC_241":
         rht_db = sqlite3.connect("allweights_db.sqlite")
+        tablename = "RHT_weights"
     elif region is "allsky":
         root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
         rht_db = sqlite3.connect(root + "allsky_RHTweights_db.sqlite")
+        tablename = "RHT_weights_allsky"
     
     rht_cursor = rht_db.cursor()
     
-    return rht_cursor
+    return rht_cursor, tablename
 
 def sample_all_rht_points(all_ids, region = "SC_241"):
 
