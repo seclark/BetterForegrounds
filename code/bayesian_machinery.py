@@ -739,4 +739,7 @@ def update_progress(progress, message='Progress:', final_message='Finished:'):
         start_time = None
         stop_time = None
         print("")
+        
+if __name__ == "__main__":
+    fully_sample_sky(region = "allsky")
     
