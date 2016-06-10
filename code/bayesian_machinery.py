@@ -80,13 +80,13 @@ class Prior(BayesianComponent):
     Class for building RHT priors
     """
     
-    def __init__(self, hp_index, sample_p0, reverse_RHT = False, verbose = False):
+    def __init__(self, hp_index, sample_p0, reverse_RHT = False, verbose = False, region = "SC_241"):
     
         BayesianComponent.__init__(self, hp_index, verbose = verbose)
         
         # Planck-projected RHT database
-        rht_db = sqlite3.connect("allweights_db.sqlite")
-        rht_cursor = rht_db.cursor()
+        rht_cursor = get_rht_cursor(region = region)
+        
         self.rht_data = rht_cursor.execute("SELECT * FROM RHT_weights WHERE id = ?", (self.hp_index,)).fetchone()
         
         self.sample_p0 = sample_p0
@@ -207,7 +207,7 @@ class Posterior(BayesianComponent):
     Class for building a posterior composed of a Planck-based likelihood and an RHT prior
     """
     
-    def __init__(self, hp_index, sample_p0 = None):
+    def __init__(self, hp_index, sample_p0 = None, region = "SC_241"):
         BayesianComponent.__init__(self, hp_index)  
         
         if sample_p0 is None:
@@ -216,7 +216,7 @@ class Posterior(BayesianComponent):
             self.sample_p0 = sample_p0
         
         # Instantiate posterior components
-        prior = Prior(hp_index, self.sample_p0, reverse_RHT = True)
+        prior = Prior(hp_index, self.sample_p0, reverse_RHT = True, region = region)
         self.sample_psi0 = prior.sample_psi0
         
         # Planck covariance database
@@ -596,15 +596,18 @@ def get_all_rht_ids(rht_cursor):
     
     return all_ids
     
-def get_rht_cursor():
-    # Planck-projected RHT data for prior stored as SQL db
-    rht_db = sqlite3.connect("allweights_db.sqlite")
+def get_rht_cursor(region = "SC_241"):
+    if region is "SC_241":
+        rht_db = sqlite3.connect("allweights_db.sqlite")
+    elif region is "allsky":
+        root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
+        rht_db = sqlite3.connect(root + "allsky_RHTweights_db.sqlite")
+    
     rht_cursor = rht_db.cursor()
-    tablename = "RHT_weights"
     
     return rht_cursor
 
-def sample_all_rht_points(all_ids):
+def sample_all_rht_points(all_ids, region = "SC_241"):
 
     #rht_cursor = get_rht_cursor()
     #all_ids = get_all_rht_ids(rht_cursor)
@@ -614,11 +617,31 @@ def sample_all_rht_points(all_ids):
     
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        posterior_obj = Posterior(_id[0])
+        posterior_obj = Posterior(_id[0], region = region)
         all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False)
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
         
     return all_pMB, all_psiMB
+    
+def fully_sample_sky(region = "allsky"):
+    """
+    Sample psi_MB and p_MB from whole GALFA-HI sky
+    """
+
+    # Get ids of all pixels that contain RHT data
+    rht_cursor = get_rht_cursor(region = region)
+    all_ids = get_all_rht_ids(rht_cursor)
+    
+    # Create and sample posteriors for all pixels
+    all_pMB, all_psiMB = sample_all_rht_points(all_ids, region = region)
+    
+    # Place into healpix map
+    hp_psiMB = make_hp_map(psiMB, hp_indices, Nside = 2048, nest = nest)
+    hp_pMB = make_hp_map(pMB, hp_indices, Nside = 2048, nest = nest)
+    
+    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
+    hp.fitsfunc.write_map(out_root + "psiMB_allsky_test0.fits", hp_psiMB, coord = "C", nest = nest) 
+    hp.fitsfunc.write_map(out_root + "pMB_allsky_test0.fits", hp_pMB, coord = "C", nest = nest) 
     
 def make_hp_map(data, hp_indices, Nside = 2048, nest = True):
     """
@@ -665,7 +688,7 @@ def update_progress(progress, message='Progress:', final_message='Finished:'):
         # Fast fail for values outside the allowed range
         raise ValueError('Progress value outside allowed value in update_progress') 
 
-    #TODO_________________Slow Global Implementation
+    # Slow Global Implementation
     global start_time
     global stop_time 
 
