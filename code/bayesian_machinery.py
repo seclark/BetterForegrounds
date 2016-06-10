@@ -591,8 +591,8 @@ def test_normalization(posterior_obj, pdx, psidx):
     
     return norm_posterior_test
     
-def get_all_rht_ids(rht_cursor):
-    all_ids = rht_cursor.execute("SELECT id from RHT_weights").fetchall()
+def get_all_rht_ids(rht_cursor, tablename):
+    all_ids = rht_cursor.execute("SELECT id from "+tablename+").fetchall()
     
     return all_ids
     
@@ -632,7 +632,7 @@ def fully_sample_sky(region = "allsky"):
 
     # Get ids of all pixels that contain RHT data
     rht_cursor, tablename = get_rht_cursor(region = region)
-    all_ids = get_all_rht_ids(rht_cursor)
+    all_ids = get_all_rht_ids(rht_cursor, tablename)
     
     # Create and sample posteriors for all pixels
     all_pMB, all_psiMB = sample_all_rht_points(all_ids, region = region)
