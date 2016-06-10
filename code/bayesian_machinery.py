@@ -146,7 +146,7 @@ class PriorThetaRHT(BayesianComponent):
     
         BayesianComponent.__init__(self, hp_index, verbose = verbose)
         
-        # Need Q_RHT, U_RHT, and errors 
+        # Load Q_RHT, U_RHT, and errors 
         QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor = get_rht_QU_cursors()
         obj_ids = ["intrht", "QRHT", "URHT", "QRHTsq", "URHTsq"]
         self.QRHT = QRHT_cursor.execute("SELECT * FROM QRHT WHERE id = ?", (self.hp_index,)).fetchone()
@@ -154,7 +154,12 @@ class PriorThetaRHT(BayesianComponent):
         self.QRHTsq = sig_QRHT_cursor.execute("SELECT * FROM QRHTsq WHERE id = ?", (self.hp_index,)).fetchone()
         self.URHTsq = sig_URHT_cursor.execute("SELECT * FROM URHTsq WHERE id = ?", (self.hp_index,)).fetchone()
         
-        sig_psi, sig_P = polarization_tools.sigma_psi_P(Q, U, sig_QQ, sig_UU)
+        self.sig_psi, self.sig_P = polarization_tools.sigma_psi_P(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq)
+        
+        # This construction is simple because we can sample everything on [0, pi)
+        self.sample_psi0 = np.linspace(0, np.pi, 165)
+        
+        
                
 class Likelihood(BayesianComponent):
     """
