@@ -158,6 +158,13 @@ class PriorThetaRHT(BayesianComponent):
         
         # This construction is simple because we can sample everything on [0, pi)
         self.sample_psi0 = np.linspace(0, np.pi, 165)
+        self.sample_p0 = sample_p0
+        
+        # 1D prior will be Gaussian centered on psi_RHT
+        self.psimeas = polarization_tools.polarization_angle(self.QRHT, self.URHT, negU = True)
+        
+        gaussian = (1.0/(self.sig_psi*np.sqrt(2*np.pi)))*np.exp(-(self.sample_psi0 - self.psimeas)**2/(2*self.sig_psi**2))
+        
         
         
                
