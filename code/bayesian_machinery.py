@@ -265,7 +265,7 @@ class Posterior(BayesianComponent):
     Class for building a posterior composed of a Planck-based likelihood and an RHT prior
     """
     
-    def __init__(self, hp_index, sample_p0 = None, region = "SC_241"):
+    def __init__(self, hp_index, sample_p0 = None, region = "SC_241", useprior = "RHTPrior"):
         BayesianComponent.__init__(self, hp_index)  
         
         if sample_p0 is None:
@@ -274,7 +274,10 @@ class Posterior(BayesianComponent):
             self.sample_p0 = sample_p0
         
         # Instantiate posterior components
-        prior = Prior(hp_index, self.sample_p0, reverse_RHT = True, region = region)
+        if useprior is "RHTPrior":
+            prior = Prior(hp_index, self.sample_p0, reverse_RHT = True, region = region)
+        elif useprior is "ThetaRHT":
+            prior = PriorThetaRHT(hp_index, self.sample_p0, reverse_RHT = True, region = region)
         self.sample_psi0 = prior.sample_psi0
         
         # Planck covariance database
@@ -683,7 +686,7 @@ def sample_all_rht_points(all_ids, region = "SC_241"):
         
     return all_pMB, all_psiMB
     
-def fully_sample_sky(region = "allsky"):
+def fully_sample_sky(region = "allsky", useprior = "RHTPrior"):
     """
     Sample psi_MB and p_MB from whole GALFA-HI sky
     """
@@ -692,16 +695,36 @@ def fully_sample_sky(region = "allsky"):
     rht_cursor, tablename = get_rht_cursor(region = region)
     all_ids = get_all_rht_ids(rht_cursor, tablename)
     
+    print "beginning creation of all posteriors"
+    
     # Create and sample posteriors for all pixels
     all_pMB, all_psiMB = sample_all_rht_points(all_ids, region = region)
     
     # Place into healpix map
-    hp_psiMB = make_hp_map(psiMB, hp_indices, Nside = 2048, nest = nest)
-    hp_pMB = make_hp_map(pMB, hp_indices, Nside = 2048, nest = nest)
+    hp_psiMB = make_hp_map(all_psiMB, hp_indices, Nside = 2048, nest = True)
+    hp_pMB = make_hp_map(all_pMB, hp_indices, Nside = 2048, nest = True)
     
     out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
     hp.fitsfunc.write_map(out_root + "psiMB_allsky_test0.fits", hp_psiMB, coord = "C", nest = nest) 
     hp.fitsfunc.write_map(out_root + "pMB_allsky_test0.fits", hp_pMB, coord = "C", nest = nest) 
+    
+def gauss_sample_sky(region = "SC_241", useprior = "ThetaRHT"):
+    
+    # Get ids of all pixels that contain RHT data
+    rht_cursor, tablename = get_rht_cursor(region = region)
+    all_ids = get_all_rht_ids(rht_cursor, tablename)
+    
+    # Create and sample posteriors for all pixels
+    all_pMB, all_psiMB = sample_all_rht_points(all_ids, region = region)
+    
+    # Place into healpix map
+    hp_psiMB = make_hp_map(all_psiMB, hp_indices, Nside = 2048, nest = True)
+    hp_pMB = make_hp_map(all_pMB, hp_indices, Nside = 2048, nest = True)
+    
+    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
+    hp.fitsfunc.write_map(out_root + "psiMB_SC_241_thetaRHT_test0.fits", hp_psiMB, coord = "C", nest = nest) 
+    hp.fitsfunc.write_map(out_root + "pMB_SC_241_thetaRHT_test0.fits", hp_pMB, coord = "C", nest = nest) 
+
     
 def make_hp_map(data, hp_indices, Nside = 2048, nest = True):
     """
