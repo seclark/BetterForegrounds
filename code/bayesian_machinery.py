@@ -670,7 +670,7 @@ def get_rht_cursor(region = "SC_241"):
     
     return rht_cursor, tablename
     
-def get_rht_QU_cursors()
+def get_rht_QU_cursors():
     
     root = "/disks/jansky/a/users/goldston/susan/Planck/code/"
     QRHT_db = sqlite3.connect(root + "QRHT_ch1004_1043_db.sqlite")
