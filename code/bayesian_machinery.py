@@ -695,7 +695,7 @@ def fully_sample_sky(region = "allsky", useprior = "RHTPrior"):
     rht_cursor, tablename = get_rht_cursor(region = region)
     all_ids = get_all_rht_ids(rht_cursor, tablename)
     
-    print "beginning creation of all posteriors"
+    print("beginning creation of all posteriors")
     
     # Create and sample posteriors for all pixels
     all_pMB, all_psiMB = sample_all_rht_points(all_ids, region = region)
