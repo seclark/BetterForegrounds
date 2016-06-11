@@ -669,8 +669,23 @@ def get_rht_cursor(region = "SC_241"):
     rht_cursor = rht_db.cursor()
     
     return rht_cursor, tablename
+    
+def get_rht_QU_cursors()
+    
+    root = "/disks/jansky/a/users/goldston/susan/Planck/code/"
+    QRHT_db = sqlite3.connect(root + "QRHT_ch1004_1043_db.sqlite")
+    URHT_db = sqlite3.connect(root + "URHT_ch1004_1043_db.sqlite")
+    sig_QRHT_db = sqlite3.connect(root + "QRHTsq_ch1004_1043_db.sqlite")
+    sig_URHT_db = sqlite3.connect(root + "URHTsq_ch1004_1043_db.sqlite")
+    
+    QRHT_cursor = QRHT_db.cursor()
+    URHT_cursor = URHT_db.cursor()
+    sig_QRHT_cursor = sig_QRHT_db.cursor()
+    sig_URHT_cursor = sig_URHT_db.cursor()
 
-def sample_all_rht_points(all_ids, region = "SC_241"):
+    return QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor
+
+def sample_all_rht_points(all_ids, region = "SC_241", useprior = "RHTPrior"):
 
     #rht_cursor = get_rht_cursor()
     #all_ids = get_all_rht_ids(rht_cursor)
@@ -680,7 +695,7 @@ def sample_all_rht_points(all_ids, region = "SC_241"):
     
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        posterior_obj = Posterior(_id[0], region = region)
+        posterior_obj = Posterior(_id[0], region = region, useprior = useprior)
         all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False)
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
         
@@ -708,14 +723,14 @@ def fully_sample_sky(region = "allsky", useprior = "RHTPrior"):
     hp.fitsfunc.write_map(out_root + "psiMB_allsky_test0.fits", hp_psiMB, coord = "C", nest = nest) 
     hp.fitsfunc.write_map(out_root + "pMB_allsky_test0.fits", hp_pMB, coord = "C", nest = nest) 
     
-def gauss_sample_sky(region = "SC_241", useprior = "ThetaRHT"):
+def gauss_sample_sky(region = "allsky", useprior = "ThetaRHT"):
     
     # Get ids of all pixels that contain RHT data
-    rht_cursor, tablename = get_rht_cursor(region = region)
-    all_ids = get_all_rht_ids(rht_cursor, tablename)
+    QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor = get_rht_QU_cursors()
+    all_ids = get_all_rht_ids(QRHT_cursor, "QRHT")
     
     # Create and sample posteriors for all pixels
-    all_pMB, all_psiMB = sample_all_rht_points(all_ids, region = region)
+    all_pMB, all_psiMB = sample_all_rht_points(all_ids, region = region, useprior = useprior)
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, hp_indices, Nside = 2048, nest = True)
@@ -823,5 +838,5 @@ def update_progress(progress, message='Progress:', final_message='Finished:'):
         
 if __name__ == "__main__":
     #fully_sample_sky(region = "allsky")
-    gauss_sample_sky(region = "SC_241", useprior = "ThetaRHT")
+    gauss_sample_sky(region = "allsky", useprior = "ThetaRHT")
     
