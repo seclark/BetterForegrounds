@@ -822,5 +822,6 @@ def update_progress(progress, message='Progress:', final_message='Finished:'):
         print("")
         
 if __name__ == "__main__":
-    fully_sample_sky(region = "allsky")
+    #fully_sample_sky(region = "allsky")
+    gauss_sample_sky(region = "SC_241", useprior = "ThetaRHT")
     
