@@ -281,6 +281,8 @@ class Posterior(BayesianComponent):
             prior = Prior(hp_index, self.sample_p0, reverse_RHT = True, region = region)
         elif useprior is "ThetaRHT":
             prior = PriorThetaRHT(hp_index, self.sample_p0, reverse_RHT = True, region = region)
+            
+            print(prior.QRHT, prior.URHT)
         self.sample_psi0 = prior.sample_psi0
         
         # Planck covariance database
