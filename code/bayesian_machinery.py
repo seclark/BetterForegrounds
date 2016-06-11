@@ -155,8 +155,11 @@ class PriorThetaRHT(BayesianComponent):
             self.URHT = URHT_cursor.execute("SELECT * FROM URHT WHERE id = ?", (self.hp_index,)).fetchone()
             self.QRHTsq = sig_QRHT_cursor.execute("SELECT * FROM QRHTsq WHERE id = ?", (self.hp_index,)).fetchone()
             self.URHTsq = sig_URHT_cursor.execute("SELECT * FROM URHTsq WHERE id = ?", (self.hp_index,)).fetchone()
-        
-            self.sig_psi, self.sig_P = polarization_tools.sigma_psi_P(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq)
+            
+            try:
+                self.sig_psi, self.sig_P = polarization_tools.sigma_psi_P(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq)
+            except ZeroDivisionError:
+                print(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq)
         
             # This construction is simple because we can sample everything on [0, pi)
             self.sample_psi0 = np.linspace(0, np.pi, 165)
