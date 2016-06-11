@@ -151,10 +151,10 @@ class PriorThetaRHT(BayesianComponent):
         obj_ids = ["intrht", "QRHT", "URHT", "QRHTsq", "URHTsq"]
         
         try:
-            self.QRHT = QRHT_cursor.execute("SELECT * FROM QRHT WHERE id = ?", (self.hp_index,)).fetchone()
-            self.URHT = URHT_cursor.execute("SELECT * FROM URHT WHERE id = ?", (self.hp_index,)).fetchone()
-            self.QRHTsq = sig_QRHT_cursor.execute("SELECT * FROM QRHTsq WHERE id = ?", (self.hp_index,)).fetchone()
-            self.URHTsq = sig_URHT_cursor.execute("SELECT * FROM URHTsq WHERE id = ?", (self.hp_index,)).fetchone()
+            (self.hp_index, self.QRHT) = QRHT_cursor.execute("SELECT * FROM QRHT WHERE id = ?", (self.hp_index,)).fetchone()
+            (self.hp_index, self.URHT) = URHT_cursor.execute("SELECT * FROM URHT WHERE id = ?", (self.hp_index,)).fetchone()
+            (self.hp_index, self.QRHTsq) = sig_QRHT_cursor.execute("SELECT * FROM QRHTsq WHERE id = ?", (self.hp_index,)).fetchone()
+            (self.hp_index, self.URHTsq) = sig_URHT_cursor.execute("SELECT * FROM URHTsq WHERE id = ?", (self.hp_index,)).fetchone()
             
             try:
                 self.sig_psi, self.sig_P = polarization_tools.sigma_psi_P(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq)
