@@ -155,7 +155,7 @@ class PriorThetaRHT(BayesianComponent):
             (self.hp_index, self.URHT) = URHT_cursor.execute("SELECT * FROM URHT WHERE id = ?", (self.hp_index,)).fetchone()
             (self.hp_index, self.QRHTsq) = sig_QRHT_cursor.execute("SELECT * FROM QRHTsq WHERE id = ?", (self.hp_index,)).fetchone()
             (self.hp_index, self.URHTsq) = sig_URHT_cursor.execute("SELECT * FROM URHTsq WHERE id = ?", (self.hp_index,)).fetchone()
-            print(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq)
+
             try:
                 self.sig_psi, self.sig_P = polarization_tools.sigma_psi_P(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq, degrees = False)
             except ZeroDivisionError:
@@ -193,7 +193,7 @@ class PriorThetaRHT(BayesianComponent):
             if self.QRHT is None:
                 print("Index {} not found".format(hp_index))
             else:
-                print("Unknown TypeError when constructing RHT prior")
+                print("Unknown TypeError when constructing RHT prior for index {}".format(hp_index))
         
                
 class Likelihood(BayesianComponent):
