@@ -803,8 +803,8 @@ def gauss_sample_region(region = "SC_241", useprior = "ThetaRHT", local = True):
     hp_pMB = make_hp_map(all_pMB, all_ids_set, Nside = 2048, nest = True)
     
     out_root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/data/"
-    hp.fitsfunc.write_map(out_root + "psiMB_SC_241_thetaRHT_test0.fits", hp_psiMB, coord = "C", nest = nest) 
-    hp.fitsfunc.write_map(out_root + "pMB_SC_241_thetaRHT_test0.fits", hp_pMB, coord = "C", nest = nest) 
+    hp.fitsfunc.write_map(out_root + "psiMB_SC_241_thetaRHT_test0.fits", hp_psiMB, coord = "C", nest = True) 
+    hp.fitsfunc.write_map(out_root + "pMB_SC_241_thetaRHT_test0.fits", hp_pMB, coord = "C", nest = True) 
 
     
 def make_hp_map(data, hp_indices, Nside = 2048, nest = True):
@@ -904,6 +904,6 @@ def update_progress(progress, message='Progress:', final_message='Finished:'):
         
 if __name__ == "__main__":
     #fully_sample_sky(region = "allsky")
-    gauss_sample_sky(region = "allsky", useprior = "ThetaRHT")
-    #gauss_sample_region()
+    #gauss_sample_sky(region = "allsky", useprior = "ThetaRHT")
+    gauss_sample_region()
     
