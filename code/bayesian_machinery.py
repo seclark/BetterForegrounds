@@ -704,7 +704,11 @@ def sample_all_rht_points(all_ids, region = "SC_241", useprior = "RHTPrior"):
     all_pMB = np.zeros(len(all_ids))
     all_psiMB = np.zeros(len(all_ids))
     
-    rht_cursor = get_rht_cursor(region = region)
+    # Get ids of all pixels that contain RHT data
+    if useprior is "RHTPrior":
+        rht_cursor, tablename = get_rht_cursor(region = region)
+    else:
+        QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor = get_rht_QU_cursors(region = region, local = local)
     
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
