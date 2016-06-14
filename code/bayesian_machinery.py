@@ -756,7 +756,11 @@ def gauss_sample_sky(region = "allsky", useprior = "ThetaRHT"):
     
     # Get ids of all pixels that contain RHT data
     QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor = get_rht_QU_cursors()
-    all_ids = get_all_rht_ids(QRHT_cursor, "QRHT")
+    all_ids_QRHT = get_all_rht_ids(QRHT_cursor, "QRHT")
+    all_ids_URHT = get_all_rht_ids(URHT_cursor, "URHT")
+    all_ids_QRHTsq = get_all_rht_ids(sig_QRHT_cursor, "QRHTsq")
+    all_ids_URHTsq = get_all_rht_ids(sig_URHT_cursor, "URHTsq")
+    all_ids = list(set(all_ids_QRHT).intersection(all_ids_URHT).intersection(all_ids_QRHTsq).intersection(all_ids_URHTsq))
     
     # Create and sample posteriors for all pixels
     all_pMB, all_psiMB = sample_all_rht_points(all_ids, region = region, useprior = useprior)
@@ -895,7 +899,7 @@ def update_progress(progress, message='Progress:', final_message='Finished:'):
         print("")
         
 if __name__ == "__main__":
-    fully_sample_sky(region = "allsky")
-    #gauss_sample_sky(region = "allsky", useprior = "ThetaRHT")
+    #fully_sample_sky(region = "allsky")
+    gauss_sample_sky(region = "allsky", useprior = "ThetaRHT")
     #gauss_sample_region()
     
