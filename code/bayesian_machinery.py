@@ -767,7 +767,7 @@ def gauss_sample_sky(region = "allsky", useprior = "ThetaRHT"):
     all_ids = list(set(all_ids_QRHT).intersection(all_ids_URHT).intersection(all_ids_QRHTsq).intersection(all_ids_URHTsq))
     
     # Create and sample posteriors for all pixels
-    all_pMB, all_psiMB = sample_all_rht_points(all_ids, region = region, useprior = useprior)
+    all_pMB, all_psiMB = sample_all_rht_points_ThetaRHTPrior(all_ids, region = region, useprior = useprior)
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
