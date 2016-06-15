@@ -753,8 +753,8 @@ def fully_sample_sky(region = "allsky", useprior = "RHTPrior"):
     hp_pMB = make_hp_map(all_pMB, all_ids, Nside = 2048, nest = True)
     
     out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
-    hp.fitsfunc.write_map(out_root + "psiMB_allsky_test0.fits", hp_psiMB, coord = "C", nest = nest) 
-    hp.fitsfunc.write_map(out_root + "pMB_allsky_test0.fits", hp_pMB, coord = "C", nest = nest) 
+    hp.fitsfunc.write_map(out_root + "psiMB_allsky_test0.fits", hp_psiMB, coord = "C", nest = True) 
+    hp.fitsfunc.write_map(out_root + "pMB_allsky_test0.fits", hp_pMB, coord = "C", nest = True) 
     
 def gauss_sample_sky(region = "allsky", useprior = "ThetaRHT"):
     
@@ -774,8 +774,8 @@ def gauss_sample_sky(region = "allsky", useprior = "ThetaRHT"):
     hp_pMB = make_hp_map(all_pMB, all_ids, Nside = 2048, nest = True)
     
     out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
-    hp.fitsfunc.write_map(out_root + "psiMB_SC_241_thetaRHT_test0.fits", hp_psiMB, coord = "C", nest = nest) 
-    hp.fitsfunc.write_map(out_root + "pMB_SC_241_thetaRHT_test0.fits", hp_pMB, coord = "C", nest = nest) 
+    hp.fitsfunc.write_map(out_root + "psiMB_SC_241_thetaRHT_test0.fits", hp_psiMB, coord = "C", nest = True) 
+    hp.fitsfunc.write_map(out_root + "pMB_SC_241_thetaRHT_test0.fits", hp_pMB, coord = "C", nest = True) 
     
 def gauss_sample_region(region = "SC_241", useprior = "ThetaRHT", local = True):
     
@@ -903,7 +903,7 @@ def update_progress(progress, message='Progress:', final_message='Finished:'):
         print("")
         
 if __name__ == "__main__":
-    #fully_sample_sky(region = "allsky")
+    fully_sample_sky(region = "allsky")
     #gauss_sample_sky(region = "allsky", useprior = "ThetaRHT")
-    gauss_sample_region()
+    #gauss_sample_region()
     
