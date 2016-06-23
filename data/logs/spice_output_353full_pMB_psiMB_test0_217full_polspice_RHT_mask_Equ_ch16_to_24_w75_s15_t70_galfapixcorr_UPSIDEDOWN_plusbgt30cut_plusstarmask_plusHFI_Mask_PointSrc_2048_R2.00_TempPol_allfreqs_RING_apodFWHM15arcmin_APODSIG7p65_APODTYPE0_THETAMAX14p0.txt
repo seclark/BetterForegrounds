@@ -1,0 +1,6 @@
+ ===> HEALPIXDATA not defined, trying HEALPIX...
+ ===> HEALPIX not defined, trying default values ...
+ /usr/local/src/Healpix/data
+ /usr/local/src/Healpix_2.00/data
+ /usr/local/lib/Healpix/data
+ ===> Failed to find Healpix directory. Abort

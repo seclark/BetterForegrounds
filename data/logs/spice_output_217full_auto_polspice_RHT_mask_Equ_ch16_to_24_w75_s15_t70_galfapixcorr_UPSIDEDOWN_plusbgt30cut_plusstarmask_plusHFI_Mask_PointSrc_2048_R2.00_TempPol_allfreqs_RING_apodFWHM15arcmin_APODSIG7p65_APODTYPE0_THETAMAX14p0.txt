@@ -1,0 +1,50 @@
+ ===> HEALPIXDATA not defined, trying HEALPIX...
+ ===> Using HEALPIXDATA=/Users/susanclark/Healpix_3.30/data/
+
+ ===========================================================
+ SpICE 3.0.3 has been called with the following attributes : 
+
+ nside detected...         2048
+ max multipole used        1000
+ polarization..... YES
+ map file (1)......
+     1.000 *   /Volumes/DataDavy/Planck/HFI_SkyMap_217_2048_R2.02_full_RING.fits
+ mask file........ NO
+ weight file...... /Volumes/DataDavy/Foregrounds/RHT_mask_Equ_ch16_to_24_w75_s15_t70_galfapixcorr_UPSIDEDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_zerod.fits
+ weight power.....    1.0000000000000000     
+ weight power (Pol)   1.0000000000000000     
+ gauss beam arcmin     5.02000E+00
+ beam file........ NO
+ subtract dipole.. NO
+ subtract average. YES
+ cor. file........ NO
+ Cl file.......... cl_217full_auto_polspice_RHT_mask_Equ_ch16_to_24_w75_s15_t70_galfapixcorr_UPSIDEDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_APODSIG7p65_APODTYPE0_THETAMAX14p0.dat
+ Covariance file.. NO
+ raw Cl map output NO
+ raw Cl map intput NO
+ raw Cl mask outp. NO
+ raw Cl mask inpu. NO
+ FITS output...... NO
+ pix. window file. /Users/susanclark/Healpix_3.30/data/pixel_window_n2048.fits
+ norm. factor..... NO
+ apodizing width..     7.65000E+00
+ apodizing type...            0
+ decouple......... YES
+ thetamax.........    14.000000000000000     
+ kernels output... NO
+ window output.... NO
+ window input..... NO
+ noise cor file... NO
+ noise Cl file.... NO
+ overwrite mode... YES
+ dry format....... NO
+ output opt. file. NO
+ input opt. file.. NO
+ ===========================================================
+
+ --------------------------------------
+ Number of OpenMP threads in use:    8
+ Number of CPUs available:           8
+ --------------------------------------
+ CPU  Time [s]:    78.3778229    
+ Wall Time [s]:    25.7500000    

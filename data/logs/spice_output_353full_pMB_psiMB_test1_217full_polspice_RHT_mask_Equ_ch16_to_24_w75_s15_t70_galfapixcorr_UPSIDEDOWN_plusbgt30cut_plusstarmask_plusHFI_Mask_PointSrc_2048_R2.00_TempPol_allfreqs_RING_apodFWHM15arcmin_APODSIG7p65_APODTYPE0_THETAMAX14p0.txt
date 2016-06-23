@@ -1,0 +1,124 @@
+ ===> HEALPIXDATA not defined, trying HEALPIX...
+ ===> Using HEALPIXDATA=/Users/susanclark/Healpix_3.30/data/
+ Check header for file /Users/susanclark/BetterForegrounds/data/HFI_SkyMap_353_2048_R2.02_full_pMB_psiMB_test1.fits
+ nside for input map file =        2048
+ Check header for file /Volumes/DataDavy/Planck/HFI_SkyMap_217_2048_R2.02_full_RING.fits
+ Check header for file /Volumes/DataDavy/Foregrounds/RHT_mask_Equ_ch16_to_24_w75_s15_t70_galfapixcorr_UPSIDEDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_zerod.fits
+ Check header for file /Volumes/DataDavy/Foregrounds/RHT_mask_Equ_ch16_to_24_w75_s15_t70_galfapixcorr_UPSIDEDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_zerod.fits
+
+ ===========================================================
+ SpICE 3.0.3 has been called with the following attributes : 
+
+ nside detected...         2048
+ max multipole used        1000
+ polarization..... YES
+ map file (1)......
+     1.000 *   /Users/susanclark/BetterForegrounds/data/HFI_SkyMap_353_2048_R2.02_full_pMB_psiMB_test1.fits
+ mask file........ NO
+ weight file...... /Volumes/DataDavy/Foregrounds/RHT_mask_Equ_ch16_to_24_w75_s15_t70_galfapixcorr_UPSIDEDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_zerod.fits
+ weight power.....    1.0000000000000000     
+ weight power (Pol)   1.0000000000000000     
+ gauss beam arcmin     4.94000E+00
+ beam file........ NO
+ map file (2)......
+     1.000 *   /Volumes/DataDavy/Planck/HFI_SkyMap_217_2048_R2.02_full_RING.fits
+ mask file (2).... NO
+ weight file (2).. /Volumes/DataDavy/Foregrounds/RHT_mask_Equ_ch16_to_24_w75_s15_t70_galfapixcorr_UPSIDEDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_zerod.fits
+ weight power (2).    1.0000000000000000     
+ weight pow  (Pol2)   1.0000000000000000     
+ g.beam (2) arcmin     5.02000E+00
+ beam file (2).... NO
+ symmetrized C(l)  YES
+ subtract dipole.. NO
+ subtract average. YES
+ cor. file........ NO
+ Cl file.......... cl_353full_pMB_psiMB_test1_217full_polspice_RHT_mask_Equ_ch16_to_24_w75_s15_t70_galfapixcorr_UPSIDEDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_APODSIG7p65_APODTYPE0_THETAMAX14p0.dat
+ Covariance file.. NO
+ raw Cl map output NO
+ raw Cl map intput NO
+ raw Cl mask outp. NO
+ raw Cl mask inpu. NO
+ FITS output...... NO
+ pix. window file. /Users/susanclark/Healpix_3.30/data/pixel_window_n2048.fits
+ norm. factor..... NO
+ apodizing width..     7.65000E+00
+ apodizing type...            0
+ decouple......... YES
+ thetamax.........    14.000000000000000     
+ kernels output... NO
+ window output.... NO
+ window input..... NO
+ noise cor file... NO
+ noise Cl file.... NO
+ overwrite mode... YES
+ dry format....... NO
+ output opt. file. NO
+ input opt. file.. NO
+ ===========================================================
+
+ Importing /Users/susanclark/BetterForegrounds/data/HFI_SkyMap_353_2048_R2.02_full_pMB_psiMB_test1.fits
+ ... and combining    1.0000000000000000
+ Importing /Volumes/DataDavy/Planck/HFI_SkyMap_217_2048_R2.02_full_RING.fits
+ ... and combining    1.0000000000000000
+ Read input weight file
+ Read input weight file (2)
+ Read pixel window function
+ Warning: the 2 beams are different
+   4.9400000000000004        5.0199999999999996     
+ --------------------------------------
+ Number of OpenMP threads in use:    8
+ Number of CPUs available:           8
+ --------------------------------------
+ Compute TE kernel for apodization
+ Compute Legendre polynomials data
+ % kernel done =          11
+ % kernel done =          22
+ % kernel done =          33
+ % kernel done =          44
+ % kernel done =          55
+ % kernel done =          67
+ % kernel done =          78
+ % kernel done =          89
+ % kernel done =         100
+ Kernel calculation (wall time) =    8.00000000    
+ Compute Legendre polynomials data
+ Create the masked/weighted map
+ Create the masked/weighted map (2)
+ Checking consistency of the 2 masks and/or weights
+ Subtract monopole from map
+REMOVE_DIPOLE_REAL Excluding 46669366 pixels when computing monopole (  92.724    %)
+ Multiply the map1 by the mask/weight map
+ Subtract monopole from map2
+REMOVE_DIPOLE_REAL Excluding 46669366 pixels when computing monopole (  92.724    %)
+ Multiply the map2 by the mask/weight map
+ Compute Cl (mapXmap)
+ Symmetric TE C(l)
+ Compute Cl (weightsXweights)
+ Compute xi from Cl (masks)
+ Compute xi from Cl (map)
+ Compute pure E and B modes correlation function (final)
+Simpson2: iteration, max, residual, tolerance:   1 20  1.00E+30  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   2 20  1.33E+00  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   3 20  1.00E+00  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   4 20  9.70E-03  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   5 20  2.29E-03  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   6 20  1.15E-04  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   7 20  1.22E-03  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   8 20  9.02E-04  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   9 20  1.41E-04  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   1 20  1.00E+30  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   2 20  1.33E+00  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   3 20  1.00E+00  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   4 20  9.21E-03  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   5 20  5.70E-03  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   6 20  1.09E-03  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   7 20  2.32E-03  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   8 20  1.17E-03  1.00E-05
+Simpson2: iteration, max, residual, tolerance:   9 20  1.43E-04  1.00E-05
+ Apodize final xi
+ Compute Cl from xi (final)
+ Correcting Cl for the beam window function
+ Correcting Cl for the pixel window function
+ Output Cl file
+ CPU  Time [s]:    96.7831955    
+ Wall Time [s]:    54.6250000    
