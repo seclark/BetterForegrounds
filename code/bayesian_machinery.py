@@ -168,16 +168,12 @@ class PriorThetaRHT(BayesianComponent):
         
             # 1D prior will be Gaussian centered on psi_RHT
             self.psimeas = polarization_tools.polarization_angle(self.QRHT, self.URHT, negU = True)
-            gaussian = (1.0/(self.sig_psi*np.sqrt(2*np.pi)))*np.exp(-(self.sample_psi0 - self.psimeas)**2/(2*self.sig_psi**2))
+            #gaussian = (1.0/(self.sig_psi*np.sqrt(2*np.pi)))*np.exp(-(self.sample_psi0 - self.psimeas)**2/(2*self.sig_psi**2))
         
             # Instead of gaussian, construct axial von mises distribution
             kappa = 1/self.sig_psi**2
             #vonmises = np.exp(kappa*np.cos(self.sample_psi0 - self.psimeas))/(2*np.pi*special.iv(0, kappa))
             axialvonmises = np.cosh(kappa*np.cos(self.sample_psi0 - self.psimeas))/(np.pi*special.iv(0, kappa))
-            
-            #testing
-            self.gaussian = gaussian
-            self.axialvonmises = axialvonmises
         
             # Create correct prior geometry
             npsample = len(self.sample_p0)
@@ -914,8 +910,8 @@ def update_progress(progress, message='Progress:', final_message='Finished:'):
         stop_time = None
         print("")
         
-#if __name__ == "__main__":
+if __name__ == "__main__":
 #    fully_sample_sky(region = "allsky")
-    #gauss_sample_sky(region = "allsky", useprior = "ThetaRHT")
+    gauss_sample_sky(region = "allsky", useprior = "ThetaRHT")
     #gauss_sample_region()
     
