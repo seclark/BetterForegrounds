@@ -1,2 +1,3 @@
-# Ignore all fits files
+# Ignore all large files
 *.fits
+*.sqlite
