@@ -149,7 +149,6 @@ class PriorThetaRHT(BayesianComponent):
         
         # Load Q_RHT, U_RHT, and errors 
         #QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor = get_rht_QU_cursors()
-        obj_ids = ["intrht", "QRHT", "URHT", "QRHTsq", "URHTsq"]
         
         try:
             (self.hp_index, self.QRHT) = QRHT_cursor.execute("SELECT * FROM QRHT WHERE id = ?", (self.hp_index,)).fetchone()
