@@ -11,6 +11,7 @@ import itertools
 import string
 import sqlite3
 import scipy
+from scipy import special
 import copy
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
 import matplotlib as mpl
@@ -169,9 +170,19 @@ class PriorThetaRHT(BayesianComponent):
             self.psimeas = polarization_tools.polarization_angle(self.QRHT, self.URHT, negU = True)
             gaussian = (1.0/(self.sig_psi*np.sqrt(2*np.pi)))*np.exp(-(self.sample_psi0 - self.psimeas)**2/(2*self.sig_psi**2))
         
+            # Instead of gaussian, construct axial von mises distribution
+            kappa = 1/self.sig_psi**2
+            #vonmises = np.exp(kappa*np.cos(self.sample_psi0 - self.psimeas))/(2*np.pi*special.iv(0, kappa))
+            axialvonmises = np.cosh(kappa*np.cos(self.sample_psi0 - self.psimeas))/(np.pi*special.iv(0, kappa))
+            
+            #testing
+            self.gaussian = gaussian
+            self.axialvonmises = axialvonmises
+        
             # Create correct prior geometry
             npsample = len(self.sample_p0)
-            self.prior = np.array([gaussian]*npsample).T
+            #self.prior = np.array([gaussian]*npsample).T
+            self.prior = np.array([axialvonmises]*npsample).T
         
             self.psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
             self.p_dx = self.sample_p0[1] - self.sample_p0[0]
@@ -312,6 +323,8 @@ class Posterior(BayesianComponent):
         self.posterior_integrated_over_p_and_psi = self.integrate_highest_dimension(self.posterior_integrated_over_psi, dx = p_dx)
         
         self.normed_posterior = self.posterior/self.posterior_integrated_over_p_and_psi
+        
+        self.prior_obj = prior
         
 class DummyPosterior(BayesianComponent):
       """
@@ -901,8 +914,8 @@ def update_progress(progress, message='Progress:', final_message='Finished:'):
         stop_time = None
         print("")
         
-if __name__ == "__main__":
-    fully_sample_sky(region = "allsky")
+#if __name__ == "__main__":
+#    fully_sample_sky(region = "allsky")
     #gauss_sample_sky(region = "allsky", useprior = "ThetaRHT")
     #gauss_sample_region()
     
