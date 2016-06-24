@@ -12,6 +12,7 @@ import string
 import sqlite3
 import scipy
 from scipy import special
+import scipy.ndimage
 import copy
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
 import matplotlib as mpl
@@ -84,7 +85,7 @@ class Prior(BayesianComponent):
     Class for building RHT priors
     """
     
-    def __init__(self, hp_index, sample_p0, reverse_RHT = False, verbose = False, region = "SC_241", rht_cursor = None):
+    def __init__(self, hp_index, sample_p0, reverse_RHT = False, verbose = False, region = "SC_241", rht_cursor = None, gausssmooth = False):
     
         BayesianComponent.__init__(self, hp_index, verbose = verbose)
         
@@ -101,6 +102,10 @@ class Prior(BayesianComponent):
         try:
             # Discard first element because it is the healpix id
             self.rht_data = self.rht_data[1:]
+            
+            if gausssmooth is True:
+                # Gaussian smooth with sigma = 3, wrapped boundaries for filter
+                self.rht_data = scipy.ndimage.gaussian_filter1d(self.rht_data, 3, mode = "wrap")
         
             # Get sample psi data
             self.sample_psi0 = self.get_psi0_sampling_grid(hp_index, verbose = verbose)
