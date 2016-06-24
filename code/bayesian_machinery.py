@@ -93,6 +93,8 @@ class Prior(BayesianComponent):
         
         if region is "allsky":
             self.rht_data = rht_cursor.execute("SELECT * FROM RHT_weights_allsky WHERE id = ?", (self.hp_index,)).fetchone()
+        if region is "SC_241":
+            self.rht_data = rht_cursor.execute("SELECT * FROM RHT_weights WHERE id = ?", (self.hp_index,)).fetchone()
         
         self.sample_p0 = sample_p0
         
