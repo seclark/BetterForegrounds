@@ -761,7 +761,7 @@ def fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = 
     print("beginning creation of all posteriors")
     
     # Create and sample posteriors for all pixels
-    all_pMB, all_psiMB = sample_all_rht_points(all_ids, rht_cursor = rht_cursor, region = region, useprior = useprior, gaussmooth_prior = gaussmooth_prior)
+    all_pMB, all_psiMB = sample_all_rht_points(all_ids, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior)
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
