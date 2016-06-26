@@ -282,7 +282,7 @@ class Posterior(BayesianComponent):
     Class for building a posterior composed of a Planck-based likelihood and an RHT prior
     """
     
-    def __init__(self, hp_index, sample_p0 = None, region = "SC_241", useprior = "RHTPrior", rht_cursor = None, QRHT_cursor = None, URHT_cursor = None, sig_QRHT_cursor = None, sig_URHT_cursor = None, gaussmooth_prior = False):
+    def __init__(self, hp_index, sample_p0 = None, region = "SC_241", useprior = "RHTPrior", rht_cursor = None, QRHT_cursor = None, URHT_cursor = None, sig_QRHT_cursor = None, sig_URHT_cursor = None, gausssmooth_prior = False):
         BayesianComponent.__init__(self, hp_index)  
         
         if sample_p0 is None:
@@ -292,7 +292,7 @@ class Posterior(BayesianComponent):
         
         # Instantiate posterior components
         if useprior is "RHTPrior":
-            prior = Prior(hp_index, self.sample_p0, reverse_RHT = True, region = region, rht_cursor = rht_cursor, gaussmooth_prior = gaussmooth_prior)
+            prior = Prior(hp_index, self.sample_p0, reverse_RHT = True, region = region, rht_cursor = rht_cursor, gausssmooth = gausssmooth_prior)
         elif useprior is "ThetaRHT":
             prior = PriorThetaRHT(hp_index, self.sample_p0, reverse_RHT = True, region = region, QRHT_cursor = QRHT_cursor, URHT_cursor = URHT_cursor, sig_QRHT_cursor = sig_QRHT_cursor, sig_URHT_cursor = sig_URHT_cursor)
             
@@ -687,6 +687,7 @@ def get_rht_cursor(region = "SC_241", velrangestring = "-10_10"):
         if velrangestring == "-10_10":
             rht_db = sqlite3.connect(root + "allsky_RHTweights_db.sqlite")
         elif velrangestring == "-4_3":
+            print("Loading database with velrangestring -4_3")
             rht_db = sqlite3.connect(root + "allsky_RHTweights_-4_3_db.sqlite")
     
     rht_cursor = rht_db.cursor()
@@ -714,7 +715,7 @@ def get_rht_QU_cursors(local = False):
 
     return QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor
 
-def sample_all_rht_points(all_ids, rht_cursor = None, region = "SC_241", useprior = "RHTPrior", gaussmooth_prior = False):
+def sample_all_rht_points(all_ids, rht_cursor = None, region = "SC_241", useprior = "RHTPrior", gausssmooth_prior = False):
     
     all_pMB = np.zeros(len(all_ids))
     all_psiMB = np.zeros(len(all_ids))
@@ -726,7 +727,7 @@ def sample_all_rht_points(all_ids, rht_cursor = None, region = "SC_241", useprio
     
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        posterior_obj = Posterior(_id[0], region = region, useprior = useprior, rht_cursor = rht_cursor, gaussmooth_prior = gaussmooth_prior)
+        posterior_obj = Posterior(_id[0], region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
         all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False)
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
         
@@ -923,5 +924,5 @@ if __name__ == "__main__":
 #    fully_sample_sky(region = "allsky")
     #gauss_sample_sky(region = "allsky", useprior = "ThetaRHT")
     #gauss_sample_region(local = False)
-    fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gaussmooth_prior = False)
+    fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     
