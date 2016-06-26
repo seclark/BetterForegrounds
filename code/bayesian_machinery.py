@@ -749,7 +749,7 @@ def sample_all_rht_points_ThetaRHTPrior(all_ids, region = "SC_241", useprior = "
         
     return all_pMB, all_psiMB
     
-def fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False):
+def fully_sample_sky(region = "allsky", limitregion = False, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False):
     """
     Sample psi_MB and p_MB from whole GALFA-HI sky
     """
@@ -758,7 +758,7 @@ def fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = 
     rht_cursor, tablename = get_rht_cursor(region = region, velrangestring = velrangestring)
     all_ids = get_all_rht_ids(rht_cursor, tablename)
     
-    if region == "SC_241":
+    if limitregion is True:
         print("Loading all allsky data points that are in the SC_241 region")
         # Get all ids that are in both allsky data and SC_241
         all_ids_SC = pickle.load(open("SC_241_healpix_ids.p", "rb"))
@@ -932,5 +932,5 @@ if __name__ == "__main__":
     #gauss_sample_region(local = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
-    fully_sample_sky(region = "SC_241", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
+    fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     
