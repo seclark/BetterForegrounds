@@ -748,7 +748,7 @@ def sample_all_rht_points_ThetaRHTPrior(all_ids, region = "SC_241", useprior = "
         
     return all_pMB, all_psiMB
     
-def fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-10_10"):
+def fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-10_10", gaussmooth_prior = False):
     """
     Sample psi_MB and p_MB from whole GALFA-HI sky
     """
@@ -760,7 +760,7 @@ def fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = 
     print("beginning creation of all posteriors")
     
     # Create and sample posteriors for all pixels
-    all_pMB, all_psiMB = sample_all_rht_points(all_ids, rht_cursor = rht_cursor, region = region, useprior = useprior)
+    all_pMB, all_psiMB = sample_all_rht_points(all_ids, rht_cursor = rht_cursor, region = region, useprior = useprior, gaussmooth_prior = gaussmooth_prior)
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
@@ -922,5 +922,6 @@ def update_progress(progress, message='Progress:', final_message='Finished:'):
 if __name__ == "__main__":
 #    fully_sample_sky(region = "allsky")
     #gauss_sample_sky(region = "allsky", useprior = "ThetaRHT")
-    gauss_sample_region(local = False)
+    #gauss_sample_region(local = False)
+    fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gaussmooth_prior = False)
     
