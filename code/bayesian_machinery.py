@@ -282,7 +282,7 @@ class Posterior(BayesianComponent):
     Class for building a posterior composed of a Planck-based likelihood and an RHT prior
     """
     
-    def __init__(self, hp_index, sample_p0 = None, region = "SC_241", useprior = "RHTPrior", rht_cursor = None, QRHT_cursor = None, URHT_cursor = None, sig_QRHT_cursor = None, sig_URHT_cursor = None):
+    def __init__(self, hp_index, sample_p0 = None, region = "SC_241", useprior = "RHTPrior", rht_cursor = None, QRHT_cursor = None, URHT_cursor = None, sig_QRHT_cursor = None, sig_URHT_cursor = None, gaussmooth_prior = False):
         BayesianComponent.__init__(self, hp_index)  
         
         if sample_p0 is None:
@@ -292,7 +292,7 @@ class Posterior(BayesianComponent):
         
         # Instantiate posterior components
         if useprior is "RHTPrior":
-            prior = Prior(hp_index, self.sample_p0, reverse_RHT = True, region = region, rht_cursor = rht_cursor)
+            prior = Prior(hp_index, self.sample_p0, reverse_RHT = True, region = region, rht_cursor = rht_cursor, gaussmooth_prior = gaussmooth_prior)
         elif useprior is "ThetaRHT":
             prior = PriorThetaRHT(hp_index, self.sample_p0, reverse_RHT = True, region = region, QRHT_cursor = QRHT_cursor, URHT_cursor = URHT_cursor, sig_QRHT_cursor = sig_QRHT_cursor, sig_URHT_cursor = sig_URHT_cursor)
             
@@ -714,23 +714,19 @@ def get_rht_QU_cursors(local = False):
 
     return QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor
 
-def sample_all_rht_points(all_ids, region = "SC_241", useprior = "RHTPrior"):
-
-    #rht_cursor = get_rht_cursor()
-    #all_ids = get_all_rht_ids(rht_cursor)
+def sample_all_rht_points(all_ids, rht_cursor = None, region = "SC_241", useprior = "RHTPrior", gaussmooth_prior = False):
     
     all_pMB = np.zeros(len(all_ids))
     all_psiMB = np.zeros(len(all_ids))
     
     # Get ids of all pixels that contain RHT data
-    if useprior is "RHTPrior":
+    if rht_cursor is None:
+        print("Loading default rht_cursor by region because it was not provided")
         rht_cursor, tablename = get_rht_cursor(region = region)
-    else:
-        QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor = get_rht_QU_cursors(region = region, local = local)
     
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        posterior_obj = Posterior(_id[0], region = region, useprior = useprior, rht_cursor = rht_cursor)
+        posterior_obj = Posterior(_id[0], region = region, useprior = useprior, rht_cursor = rht_cursor, gaussmooth_prior = gaussmooth_prior)
         all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False)
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
         
@@ -752,27 +748,27 @@ def sample_all_rht_points_ThetaRHTPrior(all_ids, region = "SC_241", useprior = "
         
     return all_pMB, all_psiMB
     
-def fully_sample_sky(region = "allsky", useprior = "RHTPrior"):
+def fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-10_10"):
     """
     Sample psi_MB and p_MB from whole GALFA-HI sky
     """
 
     # Get ids of all pixels that contain RHT data
-    rht_cursor, tablename = get_rht_cursor(region = region)
+    rht_cursor, tablename = get_rht_cursor(region = region, velrangestring = velrangestring)
     all_ids = get_all_rht_ids(rht_cursor, tablename)
     
     print("beginning creation of all posteriors")
     
     # Create and sample posteriors for all pixels
-    all_pMB, all_psiMB = sample_all_rht_points(all_ids, region = region, useprior = useprior)
+    all_pMB, all_psiMB = sample_all_rht_points(all_ids, rht_cursor = rht_cursor, region = region, useprior = useprior)
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
     hp_pMB = make_hp_map(all_pMB, all_ids, Nside = 2048, nest = True)
     
     out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
-    hp.fitsfunc.write_map(out_root + "psiMB_allsky_test0.fits", hp_psiMB, coord = "C", nest = True) 
-    hp.fitsfunc.write_map(out_root + "pMB_allsky_test0.fits", hp_pMB, coord = "C", nest = True) 
+    hp.fitsfunc.write_map(out_root + "psiMB_allsky_"+velrangestring+".fits", hp_psiMB, coord = "C", nest = True) 
+    hp.fitsfunc.write_map(out_root + "pMB_allsky_"+velrangestring+".fits", hp_pMB, coord = "C", nest = True) 
     
 def gauss_sample_sky(region = "allsky", useprior = "ThetaRHT"):
     
