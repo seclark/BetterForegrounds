@@ -774,8 +774,14 @@ def fully_sample_sky(region = "allsky", limitregion = False, useprior = "RHTPrio
     hp_pMB = make_hp_map(all_pMB, all_ids, Nside = 2048, nest = True)
     
     out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
-    hp.fitsfunc.write_map(out_root + "psiMB_allsky_"+velrangestring+".fits", hp_psiMB, coord = "C", nest = True) 
-    hp.fitsfunc.write_map(out_root + "pMB_allsky_"+velrangestring+".fits", hp_pMB, coord = "C", nest = True) 
+    if limitregion is False:
+        psiMB_out_fn = "psiMB_allsky_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+".fits"
+        pMB_out_fn = "pMB_allsky_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+".fits"
+    elif limitregion is True:
+        psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+".fits"
+        pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+".fits"
+    hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
+    hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
     
 def gauss_sample_sky(region = "allsky", useprior = "ThetaRHT"):
     
@@ -930,8 +936,8 @@ if __name__ == "__main__":
 #    fully_sample_sky(region = "allsky")
     #gauss_sample_sky(region = "allsky", useprior = "ThetaRHT")
     #gauss_sample_region(local = False)
-    #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
+    fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
-    fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
+    #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     
