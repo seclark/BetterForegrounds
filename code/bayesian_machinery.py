@@ -749,7 +749,7 @@ def sample_all_rht_points_ThetaRHTPrior(all_ids, region = "SC_241", useprior = "
         
     return all_pMB, all_psiMB
     
-def fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-10_10", gaussmooth_prior = False):
+def fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False):
     """
     Sample psi_MB and p_MB from whole GALFA-HI sky
     """
