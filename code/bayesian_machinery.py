@@ -753,6 +753,8 @@ def fully_sample_sky(region = "allsky", limitregion = False, useprior = "RHTPrio
     """
     Sample psi_MB and p_MB from whole GALFA-HI sky
     """
+    
+    print("Fully sampling sky with options: region = {}, limitregion = {}, useprior = {}, velrangestring = {}, gausssmooth_prior = {}".format(region, limitregion, useprior, velrangestring, gausssmooth_prior))
 
     # Get ids of all pixels that contain RHT data
     rht_cursor, tablename = get_rht_cursor(region = region, velrangestring = velrangestring)
