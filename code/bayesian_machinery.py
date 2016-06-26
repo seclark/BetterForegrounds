@@ -677,14 +677,17 @@ def get_all_rht_ids(rht_cursor, tablename):
     
     return all_ids
     
-def get_rht_cursor(region = "SC_241"):
+def get_rht_cursor(region = "SC_241", velrangestring = "-10_10"):
     if region is "SC_241":
         rht_db = sqlite3.connect("allweights_db.sqlite")
         tablename = "RHT_weights"
     elif region is "allsky":
         root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
-        rht_db = sqlite3.connect(root + "allsky_RHTweights_db.sqlite")
         tablename = "RHT_weights_allsky"
+        if velrangestring == "-10_10":
+            rht_db = sqlite3.connect(root + "allsky_RHTweights_db.sqlite")
+        elif velrangestring == "-4_3":
+            rht_db = sqlite3.connect(root + "allsky_RHTweights_-4_3_db.sqlite")
     
     rht_cursor = rht_db.cursor()
     
