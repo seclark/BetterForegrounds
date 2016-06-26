@@ -758,6 +758,12 @@ def fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = 
     rht_cursor, tablename = get_rht_cursor(region = region, velrangestring = velrangestring)
     all_ids = get_all_rht_ids(rht_cursor, tablename)
     
+    if region == "SC_241":
+        print("Loading all allsky data points that are in the SC_241 region")
+        # Get all ids that are in both allsky data and SC_241
+        all_ids_SC = pickle.load(open("SC_241_healpix_ids.p", "rb"))
+        all_ids = list(set(all_ids).intersection(all_ids_SC))
+    
     print("beginning creation of all posteriors")
     
     # Create and sample posteriors for all pixels
@@ -925,5 +931,6 @@ if __name__ == "__main__":
     #gauss_sample_sky(region = "allsky", useprior = "ThetaRHT")
     #gauss_sample_region(local = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
-    fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
+    #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
+    fully_sample_sky(region = "SC_241", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     
