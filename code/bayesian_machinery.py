@@ -733,7 +733,7 @@ def sample_all_rht_points(all_ids, rht_cursor = None, region = "SC_241", useprio
     
     return all_pMB, all_psiMB
     
-def sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241")
+def sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241"):
     """
     Sample the Planck likelihood rather than a posterior constructed from a likelihood and prior
     """
@@ -811,6 +811,43 @@ def fully_sample_sky(region = "allsky", limitregion = False, useprior = "RHTPrio
     elif limitregion is True:
         psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+".fits"
         pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+".fits"
+    hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
+    hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
+    
+def fully_sample_planck_sky(region = "allsky", limitregion = False):
+    """
+    Sample Planck 353 GHz psi_MB and p_MB from whole GALFA-HI sky
+    """
+    
+    # Get ids of all pixels that contain RHT data
+    rht_cursor, tablename = get_rht_cursor(region = region)
+    all_ids = get_all_rht_ids(rht_cursor, tablename)
+    
+    planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+    planck_tqu_cursor = planck_tqu_db.cursor()
+    planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
+    planck_cov_cursor = planck_cov_db.cursor()
+    
+    if limitregion is True:
+        print("Loading all allsky data points that are in the SC_241 region")
+        # Get all ids that are in both allsky data and SC_241
+        all_ids_SC = pickle.load(open("SC_241_healpix_ids.p", "rb"))
+        all_ids = list(set(all_ids).intersection(all_ids_SC))
+    
+    print("beginning creation of all likelihoods")
+    all_pMB, all_psiMB = sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241")
+    
+    # Place into healpix map
+    hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
+    hp_pMB = make_hp_map(all_pMB, all_ids, Nside = 2048, nest = True)
+    
+    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
+    if limitregion is False:
+        psiMB_out_fn = "psiMB_allsky_353GHz.fits"
+        pMB_out_fn = "pMB_allsky_353GHz.fits"
+    elif limitregion is True:
+        psiMB_out_fn = "psiMB_DR2_SC_241_353GHz.fits"
+        pMB_out_fn = "pMB_DR2_SC_241_353GHz.fits"
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
     
@@ -970,5 +1007,6 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
-    fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
+    #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
+    fully_sample_planck_sky(region = "allsky", limitregion = False)
     
