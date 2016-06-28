@@ -333,33 +333,23 @@ class PlanckPosterior(BayesianComponent):
     """
     Class for building a posterior that is only a Planck-based likelihood
     """
+    def __init__(self, hp_index, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all):
+        BayesianComponent.__init__(self, hp_index)      
     
-    self.sample_p0 = np.linspace(0, 1, 165)
-    self.sample_psi0 = np.linspace(0, np.pi, 165)
+        # Planck-based likelihood
+        self.posterior = Likelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, self.sample_p0, self.sample_psi0)
     
-     # Planck covariance database
-    planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
-    planck_cov_cursor = planck_cov_db.cursor()
-
-    # Planck TQU database
-    planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
-    planck_tqu_cursor = planck_tqu_db.cursor()
+        self.naive_psi = self.posterior.naive_psi
+        self.psimeas = self.posterior.psimeas
+        self.pmeas = self.posterior.pmeas
     
-    # Planck-based likelihood
-    self.posterior = Likelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, self.sample_p0, self.sample_psi0)
+        psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
+        p_dx = self.sample_p0[1] - self.sample_p0[0]
     
-    self.naive_psi = self.posterior.naive_psi
-    self.psimeas = self.posterior.psimeas
-    self.pmeas = self.posterior.pmeas
+        self.posterior_integrated_over_psi = self.integrate_highest_dimension(self.posterior, dx = psi_dx)
+        self.posterior_integrated_over_p_and_psi = self.integrate_highest_dimension(self.posterior_integrated_over_psi, dx = p_dx)
     
-    psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
-    p_dx = self.sample_p0[1] - self.sample_p0[0]
-    
-    self.posterior_integrated_over_psi = self.integrate_highest_dimension(self.posterior, dx = psi_dx)
-    self.posterior_integrated_over_p_and_psi = self.integrate_highest_dimension(self.posterior_integrated_over_psi, dx = p_dx)
-    
-    self.normed_posterior = self.posterior/self.posterior_integrated_over_p_and_psi
-
+        self.normed_posterior = self.posterior/self.posterior_integrated_over_p_and_psi
         
 class DummyPosterior(BayesianComponent):
       """
@@ -786,8 +776,8 @@ def sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_curso
 
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        likelihood_obj = Likelihood(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all)
-        all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(likelihood_obj, center = "naive", verbose = False)
+        posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all)
+        all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False)
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
     
     return all_pMB, all_psiMB
