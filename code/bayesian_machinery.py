@@ -724,13 +724,32 @@ def sample_all_rht_points(all_ids, rht_cursor = None, region = "SC_241", useprio
     if rht_cursor is None:
         print("Loading default rht_cursor by region because it was not provided")
         rht_cursor, tablename = get_rht_cursor(region = region)
-    
+        
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
         posterior_obj = Posterior(_id[0], region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
         all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False)
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
-        
+    
+    return all_pMB, all_psiMB
+    
+def sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241")
+    """
+    Sample the Planck likelihood rather than a posterior constructed from a likelihood and prior
+    """
+
+    # Get p0 and psi0 sampling grids
+    id0 = all_ids[0]
+    posterior_obj = Posterior(id0[0], region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
+    p0_all = posterior_obj.p0_all
+    psi0_all = posterior_obj.psi0_all
+
+    update_progress(0.0)
+    for i, _id in enumerate(all_ids):
+        likelihood_obj = Likelihood(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all)
+        all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(likelihood_obj, center = "naive", verbose = False)
+        update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
+    
     return all_pMB, all_psiMB
     
 def sample_all_rht_points_ThetaRHTPrior(all_ids, region = "SC_241", useprior = "RHTPrior", local = False):
