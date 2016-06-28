@@ -342,6 +342,9 @@ class PlanckPosterior(BayesianComponent):
         self.naive_psi = self.posterior.naive_psi
         self.psimeas = self.posterior.psimeas
         self.pmeas = self.posterior.pmeas
+        
+        self.p0_all = p0_all
+        self.psi0_all = psi0_all
     
         psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
         p_dx = self.sample_p0[1] - self.sample_p0[0]
