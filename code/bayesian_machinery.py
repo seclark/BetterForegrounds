@@ -738,6 +738,16 @@ def sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_curso
     Sample the Planck likelihood rather than a posterior constructed from a likelihood and prior
     """
 
+    if planck_tqu_cursor is None:
+        print("Loading default planck_tqu_cursor because it was not provided")
+        planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+        planck_tqu_cursor = planck_tqu_db.cursor()
+    
+    if planck_cov_cursor is None:
+        print("Loading default planck_cov_cursor because it was not provided")
+        planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
+        planck_cov_cursor = planck_cov_db.cursor()
+
     # Get p0 and psi0 sampling grids
     id0 = all_ids[0]
     posterior_obj = Posterior(id0[0], region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
