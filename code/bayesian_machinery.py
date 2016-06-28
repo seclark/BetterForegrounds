@@ -749,11 +749,8 @@ def sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_curso
         planck_cov_cursor = planck_cov_db.cursor()
 
     # Get p0 and psi0 sampling grids
-    rht_cursor, tablename = get_rht_cursor(region = region)
-    id0 = all_ids[0]
-    posterior_obj = Posterior(id0[0], region = region, useprior = "RHTPrior", rht_cursor = rht_cursor)
-    p0_all = posterior_obj.p0_all
-    psi0_all = posterior_obj.psi0_all
+    p0_all = np.linspace(0, 1, 165)
+    psi0_all = np.linspace(0, np.pi, 165)
 
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
