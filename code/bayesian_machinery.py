@@ -339,7 +339,9 @@ class PlanckPosterior(BayesianComponent):
         # Planck-based likelihood
         self.sample_p0 = p0_all
         self.sample_psi0 = psi0_all
-        self.posterior = Likelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, self.sample_p0, self.sample_psi0)
+        
+        likelihood = Likelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, self.sample_p0, self.sample_psi0)
+        self.posterior = likelihood.planck_likelihood
     
         self.naive_psi = self.posterior.naive_psi
         self.psimeas = self.posterior.psimeas
