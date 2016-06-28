@@ -329,6 +329,38 @@ class Posterior(BayesianComponent):
         
         self.prior_obj = prior
         
+class PlanckPosterior(BayesianComponent):
+    """
+    Class for building a posterior that is only a Planck-based likelihood
+    """
+    
+    self.sample_p0 = np.linspace(0, 1, 165)
+    self.sample_psi0 = np.linspace(0, np.pi, 165)
+    
+     # Planck covariance database
+    planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
+    planck_cov_cursor = planck_cov_db.cursor()
+
+    # Planck TQU database
+    planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+    planck_tqu_cursor = planck_tqu_db.cursor()
+    
+    # Planck-based likelihood
+    self.posterior = Likelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, self.sample_p0, self.sample_psi0)
+    
+    self.naive_psi = self.posterior.naive_psi
+    self.psimeas = self.posterior.psimeas
+    self.pmeas = self.posterior.pmeas
+    
+    psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
+    p_dx = self.sample_p0[1] - self.sample_p0[0]
+    
+    self.posterior_integrated_over_psi = self.integrate_highest_dimension(self.posterior, dx = psi_dx)
+    self.posterior_integrated_over_p_and_psi = self.integrate_highest_dimension(self.posterior_integrated_over_psi, dx = p_dx)
+    
+    self.normed_posterior = self.posterior/self.posterior_integrated_over_p_and_psi
+
+        
 class DummyPosterior(BayesianComponent):
       """
       Class for testing posterior estimation methods. 
