@@ -764,6 +764,9 @@ def sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_curso
     Sample the Planck likelihood rather than a posterior constructed from a likelihood and prior
     """
 
+    all_pMB = np.zeros(len(all_ids))
+    all_psiMB = np.zeros(len(all_ids))
+
     if planck_tqu_cursor is None:
         print("Loading default planck_tqu_cursor because it was not provided")
         planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
