@@ -1045,8 +1045,8 @@ if __name__ == "__main__":
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
     #fully_sample_planck_sky(region = "allsky", limitregion = True)
     
-    allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_allsky_353GHz.fits")
-    allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_allsky_353GHz.fits")
+    allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz.fits")
+    allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_DR2_SC_241_353GHz.fits")
     
     allskypmb_nest = hp.pixelfunc.reorder(allskypmb, r2n=True)
     allskypsimb_nest = hp.pixelfunc.reorder(allskypsimb, r2n=True)
