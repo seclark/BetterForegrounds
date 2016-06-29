@@ -785,6 +785,10 @@ def sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_curso
     for i, _id in enumerate(all_ids):
         posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all)
         all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = verbose)
+        
+        if _id in [3785126, 118531, 4113515]:
+            print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
+        
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
     
     return all_pMB, all_psiMB
@@ -861,10 +865,10 @@ def fully_sample_planck_sky(region = "allsky", limitregion = False, local = Fals
         all_ids_SC = pickle.load(open("SC_241_healpix_ids.p", "rb"))
         all_ids = list(set(all_ids).intersection(all_ids_SC))
     
-    all_ids = [[3785126], [118531], [4113515]] # test hack
+    #all_ids = [[3785126], [118531], [4113515]] # test hack
     
     print("beginning creation of all likelihoods")
-    all_pMB, all_psiMB = sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241", verbose = False)
+    all_pMB, all_psiMB = sample_all_planck_points(all_ids, planck_tqu_cursor = planck_tqu_cursor, planck_cov_cursor = planck_cov_cursor, region = "SC_241", verbose = False)
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
@@ -876,11 +880,11 @@ def fully_sample_planck_sky(region = "allsky", limitregion = False, local = Fals
         out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
         
     if limitregion is False:
-        psiMB_out_fn = "psiMB_allsky_353GHz.fits"
-        pMB_out_fn = "pMB_allsky_353GHz.fits"
+        psiMB_out_fn = "psiMB_allsky_353GHz_take2.fits"
+        pMB_out_fn = "pMB_allsky_353GHz_take2.fits"
     elif limitregion is True:
-        psiMB_out_fn = "psiMB_DR2_SC_241_353GHz.fits"
-        pMB_out_fn = "pMB_DR2_SC_241_353GHz.fits"
+        psiMB_out_fn = "psiMB_DR2_SC_241_353GHz_take2.fits"
+        pMB_out_fn = "pMB_DR2_SC_241_353GHz_take2.fits"
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
 
@@ -1043,8 +1047,8 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
-    #fully_sample_planck_sky(region = "allsky", limitregion = True)
-    
+    fully_sample_planck_sky(region = "allsky", limitregion = True, local = False)
+    """
     allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz.fits")
     allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_DR2_SC_241_353GHz.fits")
     
@@ -1054,5 +1058,5 @@ if __name__ == "__main__":
     hpnum = 3785126
     print("psi is ", allskypsimb_nest[hpnum])
     print("p is ", allskypmb_nest[hpnum])
-    
+    """
     
