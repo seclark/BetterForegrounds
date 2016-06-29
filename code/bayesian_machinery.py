@@ -759,7 +759,7 @@ def sample_all_rht_points(all_ids, rht_cursor = None, region = "SC_241", useprio
     
     return all_pMB, all_psiMB
     
-def sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241"):
+def sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241", verbose = False):
     """
     Sample the Planck likelihood rather than a posterior constructed from a likelihood and prior
     """
@@ -784,7 +784,7 @@ def sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_curso
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
         posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all)
-        all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False)
+        all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = verbose)
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
     
     return all_pMB, all_psiMB
@@ -841,7 +841,7 @@ def fully_sample_sky(region = "allsky", limitregion = False, useprior = "RHTPrio
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
     
-def fully_sample_planck_sky(region = "allsky", limitregion = False):
+def fully_sample_planck_sky(region = "allsky", limitregion = False, local = False):
     """
     Sample Planck 353 GHz psi_MB and p_MB from whole GALFA-HI sky
     """
@@ -861,14 +861,20 @@ def fully_sample_planck_sky(region = "allsky", limitregion = False):
         all_ids_SC = pickle.load(open("SC_241_healpix_ids.p", "rb"))
         all_ids = list(set(all_ids).intersection(all_ids_SC))
     
+    all_ids = [[3785126], [118531], [4113515]] # test hack
+    
     print("beginning creation of all likelihoods")
-    all_pMB, all_psiMB = sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241")
+    all_pMB, all_psiMB = sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241", verbose = False)
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
     hp_pMB = make_hp_map(all_pMB, all_ids, Nside = 2048, nest = True)
     
-    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
+    if local is True:
+        out_root = ""
+    else:
+        out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
+        
     if limitregion is False:
         psiMB_out_fn = "psiMB_allsky_353GHz.fits"
         pMB_out_fn = "pMB_allsky_353GHz.fits"
@@ -877,6 +883,7 @@ def fully_sample_planck_sky(region = "allsky", limitregion = False):
         pMB_out_fn = "pMB_DR2_SC_241_353GHz.fits"
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
+
     
 def gauss_sample_sky(region = "allsky", useprior = "ThetaRHT"):
     
@@ -1035,6 +1042,17 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
-    fully_sample_planck_sky(region = "allsky", limitregion = False)
+    #fully_sample_planck_sky(region = "allsky", limitregion = False)
     #fully_sample_planck_sky(region = "allsky", limitregion = True)
+    
+    allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_allsky_353GHz.fits")
+    allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_allsky_353GHz.fits")
+    
+    allskypmb_nest = hp.pixelfunc.reorder(allskypmb, r2n=True)
+    allskypsimb_nest = hp.pixelfunc.reorder(allskypsimb, r2n=True)
+    
+    hpnum = 3785126
+    print("psi is ", allskypsimb_nest[hpnum])
+    print("p is ", allskypmb_nest[hpnum])
+    
     
