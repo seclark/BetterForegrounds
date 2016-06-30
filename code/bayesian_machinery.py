@@ -1055,8 +1055,9 @@ if __name__ == "__main__":
     allskypmb_nest = hp.pixelfunc.reorder(allskypmb, r2n=True)
     allskypsimb_nest = hp.pixelfunc.reorder(allskypsimb, r2n=True)
     
-    hpnum = 3785126
-    print("psi is ", allskypsimb_nest[hpnum])
-    print("p is ", allskypmb_nest[hpnum])
+    hpnums = [3785126, 1966514]
+    for hpnum in hpnums:
+        print("psi is ", allskypsimb_nest[hpnum])
+        print("p is ", allskypmb_nest[hpnum])
     
     
