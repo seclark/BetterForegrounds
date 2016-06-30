@@ -867,8 +867,10 @@ def fully_sample_planck_sky(region = "allsky", limitregion = False, local = Fals
     
     #all_ids = [[3785126], [118531], [4113515]] # test hack
     
+    all_ids = all_ids[0:20] # test hack
+    
     print("beginning creation of all likelihoods")
-    all_pMB, all_psiMB = sample_all_planck_points(all_ids, planck_tqu_cursor = planck_tqu_cursor, planck_cov_cursor = planck_cov_cursor, region = "SC_241", verbose = False)
+    all_pMB, all_psiMB = sample_all_planck_points(all_ids, planck_tqu_cursor = planck_tqu_cursor, planck_cov_cursor = planck_cov_cursor, region = "SC_241", verbose = True)
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
