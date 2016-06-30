@@ -1047,8 +1047,8 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
-    #fully_sample_planck_sky(region = "allsky", limitregion = True, local = False)
-    
+    fully_sample_planck_sky(region = "allsky", limitregion = True, local = False)
+    """
     allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz_take2.fits")
     allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_DR2_SC_241_353GHz_take2.fits")
     
@@ -1059,5 +1059,5 @@ if __name__ == "__main__":
     for hpnum in hpnums:
         print("psi is ", allskypsimb_nest[hpnum])
         print("p is ", allskypmb_nest[hpnum])
-    
+    """
     
