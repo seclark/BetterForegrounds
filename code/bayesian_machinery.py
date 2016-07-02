@@ -791,8 +791,7 @@ def sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_curso
     for i, _id in enumerate(all_ids):
         posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all)
         all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = verbose)
-        print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
-        if _id in [3785126, 118531, 4113515]:
+        if verbose is True:
             print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
         
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
