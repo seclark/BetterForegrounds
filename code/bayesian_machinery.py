@@ -517,7 +517,7 @@ def center_posterior_naive_psi(posterior_obj, sample_psi0, posterior, verbose = 
     psinaive_indx = np.abs(sample_psi0 - (psinaive - np.pi/2)).argmin()
     
     # catch pathological case
-    if psinaive == np.pi/2:
+    if (psinaive - np.pi/2) <= 1E-10:
         if verbose is True:
             print("psinaive is EXACTLY pi/2. Doing nothing.")
     else:
