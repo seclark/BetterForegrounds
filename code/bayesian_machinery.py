@@ -516,16 +516,22 @@ def center_posterior_naive_psi(posterior_obj, sample_psi0, posterior, verbose = 
     # Find index of value closest to psinaive - pi/2
     psinaive_indx = np.abs(sample_psi0 - (psinaive - np.pi/2)).argmin()
     
-    if verbose is True:
-        print("difference between psinaive - pi/2 and closest values is {} - {} = {}".format(psinaive - np.pi/2, sample_psi0[psinaive_indx], np.abs((psinaive - np.pi/2) - sample_psi0[psinaive_indx])))
-    if np.abs((psinaive - np.pi/2) - sample_psi0[psinaive_indx]) > (sample_psi0[1] - sample_psi0[0]):
+    # catch pathological case
+    if psinaive == np.pi/2:
         if verbose is True:
-            print("Subtracting pi from all")
-        sample_psi0 -= np.pi
-        psinaive_indx = np.abs(sample_psi0 - (psinaive - np.pi/2)).argmin()
+            print("psinaive is EXACTLY pi/2. Doing nothing.")
+    else:
+    
         if verbose is True:
-            print("Redefining psinaive_indx")
             print("difference between psinaive - pi/2 and closest values is {} - {} = {}".format(psinaive - np.pi/2, sample_psi0[psinaive_indx], np.abs((psinaive - np.pi/2) - sample_psi0[psinaive_indx])))
+        if np.abs((psinaive - np.pi/2) - sample_psi0[psinaive_indx]) > (sample_psi0[1] - sample_psi0[0]):
+            if verbose is True:
+                print("Subtracting pi from all")
+            sample_psi0 -= np.pi
+            psinaive_indx = np.abs(sample_psi0 - (psinaive - np.pi/2)).argmin()
+            if verbose is True:
+                print("Redefining psinaive_indx")
+                print("difference between psinaive - pi/2 and closest values is {} - {} = {}".format(psinaive - np.pi/2, sample_psi0[psinaive_indx], np.abs((psinaive - np.pi/2) - sample_psi0[psinaive_indx])))
     
     rolled_posterior = np.roll(posterior, - psinaive_indx, axis = 0)
     
