@@ -48,7 +48,6 @@ new_header['NAXIS'] = 2
 
 #new_header = fits.getheader(hdu_todata)#copy.copy(hdu_todata.header)
 
-print(new_header)
 
 for thet_i in xrange(nthets):
     allsky_fn = path_to_rht_thetaslices + "GALFA_HI_allsky_-10_10_w75_s15_t70_thetabin_"+str(thet_i)+".fits"
@@ -62,15 +61,10 @@ for thet_i in xrange(nthets):
     
     output0, footprint0 = reproject_interp((allsky_thetaslice_data, allsky_thetaslice_hdr), allsky_thetaslice_hdr_new)
     
-    print('output0 shape', output0.shape)
-    
-    print(allsky_thetaslice_data.shape)
-    print(allsky_thetaslice_hdr)
+    print('theta_i', thet_i)
     
     # Reproject each theta slice into appropriate theta bin in cube
     output, footprint = reproject_interp((allsky_thetaslice_data, allsky_thetaslice_hdr), new_header)
-    print(output.shape)
-    print(rht_data_cube.shape)
     rht_data_cube[thet_i, :, :] = output
 
 new_hdr = copy.copy(galfa_cube_hdr)    
