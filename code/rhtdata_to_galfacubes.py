@@ -26,6 +26,7 @@ path_to_rht_thetaslices = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
 galfa_cube_name = "GALFA_HI_RA+DEC_356.00+34.35_W"
 galfa_cube_fn = path_to_galfa_cubes + galfa_cube_name + ".fits"
 
+galfa_cube_data = fits.getdata(galfa_cube_fn)
 galfa_cube_hdr = fits.getheader(galfa_cube_fn)
 
 nthets = 165
@@ -40,6 +41,7 @@ hdu_todata.header.remove('CRVAL3')
 hdu_todata.header.remove('CDELT3')
 hdu_todata.header.remove('NAXIS3')
 hdu_todata.header['NAXIS'] = 2
+hdu_todata.data = galfa_cube_data[0, :, :]
 
 print(hdu_todata.header)
 
