@@ -19,8 +19,8 @@ import string
 from reproject import reproject_interp
  
  
-path_to_galfa_cubes = "/a/users/goldston/DR2W_RC5/Wide/"
-path_to_rht_thetaslices = "/a/users/goldston/susan/Wide_maps/"
+path_to_galfa_cubes = "/disks/jansky/a/users/goldston/DR2W_RC5/Wide/"
+path_to_rht_thetaslices = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
 
 # eventually we will step through these cubes -- start w/ 1 test
 galfa_cube_name = "GALFA_HI_RA+DEC_356.00+34.35_W"
