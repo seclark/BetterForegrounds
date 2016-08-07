@@ -55,6 +55,15 @@ for thet_i in xrange(nthets):
     allsky_thetaslice_data = fits.getdata(allsky_fn)
     allsky_thetaslice_hdr = fits.getheader(allsky_fn)
     
+    # try reprojecting allsky thetaslice first
+    allsky_thetaslice_hdr_new = copy.copy(allsky_thetaslice_hdr)
+    allsky_thetaslice_hdr_new['CTYPE1'] = 'RA      '
+    allsky_thetaslice_hdr_new['CTYPE2'] = 'DEC     '
+    
+    output0, footprint0 = reproject_interp((allsky_thetaslice_data, allsky_thetaslice_hdr), allsky_thetaslice_hdr_new)
+    
+    print('output0 shape', output0.shape)
+    
     print(allsky_thetaslice_data.shape)
     print(allsky_thetaslice_hdr)
     
