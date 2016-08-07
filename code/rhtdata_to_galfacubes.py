@@ -44,7 +44,9 @@ hdu_todata.header.remove('CROTA3')
 hdu_todata.header['NAXIS'] = 2
 #hdu_todata.data = galfa_cube_data[0, :, :]
 
-print(hdu_todata.header)
+new_header = fits.getheader(hdu_todata)#copy.copy(hdu_todata.header)
+
+print(new_header)
 
 for thet_i in xrange(nthets):
     allsky_fn = path_to_rht_thetaslices + "GALFA_HI_allsky_-10_10_w75_s15_t70_thetabin_"+str(thet_i)+".fits"
@@ -55,7 +57,7 @@ for thet_i in xrange(nthets):
     print(allsky_thetaslice_hdr)
     
     # Reproject each theta slice into appropriate theta bin in cube
-    output, footprint = reproject_interp((allsky_thetaslice_data, allsky_thetaslice_hdr), hdu_todata.header)
+    output, footprint = reproject_interp((allsky_thetaslice_data, allsky_thetaslice_hdr), new_header)
     print(output.shape)
     print(rht_data_cube.shape)
     rht_data_cube[thet_i, :, :] = output
