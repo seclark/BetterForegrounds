@@ -52,8 +52,10 @@ for thet_i in xrange(nthets):
     print(allsky_thetaslice_hdr)
     
     # Reproject each theta slice into appropriate theta bin in cube
-    rht_data_cube[thet_i, :, :], footprint = reproject_interp((allsky_thetaslice_data, allsky_thetaslice_hdr), hdu_todata.header)
-    
+    output, footprint = reproject_interp((allsky_thetaslice_data, allsky_thetaslice_hdr), hdu_todata.header)
+    print(output.shape)
+    print(rht_data_cube.shape)
+    rht_data_cube[thet_i, :, :] = output
 
 new_hdr = copy.copy(galfa_cube_hdr)    
 new_hdr['NAXIS3'] = nthets
