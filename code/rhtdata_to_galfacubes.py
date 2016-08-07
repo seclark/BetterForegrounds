@@ -40,8 +40,9 @@ hdu_todata.header.remove('CTYPE3')
 hdu_todata.header.remove('CRVAL3')
 hdu_todata.header.remove('CDELT3')
 hdu_todata.header.remove('NAXIS3')
+hdu_todata.header.remove('CROTA3')
 hdu_todata.header['NAXIS'] = 2
-hdu_todata.data = galfa_cube_data[0, :, :]
+#hdu_todata.data = galfa_cube_data[0, :, :]
 
 print(hdu_todata.header)
 
