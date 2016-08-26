@@ -79,6 +79,30 @@ class BayesianComponent():
         rolled_rht = np.roll(rht_data, -psi_0_indx - 1)
         
         return rolled_rht, rolled_sample_psi
+        
+    def get_adaptive_p_grid(self, hp_index):
+        # Planck TQU database
+        planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+        planck_tqu_cursor = planck_tqu_db.cursor()
+    
+        (self.hp_index, self.T, self.Q, self.U) = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (self.hp_index,)).fetchone()
+        
+        pmeas = np.sqrt(self.Q**2 + self.U**2)/self.T
+        
+        # Planck covariance database
+        planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
+        planck_cov_cursor = planck_cov_db.cursor()
+        
+        (self.hp_index, self.TT, self.TQ, self.TU, self.TQa, self.QQ, self.QU, self.TUa, self.QUa, self.UU) = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (self.hp_index,)).fetchone()
+        
+        # from Planck Intermediate Results XIX eq. B.2. Taking I0 to be perfectly known
+        sigpsq = (1/pmeas**2*self.T**4)*(self.Q**2*self.QQ + self.U**2*self.UU + 2*self.Q*self.U*self.QU)
+        
+        # grid bounded at +/- 1
+        pgridmin = max(0, pmeas - 7*sigpsq)
+        pgridmax = min(1, pmeas + 7*sigpsq)
+        
+        
 
 class Prior(BayesianComponent):
     """
@@ -282,11 +306,14 @@ class Posterior(BayesianComponent):
     Class for building a posterior composed of a Planck-based likelihood and an RHT prior
     """
     
-    def __init__(self, hp_index, sample_p0 = None, region = "SC_241", useprior = "RHTPrior", rht_cursor = None, QRHT_cursor = None, URHT_cursor = None, sig_QRHT_cursor = None, sig_URHT_cursor = None, gausssmooth_prior = False):
+    def __init__(self, hp_index, sample_p0 = None, adaptivep0 = False, region = "SC_241", useprior = "RHTPrior", rht_cursor = None, QRHT_cursor = None, URHT_cursor = None, sig_QRHT_cursor = None, sig_URHT_cursor = None, gausssmooth_prior = False):
         BayesianComponent.__init__(self, hp_index)  
         
         if sample_p0 is None:
-            self.sample_p0 = np.linspace(0, 1, 165)
+            if adaptivep0 is True:
+                self.sample_p0 = self.get_adaptive_p_grid(hp_index)
+            else:
+                self.sample_p0 = np.linspace(0, 1, 165)
         else:
             self.sample_p0 = sample_p0
         
@@ -1048,8 +1075,8 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
-    #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
-    fully_sample_planck_sky(region = "allsky", limitregion = False)
+    fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
+    #fully_sample_planck_sky(region = "allsky", limitregion = False)
     #fully_sample_planck_sky(region = "allsky", limitregion = True, local = False)
     """
     allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz_take2.fits")
