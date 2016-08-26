@@ -102,6 +102,12 @@ class BayesianComponent():
         pgridmin = max(0, pmeas - 7*sigpsq)
         pgridmax = min(1, pmeas + 7*sigpsq)
         
+        # grid must be centered on p0
+        mindist = min(pmeas - pgridmin, pgridmax - pgridmin)
+        
+        pgrid = np.linspace(pmeas - mindist, pmeas + mindist, 165)
+        
+        return pgrid
         
 
 class Prior(BayesianComponent):
@@ -774,7 +780,7 @@ def get_rht_QU_cursors(local = False):
 
     return QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor
 
-def sample_all_rht_points(all_ids, rht_cursor = None, region = "SC_241", useprior = "RHTPrior", gausssmooth_prior = False):
+def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region = "SC_241", useprior = "RHTPrior", gausssmooth_prior = False):
     
     all_pMB = np.zeros(len(all_ids))
     all_psiMB = np.zeros(len(all_ids))
@@ -786,7 +792,7 @@ def sample_all_rht_points(all_ids, rht_cursor = None, region = "SC_241", useprio
         
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        posterior_obj = Posterior(_id[0], region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
+        posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
         all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False)
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
     
