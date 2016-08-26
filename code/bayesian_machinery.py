@@ -886,7 +886,7 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
     
-def fully_sample_planck_sky(region = "allsky", limitregion = False, local = False):
+def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = False, local = False):
     """
     Sample Planck 353 GHz psi_MB and p_MB from whole GALFA-HI sky
     """
@@ -907,7 +907,7 @@ def fully_sample_planck_sky(region = "allsky", limitregion = False, local = Fals
         all_ids = list(set(all_ids).intersection(all_ids_SC))
     
     print("beginning creation of all likelihoods")
-    all_pMB, all_psiMB = sample_all_planck_points(all_ids, planck_tqu_cursor = planck_tqu_cursor, planck_cov_cursor = planck_cov_cursor, region = "SC_241", verbose = False)
+    all_pMB, all_psiMB = sample_all_planck_points(all_ids, adaptivep0 = adaptivep0, planck_tqu_cursor = planck_tqu_cursor, planck_cov_cursor = planck_cov_cursor, region = "SC_241", verbose = False)
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
@@ -919,11 +919,11 @@ def fully_sample_planck_sky(region = "allsky", limitregion = False, local = Fals
         out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
         
     if limitregion is False:
-        psiMB_out_fn = "psiMB_allsky_353GHz_take2.fits"
-        pMB_out_fn = "pMB_allsky_353GHz_take2.fits"
+        psiMB_out_fn = "psiMB_allsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
+        pMB_out_fn = "pMB_allsky_353GHz_"+str(adaptivep0)+".fits"
     elif limitregion is True:
-        psiMB_out_fn = "psiMB_DR2_SC_241_353GHz_take2.fits"
-        pMB_out_fn = "pMB_DR2_SC_241_353GHz_take2.fits"
+        psiMB_out_fn = "psiMB_DR2_SC_241_353GHz_"+str(adaptivep0)+".fits"
+        pMB_out_fn = "pMB_DR2_SC_241_353GHz_"+str(adaptivep0)+".fits"
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
 
@@ -1084,9 +1084,9 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
+    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
-    #fully_sample_planck_sky(region = "allsky", limitregion = True, local = False)
+    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False)
     """
     allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz_take2.fits")
     allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_DR2_SC_241_353GHz_take2.fits")
