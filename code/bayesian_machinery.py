@@ -366,11 +366,14 @@ class PlanckPosterior(BayesianComponent):
     """
     Class for building a posterior that is only a Planck-based likelihood
     """
-    def __init__(self, hp_index, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all):
+    def __init__(self, hp_index, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, adaptivep0 = True):
         BayesianComponent.__init__(self, hp_index)      
     
         # Planck-based likelihood
-        self.sample_p0 = p0_all
+        if adaptivep0 is True:
+            self.sample_p0 = self.get_adaptive_p_grid(hp_index)
+        else:
+            self.sample_p0 = p0_all
         self.sample_psi0 = psi0_all
         
         likelihood = Likelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, self.sample_p0, self.sample_psi0)
@@ -798,7 +801,7 @@ def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region 
     
     return all_pMB, all_psiMB
     
-def sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241", verbose = False):
+def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241", verbose = False):
     """
     Sample the Planck likelihood rather than a posterior constructed from a likelihood and prior
     """
@@ -822,7 +825,7 @@ def sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_curso
 
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all)
+        posterior_obj = PlanckPosterior(_id[0], adaptivep0 = adaptivep0, planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all)
         all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = verbose)
         if verbose is True:
             print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
@@ -831,7 +834,7 @@ def sample_all_planck_points(all_ids, planck_tqu_cursor = None, planck_cov_curso
     
     return all_pMB, all_psiMB
     
-def sample_all_rht_points_ThetaRHTPrior(all_ids, region = "SC_241", useprior = "RHTPrior", local = False):
+def sample_all_rht_points_ThetaRHTPrior(all_ids, adaptivep0 = True, region = "SC_241", useprior = "RHTPrior", local = False):
     
     all_pMB = np.zeros(len(all_ids))
     all_psiMB = np.zeros(len(all_ids))
@@ -841,13 +844,13 @@ def sample_all_rht_points_ThetaRHTPrior(all_ids, region = "SC_241", useprior = "
     
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        posterior_obj = Posterior(_id[0], region = region, useprior = useprior, QRHT_cursor = QRHT_cursor, URHT_cursor = URHT_cursor, sig_QRHT_cursor = sig_QRHT_cursor, sig_URHT_cursor = sig_URHT_cursor)
+        posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, QRHT_cursor = QRHT_cursor, URHT_cursor = URHT_cursor, sig_QRHT_cursor = sig_QRHT_cursor, sig_URHT_cursor = sig_URHT_cursor)
         all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False)
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
         
     return all_pMB, all_psiMB
     
-def fully_sample_sky(region = "allsky", limitregion = False, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False):
+def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False):
     """
     Sample psi_MB and p_MB from whole GALFA-HI sky
     """
@@ -867,7 +870,7 @@ def fully_sample_sky(region = "allsky", limitregion = False, useprior = "RHTPrio
     print("beginning creation of all posteriors")
     
     # Create and sample posteriors for all pixels
-    all_pMB, all_psiMB = sample_all_rht_points(all_ids, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior)
+    all_pMB, all_psiMB = sample_all_rht_points(all_ids, adaptivep0 = adaptivep0, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior)
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
@@ -875,11 +878,11 @@ def fully_sample_sky(region = "allsky", limitregion = False, useprior = "RHTPrio
     
     out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
     if limitregion is False:
-        psiMB_out_fn = "psiMB_allsky_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+".fits"
-        pMB_out_fn = "pMB_allsky_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+".fits"
+        psiMB_out_fn = "psiMB_allsky_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
+        pMB_out_fn = "pMB_allsky_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
     elif limitregion is True:
-        psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+".fits"
-        pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+".fits"
+        psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
+        pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
     
@@ -1081,7 +1084,7 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
-    fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
     #fully_sample_planck_sky(region = "allsky", limitregion = True, local = False)
     """
