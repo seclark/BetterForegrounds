@@ -96,8 +96,8 @@ class BayesianComponent():
         (self.hp_index, self.TT, self.TQ, self.TU, self.TQa, self.QQ, self.QU, self.TUa, self.QUa, self.UU) = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (self.hp_index,)).fetchone()
         
         # from Planck Intermediate Results XIX eq. B.2. Taking I0 to be perfectly known
-        sigpsq = (1/pmeas**2*self.T**4)*(self.Q**2*self.QQ + self.U**2*self.UU + 2*self.Q*self.U*self.QU)
-        sigmameas = sigpsq#np.sqrt(sigpsq)
+        sigpsq = (1/(pmeas**2*self.T**4))*(self.Q**2*self.QQ + self.U**2*self.UU + 2*self.Q*self.U*self.QU)
+        sigmameas = np.sqrt(sigpsq)
         
         # grid bounded at +/- 1
         pgridmin = max(0, pmeas - 7*sigpsq)
@@ -547,7 +547,7 @@ def center_naive_measurements(hp_index, sample_p0, center_on_p, sample_psi0, cen
     
     return rolled_sample_p0, rolled_weights_p0, rolled_sample_psi0, rolled_weights_psi0
     
-def center_posterior_naive_psi(posterior_obj, sample_psi0, posterior, verbose = True):
+def center_posterior_naive_psi(posterior_obj, sample_psi0, posterior, verbose = False):
 
     try:
         pnaive = posterior_obj.pmeas
@@ -584,7 +584,7 @@ def center_posterior_naive_psi(posterior_obj, sample_psi0, posterior, verbose = 
     
     return rolled_sample_psi0, rolled_posterior 
     
-def center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior, verbose = True):
+def center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior, verbose = False):
 
     pMAP, psiMAP = maximum_a_posteriori(posterior_obj)
 
@@ -612,7 +612,7 @@ def center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior, verbose = Tr
     
     return rolled_sample_psi0, rolled_posterior
     
-def center_posterior_psi_given(sample_psi0, posterior, given_psi, verbose = True):
+def center_posterior_psi_given(sample_psi0, posterior, given_psi, verbose = False):
     """
     Center posterior on given psi
     """
@@ -639,7 +639,7 @@ def center_posterior_psi_given(sample_psi0, posterior, given_psi, verbose = True
     
     return rolled_sample_psi0, rolled_posterior
     
-def maximum_a_posteriori(posterior_obj, verbose = True):
+def maximum_a_posteriori(posterior_obj, verbose = False):
     """
     MAP estimator
     """
@@ -660,7 +660,7 @@ def maximum_a_posteriori(posterior_obj, verbose = True):
     
     return p_map, psi_map
     
-def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True):
+def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
     """
     Integrated first order moments of the posterior PDF
     """
