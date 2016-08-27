@@ -97,6 +97,7 @@ class BayesianComponent():
         
         # from Planck Intermediate Results XIX eq. B.2. Taking I0 to be perfectly known
         sigpsq = (1/pmeas**2*self.T**4)*(self.Q**2*self.QQ + self.U**2*self.UU + 2*self.Q*self.U*self.QU)
+        sigmameas = sigpsq#np.sqrt(sigpsq)
         
         # grid bounded at +/- 1
         pgridmin = max(0, pmeas - 7*sigpsq)
@@ -105,7 +106,13 @@ class BayesianComponent():
         # grid must be centered on p0
         mindist = min(pmeas - pgridmin, pgridmax - pgridmin)
         
-        pgrid = np.linspace(pmeas - mindist, pmeas + mindist, 165)
+        pgridstart = pmeas - mindist
+        pgridstop = pmeas + mindist
+        
+        pgrid = np.linspace(pgridstart, pgridstop, 165)
+        
+        #diagnostics
+        print("naive p = {}, sigma = {}, therefore bounds are p = {} to {}".format(pmeas, sigmameas, pgridstart, pgridstop))
         
         return pgrid
         
@@ -115,7 +122,7 @@ class Prior(BayesianComponent):
     Class for building RHT priors
     """
     
-    def __init__(self, hp_index, sample_p0, reverse_RHT = False, verbose = False, region = "SC_241", rht_cursor = None, gausssmooth = False):
+    def __init__(self, hp_index, sample_p0, reverse_RHT = False, verbose = True, region = "SC_241", rht_cursor = None, gausssmooth = False):
     
         BayesianComponent.__init__(self, hp_index, verbose = verbose)
         
@@ -174,7 +181,7 @@ class Prior(BayesianComponent):
             if self.rht_data is None:
                 print("Index {} not found".format(hp_index))
             else:
-                print("Unknown TypeError when constructing RHT prior")
+                print("Unknown TypeError when constructing RHT prior for index {}".format(hp_index))
                 
 class PriorThetaRHT(BayesianComponent):
     """
@@ -745,12 +752,15 @@ def get_all_rht_ids(rht_cursor, tablename):
     
     return all_ids
     
-def get_rht_cursor(region = "SC_241", velrangestring = "-10_10"):
+def get_rht_cursor(region = "SC_241", velrangestring = "-10_10", local=False):
     if region is "SC_241":
         rht_db = sqlite3.connect("allweights_db.sqlite")
         tablename = "RHT_weights"
     elif region is "allsky":
-        root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
+        if local is True:
+            root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/"
+        else:
+            root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
         tablename = "RHT_weights_allsky"
         if velrangestring == "-10_10":
             rht_db = sqlite3.connect(root + "allsky_RHTweights_db.sqlite")
@@ -920,10 +930,10 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
         
     if limitregion is False:
         psiMB_out_fn = "psiMB_allsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
-        pMB_out_fn = "pMB_allsky_353GHz_"+str(adaptivep0)+".fits"
+        pMB_out_fn = "pMB_allsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
     elif limitregion is True:
-        psiMB_out_fn = "psiMB_DR2_SC_241_353GHz_"+str(adaptivep0)+".fits"
-        pMB_out_fn = "pMB_DR2_SC_241_353GHz_"+str(adaptivep0)+".fits"
+        psiMB_out_fn = "psiMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
+        pMB_out_fn = "pMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
 
@@ -1084,9 +1094,9 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
-    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
-    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False)
+    #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False)
     """
     allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz_take2.fits")
     allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_DR2_SC_241_353GHz_take2.fits")
@@ -1099,4 +1109,6 @@ if __name__ == "__main__":
         print("psi is ", allskypsimb_nest[hpnum])
         print("p is ", allskypmb_nest[hpnum])
     """
+    
+    
     
