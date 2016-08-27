@@ -104,7 +104,7 @@ class BayesianComponent():
         pgridmax = min(1, pmeas + 7*sigmameas)
         
         # grid must be centered on p0
-        mindist = min(pmeas - pgridmin, pgridmax - pgridmin)
+        mindist = min(pmeas - pgridmin, pgridmax - pmeas)
         
         pgridstart = pmeas - mindist
         pgridstop = pmeas + mindist
@@ -112,7 +112,11 @@ class BayesianComponent():
         pgrid = np.linspace(pgridstart, pgridstop, 165)
         
         #diagnostics
-        print("naive p = {}, sigma = {}, therefore bounds are p = {} to {}".format(pmeas, sigmameas, pgridstart, pgridstop))
+        #print("naive p = {}, sigma = {}, therefore bounds are p = {} to {}".format(pmeas, sigmameas, pgridstart, pgridstop))
+        if pgridstart < 0.0:
+            print("CAUTION: pgridstart = {}".format(pgridstart))
+        if pgridstop > 1.0:
+            print("CAUTION: pgridstop = {}".format(pgridstop))
         
         return pgrid
         
