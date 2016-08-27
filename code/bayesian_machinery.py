@@ -114,9 +114,9 @@ class BayesianComponent():
         #diagnostics
         #print("naive p = {}, sigma = {}, therefore bounds are p = {} to {}".format(pmeas, sigmameas, pgridstart, pgridstop))
         if pgridstart < 0.0:
-            print("CAUTION: pgridstart = {}".format(pgridstart))
+            print("CAUTION: pgridstart = {} for index {}".format(pgridstart, hp_index))
         if pgridstop > 1.0:
-            print("CAUTION: pgridstop = {}".format(pgridstop))
+            print("CAUTION: pgridstop = {} for index {}".format(pgridstop, hp_index))
         
         return pgrid
         
@@ -126,7 +126,7 @@ class Prior(BayesianComponent):
     Class for building RHT priors
     """
     
-    def __init__(self, hp_index, sample_p0, reverse_RHT = False, verbose = True, region = "SC_241", rht_cursor = None, gausssmooth = False):
+    def __init__(self, hp_index, sample_p0, reverse_RHT = False, verbose = False, region = "SC_241", rht_cursor = None, gausssmooth = False):
     
         BayesianComponent.__init__(self, hp_index, verbose = verbose)
         
