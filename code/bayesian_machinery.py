@@ -100,8 +100,8 @@ class BayesianComponent():
         sigmameas = np.sqrt(sigpsq)
         
         # grid bounded at +/- 1
-        pgridmin = max(0, pmeas - 7*sigpsq)
-        pgridmax = min(1, pmeas + 7*sigpsq)
+        pgridmin = max(0, pmeas - 7*sigmameas)
+        pgridmax = min(1, pmeas + 7*sigmameas)
         
         # grid must be centered on p0
         mindist = min(pmeas - pgridmin, pgridmax - pgridmin)
