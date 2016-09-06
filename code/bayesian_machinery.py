@@ -718,19 +718,20 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
     # Set parameters for convergence
     psi_last = psiMB - np.pi/2
     tol = 1.0E-12#0.001
+    i = 0
     if verbose is True:
         print("Using tolerance of {}".format(tol))
         
     if verbose is True:
         print("mod (psi_last, pi) =  {}".format(np.mod(psi_last, np.pi)))
         print("mod (psiMB, pi) =  {}".format(np.mod(psiMB, np.pi)))
-        print("beginning with angle residual {}".format(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False)))
-        print("should we instead use {}".format(angle_residual(psi_last, psiMB, degrees=False)))
+        print("beginning with angle residual {}".format(np.abs(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False))))
     
-    while angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False) > tol:
+    while np.abs(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False)) > tol:
         if verbose is True:
             print("Convergence at {}".format(np.abs(np.mod(psi_last, np.pi) - np.mod(psiMB, np.pi))))
             print(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi))
+            print("i = {}".format(i))
         psi_last = copy.copy(psiMB)
     
         rolled_sample_psi0, rolled_posterior = center_posterior_psi_given(rolled_sample_psi0, rolled_posterior, np.mod(psiMB, np.pi), verbose = verbose)
@@ -749,6 +750,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
         if verbose is True:
             print("Iterating. New pMB is {}".format(pMB))
             print("Iterating. New psiMB is {}".format(psiMB))
+        i += 1
     
     return pMB, psiMB#, pMB1, psiMB1, sample_psi0, sample_p0
 
