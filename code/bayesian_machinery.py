@@ -731,7 +731,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
         if verbose is True:
             print("Convergence at {}".format(np.abs(np.mod(psi_last, np.pi) - np.mod(psiMB, np.pi))))
             print(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi))
-        psi_last = psiMB
+        psi_last = copy.copy(psiMB)
     
         rolled_sample_psi0, rolled_posterior = center_posterior_psi_given(rolled_sample_psi0, rolled_posterior, np.mod(psiMB, np.pi), verbose = verbose)
         # Integrate over p
