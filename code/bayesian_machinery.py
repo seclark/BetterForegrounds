@@ -720,6 +720,9 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
     tol = 1.0E-12#0.001
     if verbose is True:
         print("Using tolerance of {}".format(tol))
+        
+    if verbose is True:
+        print("beginning with angle residual {}".format(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False)))
     
     while angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False) > tol:
         if verbose is True:
