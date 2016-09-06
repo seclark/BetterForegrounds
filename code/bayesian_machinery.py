@@ -717,7 +717,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
     
     # Set parameters for convergence
     psi_last = psiMB - np.pi/2
-    tol = 0.001
+    tol = 1.0E-10#0.001
     while angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False) > tol:
         if verbose is True:
             print("Convergence at {}".format(np.abs(np.mod(psi_last, np.pi) - np.mod(psiMB, np.pi))))
