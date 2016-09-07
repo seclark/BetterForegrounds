@@ -780,7 +780,6 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     psi_last = copy.copy(psinaive)
     i = 0
     itertol = 10#0
-    print("Using itertol of {}".format(itertol))
     if verbose is True:
         print("Using tolerance of {}".format(tol))
         
