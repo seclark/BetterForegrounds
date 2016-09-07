@@ -649,11 +649,15 @@ def center_posterior_psi_given(sample_psi0, posterior, given_psi, verbose = Fals
     Center posterior on given psi
     """
     
+    print("centering on {}".format(given_psi))
+    
     psi0new = np.linspace(given_psi - np.pi/2, given_psi + np.pi/2, len(sample_psi0), endpoint=True)
     
     centered_posterior = np.zeros(posterior.shape)
     for i, col in enumerate(posterior.T):
         centered_posterior[:, i] = np.interp(psi0new, sample_psi0, col, period=np.pi)
+    
+    print("middle psi is now {}".format(psi0new[len(psi0new)/2.0]))
         
     return psi0new, centered_posterior 
     
