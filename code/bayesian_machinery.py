@@ -777,7 +777,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         print("initial psiMB is {}".format(psiMB))
     
     # Set parameters for convergence
-    psi_last = psiMB + tol*2
+    psi_last = copy.copy(psinaive)
     i = 0
     itertol = 100
     if verbose is True:
@@ -798,7 +798,6 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         psiMB = posterior_obj.integrate_highest_dimension(psiMB_integrated_over_psi0, dx=pdx)
         
         if verbose is True:
-            print("Iterating. New pMB is {}".format(pMB))
             print("Iterating. New psiMB is {}".format(psiMB))
         i += 1
         
