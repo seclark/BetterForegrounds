@@ -649,8 +649,33 @@ def center_posterior_psi_given(sample_psi0, posterior, given_psi, verbose = Fals
     Center posterior on given psi
     """
     
-    psi0new = np.linspace(given_psi - np.pi/2, given_psi + np.pi/2, len(sample_psi0), endpoint=False)
-    #rolled_sample_psi0 = np.interp(psi0new, sample_psi0, pp, period=np.pi) 
+    psi0new = np.linspace(given_psi - np.pi/2, given_psi + np.pi/2, len(sample_psi0), endpoint=True)
+    
+    centered_posterior = np.zeros(posterior.shape)
+    for i, col in enumerate(posterior.T):
+        centered_posterior[:, i] = np.interp(psi0new, sample_psi0, col, period=np.pi)
+        
+    return psi0new, centered_posterior 
+    
+def circular_integration(xpoints, ypoints, endpoint_included=False, axis=0):
+    """
+    Integrate on wrapped domain. endpoint_included should be false if array has linspace endpoint=False
+    """
+    if endpoint_included is False:
+        integrateme = np.zeros(len(ypoints)+1)
+        integrateme[:-1] = ypoints
+        integrateme[-1] = ypoints[0] # wrap domain
+        
+        integratex = np.zeros(len(xpoints) + 1)
+        integratex[:-1] = xpoints
+        integratex[-1] = xpoints[-1] + (xpoints[1]-xpoints[0])
+    elif endpoint_included is True:
+        integrateme = ypoints
+        integratex = xpoints
+    
+    intdata = np.trapz(integrateme, integratex, axis=axis)
+    
+    return intdata
     
 def maximum_a_posteriori(posterior_obj, verbose = False):
     """
@@ -698,29 +723,37 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
     if center == "naive":
         if verbose is True:
             print("Centering initial integral on naive psi")
-        rolled_sample_psi0, rolled_posterior = center_posterior_naive_psi(posterior_obj, sample_psi0, posterior, verbose = verbose)
+        #rolled_sample_psi0, rolled_posterior = center_posterior_naive_psi(posterior_obj, sample_psi0, posterior, verbose = verbose)
+        pnaive, psinaive = naive_planck_measurements(posterior_obj.hp_index)
+        psi0new, centered_posterior = center_posterior_psi_given(sample_psi0, posterior, psinaive, verbose = verbose)
+        
     elif center == "MAP":
+        print("WARNING: MAP center may not be correctly implemented")
         if verbose is True:
             print("Centering initial integral on psi_MAP")
         rolled_sample_psi0, rolled_posterior = center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior, verbose = verbose)
-    posterior = rolled_posterior
-    sample_psi0 = rolled_sample_psi0
+    
+    #posterior = rolled_posterior
+    #sample_psi0 = rolled_sample_psi0
     
     # Integrate over p
-    pMB1 = np.trapz(posterior, dx = psidx, axis = 0)
+    #pMB1 = np.trapz(posterior, dx = psidx, axis = 0)
+    pMB1 = np.trapz(centered_posterior, psi0new, axis=0)
     
     # Integrate over psi
     pMB = np.trapz(pMB1*sample_p0, dx = pdx)
     
     # Integrate over p
-    psiMB1 = np.trapz(posterior, dx = pdx, axis = 1)
+    #psiMB1 = np.trapz(posterior, dx = pdx, axis = 1)
+    psiMB1 = np.trapz(centered_posterior, dx = pdx, axis = 1)
     
     # Integrate over psi
-    psiMB = np.trapz(psiMB1*sample_psi0, dx = psidx)
+    #psiMB = np.trapz(psiMB1*sample_psi0, dx = psidx)
+    psiMB = np.trapz(psiMB1*psi0new, psi0new)
     
     if verbose is True:
-        print("pMB is {}".format(pMB))
-        print("psiMB is {}".format(psiMB))
+        print("initial pMB is {}".format(pMB))
+        print("initial psiMB is {}".format(psiMB))
     
     # Set parameters for convergence
     psi_last = psiMB - np.pi/2
@@ -742,18 +775,20 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
             print("i = {}".format(i))
         psi_last = copy.copy(psiMB)
     
-        rolled_sample_psi0, rolled_posterior = center_posterior_psi_given(rolled_sample_psi0, rolled_posterior, np.mod(psiMB, np.pi), verbose = verbose)
+        #rolled_sample_psi0, rolled_posterior = center_posterior_psi_given(rolled_sample_psi0, rolled_posterior, np.mod(psiMB, np.pi), verbose = verbose)
+        psi0new, centered_posterior = center_posterior_psi_given(psi0new, centered_posterior, psi_last, verbose = verbose)
+        
         # Integrate over p
-        pMB1 = np.trapz(rolled_posterior, dx = psidx, axis = 0)
+        pMB1 = np.trapz(centered_posterior, psi0new, axis=0)
     
         # Integrate over psi
         pMB = np.trapz(pMB1*sample_p0, dx = pdx)
     
         # Integrate over p
-        psiMB1 = np.trapz(rolled_posterior, dx = pdx, axis = 1)
+        psiMB1 = np.trapz(centered_posterior, dx = pdx, axis = 1)
     
         # Integrate over psi
-        psiMB = np.trapz(psiMB1*rolled_sample_psi0, dx = psidx)
+        psiMB = np.trapz(psiMB1*psi0new, psi0new)
         
         if verbose is True:
             print("Iterating. New pMB is {}".format(pMB))
