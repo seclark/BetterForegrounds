@@ -714,8 +714,8 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     
     # pMB integrand is p0*B2D. This can happen once only, before centering.
     pMB_integrand = posterior*sample_p0
-    pMB_integrated_over_psi0 = self.integrate_highest_dimension(pMB_integrand, dx = psidx)
-    pMB = self.integrate_highest_dimension(pMB_integrated_over_psi0, dx = pdx)
+    pMB_integrated_over_psi0 = posterior_obj.integrate_highest_dimension(pMB_integrand, dx = psidx)
+    pMB = posterior_obj.integrate_highest_dimension(pMB_integrated_over_psi0, dx = pdx)
     
     if verbose is True:
         print("Sampling pdx is {}, psidx is {}".format(pdx, psidx))
@@ -789,8 +789,8 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         psi0new, centered_posterior = center_posterior_psi_given(psi0new, centered_posterior_last, psi_last, verbose = verbose)
 
         psiMB_integrand = centered_posterior*psi0new[:, np.newaxis]
-        psiMB_integrated_over_psi0 = self.integrate_highest_dimension(psiMB_integrand, dx=psidx)
-        psiMB = self.integrate_highest_dimension(psiMB_integrated_over_psi0, dx=pdx)
+        psiMB_integrated_over_psi0 = posterior_obj.integrate_highest_dimension(psiMB_integrand, dx=psidx)
+        psiMB = posterior_obj.integrate_highest_dimension(psiMB_integrated_over_psi0, dx=pdx)
         
         if verbose is True:
             print("Iterating. New pMB is {}".format(pMB))
@@ -909,8 +909,8 @@ def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = Non
     for i, _id in enumerate(all_ids):
         #if _id[0] in [3400757, 793551, 2447655]:
         posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, adaptivep0 = adaptivep0)
-        print("for id {}, p0 grid is {}".format(_id, posterior_obj.sample_p0))
-        print("for id {}, pmeas is {}, psimeas is {}, psi naive is {}".format(_id, posterior_obj.pmeas, posterior_obj.psimeas, posterior_obj.naive_psi))
+        #print("for id {}, p0 grid is {}".format(_id, posterior_obj.sample_p0))
+        #print("for id {}, pmeas is {}, psimeas is {}, psi naive is {}".format(_id, posterior_obj.pmeas, posterior_obj.psimeas, posterior_obj.naive_psi))
         #testing
         all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = verbose, tol=tol)
         if verbose is True:
