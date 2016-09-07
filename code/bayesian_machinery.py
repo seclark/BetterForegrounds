@@ -898,7 +898,7 @@ def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = Non
 
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        if _id in [3400757, 793551, 2447655]:
+        if _id[0] in [3400757, 793551, 2447655]:
             posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, adaptivep0 = adaptivep0)
             print("for id {}, p0 grid is {}".format(_id, posterior_obj.sample_p0))
             #testing
