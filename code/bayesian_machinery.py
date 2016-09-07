@@ -712,6 +712,11 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     pdx = sample_p0[1] - sample_p0[0]
     psidx = sample_psi0[1] - sample_psi0[0]
     
+    # pMB integrand is p0*B2D. This can happen once only, before centering.
+    pMB_integrand = posterior*sample_p0
+    pMB_integrated_over_psi0 = self.integrate_highest_dimension(pMB_integrand, dx = psidx)
+    pMB = self.integrate_highest_dimension(pMB_integrated_over_psi0, dx = pdx)
+    
     if verbose is True:
         print("Sampling pdx is {}, psidx is {}".format(pdx, psidx))
     
@@ -724,7 +729,9 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         if verbose is True:
             print("Centering initial integral on naive psi")
         #rolled_sample_psi0, rolled_posterior = center_posterior_naive_psi(posterior_obj, sample_psi0, posterior, verbose = verbose)
-        pnaive, psinaive = naive_planck_measurements(posterior_obj.hp_index)
+        #pnaive, psinaive = naive_planck_measurements(posterior_obj.hp_index)
+        psinaive = posterior.psimeas
+        pnaive = posterior.pmeas
         psi0new, centered_posterior = center_posterior_psi_given(sample_psi0, posterior, psinaive, verbose = verbose)
         
     elif center == "MAP":
@@ -738,18 +745,27 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     
     # Integrate over p
     #pMB1 = np.trapz(posterior, dx = psidx, axis = 0)
-    pMB1 = np.trapz(centered_posterior, psi0new, axis=0)
+    #pMB1 = np.trapz(centered_posterior, psi0new, axis=0)
     
     # Integrate over psi
-    pMB = np.trapz(pMB1*sample_p0, dx = pdx)
+    #pMB = np.trapz(pMB1*sample_p0, dx = pdx)
     
     # Integrate over p
     #psiMB1 = np.trapz(posterior, dx = pdx, axis = 1)
-    psiMB1 = np.trapz(centered_posterior, dx = pdx, axis = 1)
+    #psiMB1 = np.trapz(centered_posterior, dx = pdx, axis = 1)
     
     # Integrate over psi
     #psiMB = np.trapz(psiMB1*sample_psi0, dx = psidx)
-    psiMB = np.trapz(psiMB1*psi0new, psi0new)
+    #psiMB = np.trapz(psiMB1*psi0new, psi0new)
+
+    #test
+    if psidx != psi0new[1] - psi0new[0]:
+        print("Caution: old psidx = {}, new psidx = {}".format(psidx, psi0new[1] - psi0new[0]))
+    
+    # psiMB integrand is psi0*B2D.
+    psiMB_integrand = centered_posterior*psi0new[:, np.newaxis]
+    psiMB_integrated_over_psi0 = self.integrate_highest_dimension(psiMB_integrand, dx=psidx)
+    psiMB = self.integrate_highest_dimension(psiMB_integrated_over_psi0, dx=pdx)
     
     if verbose is True:
         print("initial pMB is {}".format(pMB))
@@ -767,21 +783,14 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
             print("Convergence at {}".format(np.abs(np.mod(psi_last, np.pi) - np.mod(psiMB, np.pi))))
             print("i = {}".format(i))
         psi_last = copy.copy(psiMB)
+        centered_posterior_last = copy.copy(centered_posterior)
     
         #rolled_sample_psi0, rolled_posterior = center_posterior_psi_given(rolled_sample_psi0, rolled_posterior, np.mod(psiMB, np.pi), verbose = verbose)
-        psi0new, centered_posterior = center_posterior_psi_given(psi0new, centered_posterior, psi_last, verbose = verbose)
-        
-        # Integrate over p
-        pMB1 = np.trapz(centered_posterior, psi0new, axis=0)
-    
-        # Integrate over psi
-        pMB = np.trapz(pMB1*sample_p0, dx = pdx)
-    
-        # Integrate over p
-        psiMB1 = np.trapz(centered_posterior, dx = pdx, axis = 1)
-    
-        # Integrate over psi
-        psiMB = np.trapz(psiMB1*psi0new, psi0new)
+        psi0new, centered_posterior = center_posterior_psi_given(psi0new, centered_posterior_last, psi_last, verbose = verbose)
+
+        psiMB_integrand = centered_posterior*psi0new[:, np.newaxis]
+        psiMB_integrated_over_psi0 = self.integrate_highest_dimension(psiMB_integrand, dx=psidx)
+        psiMB = self.integrate_highest_dimension(psiMB_integrated_over_psi0, dx=pdx)
         
         if verbose is True:
             print("Iterating. New pMB is {}".format(pMB))
@@ -898,12 +907,12 @@ def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = Non
 
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        if _id[0] in [3400757, 793551, 2447655]:
-            posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, adaptivep0 = adaptivep0)
-            print("for id {}, p0 grid is {}".format(_id, posterior_obj.sample_p0))
-            print("for id {}, pmeas is {}, psimeas is {}, psi naive is {}".format(_id, posterior_obj.pmeas, posterior_obj.psimeas, posterior_obj.naive_psi))
-            #testing
-            #all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = verbose, tol=tol)
+        #if _id[0] in [3400757, 793551, 2447655]:
+        posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, adaptivep0 = adaptivep0)
+        print("for id {}, p0 grid is {}".format(_id, posterior_obj.sample_p0))
+        print("for id {}, pmeas is {}, psimeas is {}, psi naive is {}".format(_id, posterior_obj.pmeas, posterior_obj.psimeas, posterior_obj.naive_psi))
+        #testing
+        all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = verbose, tol=tol)
         if verbose is True:
             print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
         
