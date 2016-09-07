@@ -619,7 +619,7 @@ def center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior, verbose = Fa
     
     return rolled_sample_psi0, rolled_posterior
     
-def center_posterior_psi_given(sample_psi0, posterior, given_psi, verbose = False):
+def center_posterior_psi_given_old(sample_psi0, posterior, given_psi, verbose = False):
     """
     Center posterior on given psi
     """
@@ -645,6 +645,14 @@ def center_posterior_psi_given(sample_psi0, posterior, given_psi, verbose = Fals
     rolled_sample_psi0[rolled_sample_psi0 > given_psi + np.pi/2] -= np.pi
     
     return rolled_sample_psi0, rolled_posterior
+    
+def center_posterior_psi_given(sample_psi0, posterior, given_psi, verbose = False):
+    """
+    Center posterior on given psi
+    """
+    
+    psi0new = np.linspace(given_psi - np.pi/2, given_psi + np.pi/2, len(sample_psi0), endpoint=False)
+    rolled_sample_psi0 = np.interp(psi0new, sample_psi0, pp, period=np.pi) 
     
 def maximum_a_posteriori(posterior_obj, verbose = False):
     """
@@ -724,6 +732,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
         print("Using tolerance of {}".format(tol))
         
     if verbose is True:
+        print("sample_psi0 = ", sample_psi0)
         print("mod (psi_last, pi) =  {}".format(np.mod(psi_last, np.pi)))
         print("mod (psiMB, pi) =  {}".format(np.mod(psiMB, np.pi)))
         print("beginning with angle residual {}".format(np.abs(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False))))
