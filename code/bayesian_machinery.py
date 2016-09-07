@@ -20,6 +20,9 @@ import matplotlib.ticker as ticker
 from matplotlib import rc
 rc('text', usetex=True)
 
+import numpy
+print(numpy.__version__)
+
 # Local repo imports
 import debias
 
@@ -685,8 +688,6 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
     if verbose is True:
         norm_posterior_test = test_normalization(posterior_obj, pdx, psidx)
     
-    # Axis 0 integrates over psi
-    
     # Center on the naive psi
     if center == "naive":
         if verbose is True:
@@ -717,7 +718,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
     
     # Set parameters for convergence
     psi_last = psiMB - np.pi/2
-    tol = 1.0E-12#0.001
+    tol = 1.0E-10#0.001
     i = 0
     if verbose is True:
         print("Using tolerance of {}".format(tol))
@@ -1111,7 +1112,8 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
-    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = True)
+    
+    #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = True)
     """
     allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz_take2.fits")
     allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_DR2_SC_241_353GHz_take2.fits")
