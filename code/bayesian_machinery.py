@@ -764,8 +764,8 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     
     # psiMB integrand is psi0*B2D.
     psiMB_integrand = centered_posterior*psi0new[:, np.newaxis]
-    psiMB_integrated_over_psi0 = self.integrate_highest_dimension(psiMB_integrand, dx=psidx)
-    psiMB = self.integrate_highest_dimension(psiMB_integrated_over_psi0, dx=pdx)
+    psiMB_integrated_over_psi0 = posterior_obj.integrate_highest_dimension(psiMB_integrand, dx=psidx)
+    psiMB = posterior_obj.integrate_highest_dimension(psiMB_integrated_over_psi0, dx=pdx)
     
     if verbose is True:
         print("initial pMB is {}".format(pMB))
