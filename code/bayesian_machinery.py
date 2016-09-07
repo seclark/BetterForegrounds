@@ -789,6 +789,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         
         if i > 10000:
             print("CAUTION: i is now {}. Index {} may not converge".format(i, posterior_obj.hp_index))
+            print("psi initial = {}, psi last = {}, psiMB = {}".format(psinaive, np.mod(psi_last, np.pi), np.mod(psiMB, np.pi)))
             print("greater than tol: {}".format(np.abs(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False)))) 
     
     #print("difference between original and final psi is {}".format(angle_residual(psiMB, psinaive, degrees=False)))
