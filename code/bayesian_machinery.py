@@ -649,7 +649,7 @@ def center_posterior_psi_given(sample_psi0, posterior, given_psi, verbose = Fals
     """
     
     psi0new = np.linspace(given_psi - np.pi/2, given_psi + np.pi/2, len(sample_psi0), endpoint=False)
-    rolled_sample_psi0 = np.interp(psi0new, sample_psi0, pp, period=np.pi) 
+    #rolled_sample_psi0 = np.interp(psi0new, sample_psi0, pp, period=np.pi) 
     
 def maximum_a_posteriori(posterior_obj, verbose = False):
     """
