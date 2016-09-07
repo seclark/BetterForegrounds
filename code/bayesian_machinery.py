@@ -783,15 +783,13 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     if verbose is True:
         print("Using tolerance of {}".format(tol))
         
-    while (np.abs(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False)) > tol) and (i < itertol):
+    while (np.abs(angle_residual(psi_last, psiMB, degrees = False)) > tol) and (i < itertol):
         if verbose is True:
             print("Convergence at {}".format(np.abs(np.mod(psi_last, np.pi) - np.mod(psiMB, np.pi))))
             print("i = {}".format(i))
-        psi_last = copy.copy(psiMB)
-        centered_posterior_last = copy.copy(centered_posterior)
+        psi_last = copy.copy(psiMB) # to compare next round with
     
-        #rolled_sample_psi0, rolled_posterior = center_posterior_psi_given(rolled_sample_psi0, rolled_posterior, np.mod(psiMB, np.pi), verbose = verbose)
-        psi0new, centered_posterior = center_posterior_psi_given(psi0new, centered_posterior_last, psiMB, verbose = verbose)
+        psi0new, centered_posterior = center_posterior_psi_given(psi0new, centered_posterior, psiMB, verbose = verbose)
 
         psiMB_integrand = centered_posterior*psi0new[:, np.newaxis]
         psiMB_integrated_over_psi0 = posterior_obj.integrate_highest_dimension(psiMB_integrand, dx=psidx)
@@ -801,10 +799,10 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
             print("Iterating. New psiMB is {}".format(psiMB))
         i += 1
         
-        if i > itertol-1:
-            print("CAUTION: i is now {}. Index {} may not converge".format(i, posterior_obj.hp_index))
-            print("psi initial = {}, psi last = {}, psiMB = {}".format(psinaive, np.mod(psi_last, np.pi), np.mod(psiMB, np.pi)))
-            print("greater than tol: {}".format(np.abs(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False)))) 
+        #if i > itertol-1:
+        #    print("CAUTION: i is now {}. Index {} may not converge".format(i, posterior_obj.hp_index))
+        #    print("psi initial = {}, psi last = {}, psiMB = {}".format(psinaive, np.mod(psi_last, np.pi), np.mod(psiMB, np.pi)))
+        #    print("greater than tol: {}".format(np.abs(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False)))) 
     
     #print("difference between original and final psi is {}".format(angle_residual(psiMB, psinaive, degrees=False)))
     #print("difference between original and final p is {}".format(pMB - pnaive))
@@ -1177,7 +1175,7 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
     
-    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False)
+    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=1E-3)
     """
     allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz_take2.fits")
     allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_DR2_SC_241_353GHz_take2.fits")
