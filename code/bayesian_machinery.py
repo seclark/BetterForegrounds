@@ -341,7 +341,6 @@ class Posterior(BayesianComponent):
             prior = PriorThetaRHT(hp_index, self.sample_p0, reverse_RHT = True, region = region, QRHT_cursor = QRHT_cursor, URHT_cursor = URHT_cursor, sig_QRHT_cursor = sig_QRHT_cursor, sig_URHT_cursor = sig_URHT_cursor)
             
         self.sample_psi0 = prior.sample_psi0
-        print("sample_psi0 RHT prior", self.sample_psi0)
         
         # Planck covariance database
         planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
@@ -762,16 +761,9 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
     if verbose is True:
         print("Using tolerance of {}".format(tol))
         
-    if verbose is True:
-        print("sample_psi0 = ", sample_psi0)
-        print("mod (psi_last, pi) =  {}".format(np.mod(psi_last, np.pi)))
-        print("mod (psiMB, pi) =  {}".format(np.mod(psiMB, np.pi)))
-        print("beginning with angle residual {}".format(np.abs(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False))))
-    
     while np.abs(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False)) > tol:
         if verbose is True:
             print("Convergence at {}".format(np.abs(np.mod(psi_last, np.pi) - np.mod(psiMB, np.pi))))
-            print(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi))
             print("i = {}".format(i))
         psi_last = copy.copy(psiMB)
     
@@ -795,6 +787,8 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
             print("Iterating. New psiMB is {}".format(psiMB))
         i += 1
     
+    print("difference between original and final psi is {}".format(angle_residual(psiMB, psinaive, degrees=False)))
+    print("difference between original and final p is {}".format(pMB - pnaive))
     return pMB, psiMB#, pMB1, psiMB1, sample_psi0, sample_p0
 
 def test_normalization(posterior_obj, pdx, psidx):
