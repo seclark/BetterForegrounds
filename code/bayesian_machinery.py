@@ -758,10 +758,11 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     # Set parameters for convergence
     psi_last = psiMB - np.pi/2
     i = 0
+    itertol = 10000
     if verbose is True:
         print("Using tolerance of {}".format(tol))
         
-    while np.abs(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False)) > tol:
+    while (np.abs(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False)) > tol) and (i < itertol):
         if verbose is True:
             print("Convergence at {}".format(np.abs(np.mod(psi_last, np.pi) - np.mod(psiMB, np.pi))))
             print("i = {}".format(i))
@@ -787,13 +788,18 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
             print("Iterating. New psiMB is {}".format(psiMB))
         i += 1
         
-        if i > 10000:
+        if i >= itertol-1:
             print("CAUTION: i is now {}. Index {} may not converge".format(i, posterior_obj.hp_index))
             print("psi initial = {}, psi last = {}, psiMB = {}".format(psinaive, np.mod(psi_last, np.pi), np.mod(psiMB, np.pi)))
             print("greater than tol: {}".format(np.abs(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False)))) 
     
     #print("difference between original and final psi is {}".format(angle_residual(psiMB, psinaive, degrees=False)))
     #print("difference between original and final p is {}".format(pMB - pnaive))
+    if i >= itertol-1:
+        pMB = copy.copy(pnaive)
+        psiMB = copy.copy(psinaive)
+        print("Iteration tolerance reached. setting naive values")
+        
     return pMB, psiMB#, pMB1, psiMB1, sample_psi0, sample_p0
 
 def test_normalization(posterior_obj, pdx, psidx):
