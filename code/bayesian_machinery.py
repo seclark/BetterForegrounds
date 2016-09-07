@@ -712,7 +712,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     pdx = sample_p0[1] - sample_p0[0]
     psidx = sample_psi0[1] - sample_psi0[0]
     
-    # pMB integrand is p0*B2D. This can happen once only, before centering.
+    # pMB integrand is p0*B2D. This can happen once only, before centering. # note: circularize psi integral?
     pMB_integrand = posterior*sample_p0
     pMB_integrated_over_psi0 = posterior_obj.integrate_highest_dimension(pMB_integrand, dx = psidx)
     pMB = posterior_obj.integrate_highest_dimension(pMB_integrated_over_psi0, dx = pdx)
@@ -733,6 +733,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         psinaive = posterior_obj.psimeas
         pnaive = posterior_obj.pmeas
         psi0new, centered_posterior = center_posterior_psi_given(sample_psi0, posterior, psinaive, verbose = verbose)
+        psidx = psi0new[1] - psi0new[0]
         
     elif center == "MAP":
         print("WARNING: MAP center may not be correctly implemented")
