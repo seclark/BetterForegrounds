@@ -730,8 +730,8 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
             print("Centering initial integral on naive psi")
         #rolled_sample_psi0, rolled_posterior = center_posterior_naive_psi(posterior_obj, sample_psi0, posterior, verbose = verbose)
         #pnaive, psinaive = naive_planck_measurements(posterior_obj.hp_index)
-        psinaive = posterior.psimeas
-        pnaive = posterior.pmeas
+        psinaive = posterior_obj.psimeas
+        pnaive = posterior_obj.pmeas
         psi0new, centered_posterior = center_posterior_psi_given(sample_psi0, posterior, psinaive, verbose = verbose)
         
     elif center == "MAP":
