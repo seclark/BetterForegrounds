@@ -515,7 +515,7 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
         ax.set_ylabel(r"$\psi_0$", size = 15)
         ax.set_xlabel(r"$p_0$", size = 15)
         
-def naive_planck_measurements(hp_index):
+def naive_planck_measurements(hp_index, verbose=False):
     
     # Planck TQU database
     planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
@@ -530,8 +530,9 @@ def naive_planck_measurements(hp_index):
     pnaive = Pnaive/I0
     psinaive = np.mod(0.5*np.arctan2(Umeas, Qmeas), np.pi)
 
-    print("Naive p is {}".format(pnaive))
-    print("Naive psi is {}".format(psinaive))
+    if verbose is True:
+        print("Naive p is {}".format(pnaive))
+        print("Naive psi is {}".format(psinaive))
     
     return pnaive, psinaive
     
@@ -790,8 +791,8 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
         if i > 10000:
             print("CAUTION: i is now {}. Index {} may not converge".format(i, posterior_obj.hp_index))
     
-    print("difference between original and final psi is {}".format(angle_residual(psiMB, psinaive, degrees=False)))
-    print("difference between original and final p is {}".format(pMB - pnaive))
+    #print("difference between original and final psi is {}".format(angle_residual(psiMB, psinaive, degrees=False)))
+    #print("difference between original and final p is {}".format(pMB - pnaive))
     return pMB, psiMB#, pMB1, psiMB1, sample_psi0, sample_p0
 
 def test_normalization(posterior_obj, pdx, psidx):
@@ -987,8 +988,8 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
         psiMB_out_fn = "psiMB_allsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
         pMB_out_fn = "pMB_allsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
     elif limitregion is True:
-        psiMB_out_fn = "psiMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_tol10E-12.fits"
-        pMB_out_fn = "pMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_tol_10E-12.fits"
+        psiMB_out_fn = "psiMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_tol10E-10.fits"
+        pMB_out_fn = "pMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_tol_10E-10.fits"
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
 
