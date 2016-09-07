@@ -649,7 +649,7 @@ def center_posterior_psi_given(sample_psi0, posterior, given_psi, verbose = Fals
     Center posterior on given psi
     """
     
-    print("centering on {}".format(given_psi))
+    #print("centering on {}".format(given_psi))
     
     psi0new = np.linspace(given_psi - np.pi/2, given_psi + np.pi/2, len(sample_psi0), endpoint=True)
     
@@ -657,7 +657,7 @@ def center_posterior_psi_given(sample_psi0, posterior, given_psi, verbose = Fals
     for i, col in enumerate(posterior.T):
         centered_posterior[:, i] = np.interp(psi0new, sample_psi0, col, period=np.pi)
     
-    print("middle psi is now {}".format(psi0new[len(psi0new)/2.0]))
+    #print("middle psi is now {}".format(psi0new[len(psi0new)/2.0]))
         
     return psi0new, centered_posterior 
     
@@ -779,7 +779,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     # Set parameters for convergence
     psi_last = psiMB - np.pi/2
     i = 0
-    itertol = 10000
+    itertol = 100
     if verbose is True:
         print("Using tolerance of {}".format(tol))
         
@@ -802,17 +802,17 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
             print("Iterating. New psiMB is {}".format(psiMB))
         i += 1
         
-        if i >= itertol-1:
+        if i > itertol-1:
             print("CAUTION: i is now {}. Index {} may not converge".format(i, posterior_obj.hp_index))
             print("psi initial = {}, psi last = {}, psiMB = {}".format(psinaive, np.mod(psi_last, np.pi), np.mod(psiMB, np.pi)))
             print("greater than tol: {}".format(np.abs(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False)))) 
     
     #print("difference between original and final psi is {}".format(angle_residual(psiMB, psinaive, degrees=False)))
     #print("difference between original and final p is {}".format(pMB - pnaive))
-    if i >= itertol-1:
-        pMB = copy.copy(pnaive)
-        psiMB = copy.copy(psinaive)
-        print("Iteration tolerance reached. setting naive values")
+    #if i > itertol-1:
+    #    pMB = copy.copy(pnaive)
+    #    psiMB = copy.copy(psinaive)
+    #    print("Iteration tolerance reached. setting naive values")
         
     return pMB, psiMB#, pMB1, psiMB1, sample_psi0, sample_p0
 
