@@ -698,7 +698,7 @@ def maximum_a_posteriori(posterior_obj, verbose = False):
     
     return p_map, psi_map
     
-def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
+def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, tol=1E-5):
     """
     Integrated first order moments of the posterior PDF
     """
@@ -757,7 +757,6 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
     
     # Set parameters for convergence
     psi_last = psiMB - np.pi/2
-    tol = 1.0E-10#0.001
     i = 0
     if verbose is True:
         print("Using tolerance of {}".format(tol))
@@ -790,6 +789,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False):
         
         if i > 10000:
             print("CAUTION: i is now {}. Index {} may not converge".format(i, posterior_obj.hp_index))
+            print("greater than tol: {}".format(np.abs(angle_residual(np.mod(psi_last, np.pi), np.mod(psiMB, np.pi), degrees = False)))) 
     
     #print("difference between original and final psi is {}".format(angle_residual(psiMB, psinaive, degrees=False)))
     #print("difference between original and final p is {}".format(pMB - pnaive))
@@ -867,7 +867,7 @@ def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region 
     
     return all_pMB, all_psiMB
     
-def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241", verbose = False):
+def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241", verbose = False, tol=1E-5):
     """
     Sample the Planck likelihood rather than a posterior constructed from a likelihood and prior
     """
@@ -892,7 +892,7 @@ def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = Non
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
         posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, adaptivep0 = adaptivep0)
-        all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = verbose)
+        all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = verbose, tol=tol)
         if verbose is True:
             print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
         
@@ -952,7 +952,7 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
     
-def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = False, local = False, verbose = False):
+def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = False, local = False, verbose = False, tol=1E-5):
     """
     Sample Planck 353 GHz psi_MB and p_MB from whole GALFA-HI sky
     """
@@ -973,7 +973,7 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
         all_ids = list(set(all_ids).intersection(all_ids_SC))
     
     print("beginning creation of all likelihoods")
-    all_pMB, all_psiMB = sample_all_planck_points(all_ids, adaptivep0 = adaptivep0, planck_tqu_cursor = planck_tqu_cursor, planck_cov_cursor = planck_cov_cursor, region = "SC_241", verbose = verbose)
+    all_pMB, all_psiMB = sample_all_planck_points(all_ids, adaptivep0 = adaptivep0, planck_tqu_cursor = planck_tqu_cursor, planck_cov_cursor = planck_cov_cursor, region = "SC_241", verbose = verbose, tol=tol)
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
@@ -988,8 +988,8 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
         psiMB_out_fn = "psiMB_allsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
         pMB_out_fn = "pMB_allsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
     elif limitregion is True:
-        psiMB_out_fn = "psiMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_tol10E-10.fits"
-        pMB_out_fn = "pMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_tol_10E-10.fits"
+        psiMB_out_fn = "psiMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
+        pMB_out_fn = "pMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
 
