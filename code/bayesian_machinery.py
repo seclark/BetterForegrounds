@@ -341,6 +341,7 @@ class Posterior(BayesianComponent):
             prior = PriorThetaRHT(hp_index, self.sample_p0, reverse_RHT = True, region = region, QRHT_cursor = QRHT_cursor, URHT_cursor = URHT_cursor, sig_QRHT_cursor = sig_QRHT_cursor, sig_URHT_cursor = sig_URHT_cursor)
             
         self.sample_psi0 = prior.sample_psi0
+        print("sample_psi0 RHT prior", self.sample_psi0)
         
         # Planck covariance database
         planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
@@ -1116,10 +1117,10 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
-    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
     
-    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = True)
+    #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = True)
     """
     allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz_take2.fits")
     allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_DR2_SC_241_353GHz_take2.fits")
