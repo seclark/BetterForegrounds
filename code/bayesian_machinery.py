@@ -711,6 +711,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     
     sample_p0 = posterior_obj.sample_p0
     sample_psi0 = posterior_obj.sample_psi0
+    print("original psi0", sample_psi0)
     
     # Sampling widths
     pdx = sample_p0[1] - sample_p0[0]
@@ -744,6 +745,9 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         if verbose is True:
             print("Centering initial integral on psi_MAP")
         rolled_sample_psi0, rolled_posterior = center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior, verbose = verbose)
+    
+    print("new psi0", psi0new)
+    print(np.all(np.diff(psi0new) > 0))
     
     #posterior = rolled_posterior
     #sample_psi0 = rolled_sample_psi0
