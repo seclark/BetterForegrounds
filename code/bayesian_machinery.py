@@ -15,6 +15,7 @@ from scipy import special
 import scipy.ndimage
 import copy
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
+from numpy.core.multiarray import digitize, bincount, interp as compiled_interp
 import matplotlib as mpl
 import matplotlib.ticker as ticker
 from matplotlib import rc
@@ -660,7 +661,43 @@ def center_posterior_psi_given(sample_psi0, posterior, given_psi, verbose = Fals
     #print("middle psi is now {}".format(psi0new[len(psi0new)/2.0]))
         
     return psi0new, centered_posterior 
-    
+
+def periodic_interpolation_2D(x, xp, fp, period=0):
+    """
+    see https://github.com/numpy/numpy/blob/v1.11.0/numpy/lib/function_base.py#L1570-L1692
+    and http://stackoverflow.com/questions/39380251/wrapped-circular-2d-interpolation-in-python
+    """
+
+    if period == 0:
+        raise ValueError("period must be a non-zero value")
+    period = abs(period)
+    left = None
+    right = None
+    return_array = True
+    if isinstance(x, (float, int, number)):
+        return_array = False
+        x = [x]
+    x = np.asarray(x, dtype=np.float64)
+    xp = np.asarray(xp, dtype=np.float64)
+    fp = np.asarray(fp, dtype=np.float64)
+    if xp.ndim != 1 or fp.ndim != 1:
+        raise ValueError("Data points must be 1-D sequences")
+    if xp.shape[0] != fp.shape[0]:
+        raise ValueError("fp and xp are not of the same length")
+    # normalizing periodic boundaries
+    x = x % period
+    xp = xp % period
+    asort_xp = np.argsort(xp)
+    xp = xp[asort_xp]
+    fp = fp[asort_xp]
+    xp = np.concatenate((xp[[-1]]-period, xp, xp[[0]]+period))
+    fp = np.concatenate((fp[[-1], :], fp, fp[[0], :]))
+
+    if return_array:
+        return compiled_interp(x, xp, fp, left, right)
+    else:
+        return compiled_interp(x, xp, fp, left, right).item()
+
 def circular_integration(xpoints, ypoints, endpoint_included=False, axis=0):
     """
     Integrate on wrapped domain. endpoint_included should be false if array has linspace endpoint=False
@@ -711,7 +748,6 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     
     sample_p0 = posterior_obj.sample_p0
     sample_psi0 = posterior_obj.sample_psi0
-    print("original psi0", sample_psi0)
     
     # Sampling widths
     pdx = sample_p0[1] - sample_p0[0]
@@ -745,9 +781,6 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         if verbose is True:
             print("Centering initial integral on psi_MAP")
         rolled_sample_psi0, rolled_posterior = center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior, verbose = verbose)
-    
-    print("new psi0", psi0new)
-    print(np.all(np.diff(psi0new) > 0))
     
     #posterior = rolled_posterior
     #sample_psi0 = rolled_sample_psi0
@@ -908,7 +941,7 @@ def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = Non
         planck_cov_cursor = planck_cov_db.cursor()
 
     # Get p0 and psi0 sampling grids
-    p0_all = np.linspace(0, 1, 165)
+    p0_all = np.linspace(0, 1, 166)
     psi0_all = np.linspace(0, np.pi, 165, endpoint=False) # don't count both 0 and pi
 
     update_progress(0.0)
@@ -1176,10 +1209,10 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0)
+    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
     
-    #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0)
+    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0)
     """
     allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz_take2.fits")
     allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_DR2_SC_241_353GHz_take2.fits")
