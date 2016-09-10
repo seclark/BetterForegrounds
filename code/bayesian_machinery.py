@@ -1016,7 +1016,7 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
         all_ids = list(set(all_ids).intersection(all_ids_SC))
     
     print("beginning creation of all likelihoods")
-    all_pMB, all_psiMB = sample_all_planck_points(all_ids, adaptivep0 = adaptivep0, planck_tqu_cursor = planck_tqu_cursor, planck_cov_cursor = planck_cov_cursor, region = "SC_241", verbose = verbose, tol=tol, sampletype = "mean_bayes")
+    all_pMB, all_psiMB = sample_all_planck_points(all_ids, adaptivep0 = adaptivep0, planck_tqu_cursor = planck_tqu_cursor, planck_cov_cursor = planck_cov_cursor, region = "SC_241", verbose = verbose, tol=tol, sampletype = sampletype)
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
