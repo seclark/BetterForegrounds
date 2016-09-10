@@ -412,7 +412,7 @@ class DummyPosterior(BayesianComponent):
         BayesianComponent.__init__(self, 0)  
         
         self.sample_p0 = np.linspace(0, 1, 165)
-        self.sample_psi0 = np.linspace(0, np.pi, 165)
+        self.sample_psi0 = np.linspace(0, np.pi, 165)#, endpoint=False)
     
         self.psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
         self.p_dx = self.sample_p0[1] - self.sample_p0[0]
@@ -668,30 +668,11 @@ def periodic_interpolation_2D(x, xp, fp, period=0):
     and http://stackoverflow.com/questions/39380251/wrapped-circular-2d-interpolation-in-python
     """
 
-    if period == 0:
-        raise ValueError("period must be a non-zero value")
-    period = abs(period)
-    left = None
-    right = None
-    return_array = True
-    if isinstance(x, (float, int, number)):
-        return_array = False
-        x = [x]
-    x = np.asarray(x, dtype=np.float64)
-    xp = np.asarray(xp, dtype=np.float64)
-    fp = np.asarray(fp, dtype=np.float64)
-    if xp.ndim != 1 or fp.ndim != 1:
-        raise ValueError("Data points must be 1-D sequences")
-    if xp.shape[0] != fp.shape[0]:
-        raise ValueError("fp and xp are not of the same length")
-    # normalizing periodic boundaries
-    x = x % period
-    xp = xp % period
-    asort_xp = np.argsort(xp)
-    xp = xp[asort_xp]
     fp = fp[asort_xp]
     xp = np.concatenate((xp[[-1]]-period, xp, xp[[0]]+period))
     fp = np.concatenate((fp[[-1], :], fp, fp[[0], :]))
+    
+    
 
     if return_array:
         return compiled_interp(x, xp, fp, left, right)
@@ -814,9 +795,9 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         print("initial psiMB is {}".format(psiMB))
     
     # Set parameters for convergence
-    psi_last = copy.copy(psinaive)
+    psi_last = copy.copy(psinaive) + tol*2
     i = 0
-    itertol = 0#10#0
+    itertol = 10#10#0
     if verbose is True:
         print("Using tolerance of {}".format(tol))
         
@@ -922,7 +903,7 @@ def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region 
     
     return all_pMB, all_psiMB
     
-def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241", verbose = False, tol=1E-5):
+def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241", verbose = False, tol=1E-5, sampletype = "mean_bayes"):
     """
     Sample the Planck likelihood rather than a posterior constructed from a likelihood and prior
     """
@@ -941,7 +922,7 @@ def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = Non
         planck_cov_cursor = planck_cov_db.cursor()
 
     # Get p0 and psi0 sampling grids
-    p0_all = np.linspace(0, 1, 166)
+    p0_all = np.linspace(0, 1, 165)
     psi0_all = np.linspace(0, np.pi, 165, endpoint=False) # don't count both 0 and pi
 
     update_progress(0.0)
@@ -951,7 +932,10 @@ def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = Non
         #print("for id {}, p0 grid is {}".format(_id, posterior_obj.sample_p0))
         #print("for id {}, pmeas is {}, psimeas is {}, psi naive is {}".format(_id, posterior_obj.pmeas, posterior_obj.psimeas, posterior_obj.naive_psi))
         #testing
-        all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = verbose, tol=tol)
+        if sampletype is "mean_bayes":
+            all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = verbose, tol=tol)
+        elif sampletype is "MAP":
+            all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
         if verbose is True:
             print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
         
@@ -1011,7 +995,7 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
     
-def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = False, local = False, verbose = False, tol=1E-5):
+def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = False, local = False, verbose = False, tol=1E-5, sampletype = "mean_bayes"):
     """
     Sample Planck 353 GHz psi_MB and p_MB from whole GALFA-HI sky
     """
@@ -1032,7 +1016,7 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
         all_ids = list(set(all_ids).intersection(all_ids_SC))
     
     print("beginning creation of all likelihoods")
-    all_pMB, all_psiMB = sample_all_planck_points(all_ids, adaptivep0 = adaptivep0, planck_tqu_cursor = planck_tqu_cursor, planck_cov_cursor = planck_cov_cursor, region = "SC_241", verbose = verbose, tol=tol)
+    all_pMB, all_psiMB = sample_all_planck_points(all_ids, adaptivep0 = adaptivep0, planck_tqu_cursor = planck_tqu_cursor, planck_cov_cursor = planck_cov_cursor, region = "SC_241", verbose = verbose, tol=tol, sampletype = "mean_bayes")
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
@@ -1047,8 +1031,12 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
         psiMB_out_fn = "psiMB_allsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
         pMB_out_fn = "pMB_allsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
     elif limitregion is True:
-        psiMB_out_fn = "psiMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
-        pMB_out_fn = "pMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
+        if sampletype is "mean_bayes":
+            psiMB_out_fn = "psiMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
+            pMB_out_fn = "pMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
+        elif sampletype is "MAP":
+            psiMB_out_fn = "psiMB_MAP_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
+            pMB_out_fn = "pMB_MAP_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
 
@@ -1212,7 +1200,7 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
     
-    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0)
+    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="MAP")
     """
     allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz_take2.fits")
     allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_DR2_SC_241_353GHz_take2.fits")
