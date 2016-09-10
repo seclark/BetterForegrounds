@@ -885,7 +885,7 @@ def get_rht_QU_cursors(local = False):
 
     return QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor
 
-def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region = "SC_241", useprior = "RHTPrior", gausssmooth_prior = False, tol=1E-5, sampletype = "mean_bayes"):
+def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region = "SC_241", useprior = "RHTPrior", gausssmooth_prior = False, tol=1E-5, sampletype = "mean_bayes", verbose=False):
     
     all_pMB = np.zeros(len(all_ids))
     all_psiMB = np.zeros(len(all_ids))
