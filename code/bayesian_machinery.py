@@ -19,6 +19,7 @@ from numpy.core.multiarray import digitize, bincount, interp as compiled_interp
 import matplotlib as mpl
 import matplotlib.ticker as ticker
 from matplotlib import rc
+import emcee
 rc('text', usetex=True)
 
 # Local repo imports
@@ -442,6 +443,7 @@ class DummyPosterior(BayesianComponent):
         
         self.normed_prior = np.ones(self.normed_posterior.shape, np.float_)
       
+
 
 def latex_formatter(x, pos):
     return "${0:.1f}$".format(x)
