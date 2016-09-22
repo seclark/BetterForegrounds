@@ -492,6 +492,7 @@ def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, verbose = False, region 
     if region is "allsky":
         rht_data = rht_cursor.execute("SELECT * FROM RHT_weights_allsky WHERE id = ?", (hp_index,)).fetchone()
     if region is "SC_241":
+        print("is this where the problem is?")
         rht_data = rht_cursor.execute("SELECT * FROM RHT_weights WHERE id = ?", (hp_index,)).fetchone()
     
     # Discard first element because it is the healpix id
@@ -1083,7 +1084,7 @@ def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region 
             elif sampletype is "MAP":
                 all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
             
-            print(all_pMB[i], all_psiMB[i])
+            print("MB p", all_pMB[i], "MB psi", all_psiMB[i])
             MCMC_posterior(_id[0], rht_cursor = rht_cursor)
         
             update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
