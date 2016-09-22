@@ -527,7 +527,7 @@ def lnposterior(p0psi0, hp_index, lowerp0bound, upperp0bound, region, rht_cursor
         
         return lnlikeout + lnpriorout
 
-def MCMC_posterior(hp_index, region="SC_241"):
+def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None):
     time0 = time.time()
     
     nwalkers = 250
@@ -543,8 +543,6 @@ def MCMC_posterior(hp_index, region="SC_241"):
     # Planck TQU database
     planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
     planck_tqu_cursor = planck_tqu_db.cursor()
-    
-    rht_cursor, tablename = get_rht_cursor(region = region, velrangestring = "-4_3")
 
     # get planck data once...
     (hp_index, T, Q, U) = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
@@ -1086,7 +1084,7 @@ def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region 
                 all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
             
             print(all_pMB[i], all_psiMB[i])
-            MCMC_posterior(_id[0])
+            MCMC_posterior(_id[0], rht_cursor = rht_cursor)
         
             update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
     
