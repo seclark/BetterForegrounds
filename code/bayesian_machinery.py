@@ -11,7 +11,7 @@ import itertools
 import string
 import sqlite3
 import scipy
-from scipy import special
+from scipy import special, interpolate
 import scipy.ndimage
 import copy
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
@@ -295,7 +295,6 @@ class Likelihood(BayesianComponent):
         p0_psi0_grid = np.asarray(np.meshgrid(p0_all, psi0_all))
 
         # isig array of size (2, 2, nsample*nsample)
-        time0 = time.time()
         outfast = np.zeros(nsample*nsample, np.float_)
     
         # Construct measured part
@@ -409,7 +408,7 @@ class DummyPosterior(BayesianComponent):
       Class for testing posterior estimation methods. 
       """
       
-      def __init__(self):
+      def __init__(self, verbose=True):
         BayesianComponent.__init__(self, 0)  
         
         self.sample_p0 = np.linspace(0, 1, 165)
@@ -422,15 +421,16 @@ class DummyPosterior(BayesianComponent):
             print("Multiplying psi_dx by -1")
             self.psi_dx *= -1
         
-        print("psi dx is {}, p dx is {}".format(self.psi_dx, self.p_dx))
+        if verbose is True:
+            print("psi dx is {}, p dx is {}".format(self.psi_dx, self.p_dx))
         
         psi_y = self.sample_psi0[:, np.newaxis]
         p_x = self.sample_p0
         
-        self.psimeas = np.pi/3
-        self.pmeas = 0.2
+        self.psimeas = np.pi
+        self.pmeas = 0.0
         
-        self.fwhm = 0.3
+        self.fwhm = 0.03
         
         gaussian = np.exp(-4*np.log(2) * ((p_x-self.pmeas)**2 + (psi_y-self.psimeas)**2) / self.fwhm**2)
         
@@ -442,8 +442,94 @@ class DummyPosterior(BayesianComponent):
         self.normed_posterior = self.planck_likelihood/self.integrated_over_p_and_psi
         
         self.normed_prior = np.ones(self.normed_posterior.shape, np.float_)
-      
+        
+def lnlikelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, p0, psi0):    
+    (hp_index, T, Q, U) = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
+    (hp_index, TT, TQ, TU, TQa, QQ, QU, TUa, QUa, UU) = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (hp_index,)).fetchone()
+        
+    # sigma_p as defined in arxiv:1407.0178v1 Eqn 3.
+    sigma_p = np.zeros((2, 2), np.float_) # [sig_Q^2, sig_QU // sig_QU, UU]
+    sigma_p[0, 0] = (1.0/T**2)*QQ #QQ
+    sigma_p[0, 1] = (1.0/T**2)*QU #QU
+    sigma_p[1, 0] = (1.0/T**2)*QU #QU
+    sigma_p[1, 1] = (1.0/T**2)*UU #UU
+          
+    # det(sigma_p) = sigma_p,G^4
+    det_sigma_p = np.linalg.det(sigma_p)
+    sigpGsq = np.sqrt(det_sigma_p)
+    
+    # measured naive polarization angle (psi_i = arctan(U_i/Q_i))
+    psimeas = np.mod(0.5*np.arctan2(U, Q), np.pi)
 
+    # measured polarization fraction
+    pmeas = np.sqrt(Q**2 + U**2)/T
+    
+    # invert sigma_p
+    invsig = np.linalg.inv(sigma_p)
+
+    # Construct measured part
+    measpart0 = pmeas*np.cos(2*psimeas)
+    measpart1 = pmeas*np.sin(2*psimeas)
+    
+    # true part (from point to sample)
+    truepart0 = p0*np.cos(2*psi0)
+    truepart1 = p0*np.sin(2*psi0)
+    
+    rharr = np.zeros((2, 1), np.float_)
+    lharr = np.zeros((1, 2), np.float_)
+    
+    rharr[0, 0] = measpart0 - truepart0
+    rharr[1, 0] = measpart1 - truepart1
+    lharr[0, 0] = measpart0 - truepart0
+    lharr[0, 1] = measpart1 - truepart1
+
+    likelihood = (1.0/(np.pi*sigpGsq))*np.exp(-0.5*np.einsum('ij,jk->ik', lharr, np.einsum('ij,jk->ik', invsig, rharr)))
+
+    return np.log(likelihood)    
+      
+def lnposterior(pt, bayesian_object, lowerp0bound, upperp0bound):
+    
+    p0, psi0 = pt
+    
+    if (p0 > upperp0bound) or (p0 < lowerp0bound):# or (psi0 < 0) or (psi0 > np.pi):
+        return -np.inf
+    
+    else:
+        interpfunc = interpolate.interp1d(bayesian_object.sample_p0, np.log(bayesian_object.normed_posterior), axis=1)
+        psiarr = interpfunc(p0)
+    
+        return np.interp(psi0, bayesian_object.sample_psi0, psiarr, period=np.pi)
+        
+def MCMC_posterior(bayesian_object):
+    #time0 = time.time()
+    nwalkers = 250
+    ndim = 2
+    
+    lowerp0bound = np.nanmin(bayesian_object.sample_p0)
+    upperp0bound = np.nanmax(bayesian_object.sample_p0)
+    
+    # walkers begin clustered around naive values
+    startpos=np.array([[bayesian_object.pmeas,bayesian_object.psimeas] + 1e-2*np.random.randn(ndim) for i in range(nwalkers)])
+    startpos[:, 1] = np.mod(startpos[:, 1], np.pi)
+    
+    # MCMC chain. ndim =2
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnposterior, args=[bayesian_object, lowerp0bound, upperp0bound])
+    posout, probout, stateout = sampler.run_mcmc(startpos, 50)
+    sampler.reset()
+    posout[:, 1] = np.mod(posout[:, 1], np.pi)
+    sampler.run_mcmc(posout, 500)
+    
+    pmed, psimed = np.percentile(sampler.flatchain, 50, axis=0)
+    pmed16, psimed16 = np.percentile(sampler.flatchain, 16, axis=0)
+    pmed84, psimed84 = np.percentile(sampler.flatchain, 84, axis=0)
+    print(np.mean(sampler.flatchain, axis=0))
+    #time1 = time.time()
+    print("Mean acceptance fraction: {0:.3f}".format(np.mean(sampler.acceptance_fraction)))
+    print(pmed, psimed)
+    print(pmed16, pmed84, psimed16, psimed84)
+    #print("time:", time1 - time0)
+    
+    #return pmed, psimed, 
 
 def latex_formatter(x, pos):
     return "${0:.1f}$".format(x)
