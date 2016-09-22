@@ -485,9 +485,101 @@ def lnlikelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, p0, psi0):
 
     likelihood = (1.0/(np.pi*sigpGsq))*np.exp(-0.5*np.einsum('ij,jk->ik', lharr, np.einsum('ij,jk->ik', invsig, rharr)))
 
-    return np.log(likelihood)    
+    return np.log(likelihood[0][0]) 
+    
+def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, verbose = False, region = "SC_241", rht_cursor = None, gausssmooth = False):
+    
+    if region is "allsky":
+        rht_data = rht_cursor.execute("SELECT * FROM RHT_weights_allsky WHERE id = ?", (hp_index,)).fetchone()
+    if region is "SC_241":
+        rht_data = rht_cursor.execute("SELECT * FROM RHT_weights WHERE id = ?", (hp_index,)).fetchone()
+    
+    # Discard first element because it is the healpix id
+    rht_data = rht_data[1:]
+            
+    if gausssmooth is True:
+        # Gaussian smooth with sigma = 3, wrapped boundaries for filter
+        rht_data = scipy.ndimage.gaussian_filter1d(rht_data, 3, mode = "wrap")
+        
+    # Get sample psi data
+    sample_psi0 = get_psi0_sampling_grid(hp_index, verbose = verbose)
+
+    # Add 0.7 because that was the RHT threshold 
+    prior = (np.array(rht_data) + 0.7)*75
+        
+    psi_dx = sample_psi0[1] - sample_psi0[0]
+        
+    integrated_over_psi = np.trapz(prior, dx = psi_dx)
+    normed_prior = (prior/integrated_over_psi)/(upperp0bound - lowerp0bound) # integrate over p0 too
+        
+    return np.log(np.interp(psi0, sample_psi0, normed_prior, period=np.pi))
       
-def lnposterior(pt, bayesian_object, lowerp0bound, upperp0bound):
+def lnposterior(p0psi0, hp_index, lowerp0bound, upperp0bound, region, rht_cursor):
+    
+    p0, psi0 = p0psi0
+    
+    if (p0 > upperp0bound) or (p0 < lowerp0bound):
+        return -np.inf
+    
+    else:
+        lnlikeout = lnlikelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, p0, psi0)
+        lnpriorout = lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_cursor=rht_cursor, region=region)
+        
+        return lnlikeout + lnpriorout
+
+def MCMC_posterior(hp_index, region="SC_241"):
+    time0 = time.time()
+    
+    nwalkers = 250
+    ndim = 2
+    
+    lowerp0bound = 0#np.nanmin(bayesian_object.sample_p0)
+    upperp0bound = 1#np.nanmax(bayesian_object.sample_p0)
+    
+    # Planck covariance database
+    planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
+    planck_cov_cursor = planck_cov_db.cursor()
+
+    # Planck TQU database
+    planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+    planck_tqu_cursor = planck_tqu_db.cursor()
+    
+    rht_cursor, tablename = get_rht_cursor(region = region, velrangestring = "-4_3")
+
+    # get planck data once...
+    (hp_index, T, Q, U) = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
+    (hp_index, TT, TQ, TU, TQa, QQ, QU, TUa, QUa, UU) = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (hp_index,)).fetchone()
+    
+    # measured naive polarization angle (psi_i = arctan(U_i/Q_i))
+    psimeas = np.mod(0.5*np.arctan2(U, Q), np.pi)
+
+    # measured polarization fraction
+    pmeas = np.sqrt(Q**2 + U**2)/T
+    
+    
+    # walkers begin clustered around naive values
+    startpos=np.array([[pmeas,psimeas] + 1e-2*np.random.randn(ndim) for i in range(nwalkers)])
+    startpos[:, 1] = np.mod(startpos[:, 1], np.pi)
+    
+    # MCMC chain. ndim =2
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnposterior, args=[hp_index, lowerp0bound, upperp0bound, region, rht_cursor])
+    posout, probout, stateout = sampler.run_mcmc(startpos, 50)
+    sampler.reset()
+    posout[:, 1] = np.mod(posout[:, 1], np.pi)
+    sampler.run_mcmc(posout, 500)
+    
+    pmed, psimed = np.percentile(sampler.flatchain, 50, axis=0)
+    pmed16, psimed16 = np.percentile(sampler.flatchain, 16, axis=0)
+    pmed84, psimed84 = np.percentile(sampler.flatchain, 84, axis=0)
+    time1 = time.time()
+    print(time1 - time0)
+    print(np.mean(sampler.flatchain, axis=0))
+    print("Mean acceptance fraction: {0:.3f}".format(np.mean(sampler.acceptance_fraction)))
+    print(pmed, psimed)
+    print(pmed16, pmed84, psimed16, psimed84)
+  
+      
+def lnposterior_interpolated(pt, bayesian_object, lowerp0bound, upperp0bound):
     
     p0, psi0 = pt
     
@@ -500,7 +592,7 @@ def lnposterior(pt, bayesian_object, lowerp0bound, upperp0bound):
     
         return np.interp(psi0, bayesian_object.sample_psi0, psiarr, period=np.pi)
         
-def MCMC_posterior(bayesian_object):
+def MCMC_posterior_interpolated(bayesian_object):
     #time0 = time.time()
     nwalkers = 250
     ndim = 2
@@ -985,14 +1077,18 @@ def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region 
         
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
+        if _id[0] in [3400757, 793551, 2447655]:
+            posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
         
-        if sampletype is "mean_bayes":
-            all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, tol=tol)
-        elif sampletype is "MAP":
-            all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
+            if sampletype is "mean_bayes":
+                all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, tol=tol)
+            elif sampletype is "MAP":
+                all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
+            
+            print(all_pMB[i], all_psiMB[i])
+            MCMC_posterior(_id)
         
-        update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
+            update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
     
     return all_pMB, all_psiMB
     
@@ -1020,25 +1116,25 @@ def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = Non
 
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        if _id[0] in [3400757, 793551, 2447655]:
-            posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, adaptivep0 = adaptivep0)
-            #print("for id {}, p0 grid is {}".format(_id, posterior_obj.sample_p0))
-            print("for id {}, pmeas is {}, psimeas is {}, psi naive is {}".format(_id, posterior_obj.pmeas, posterior_obj.psimeas, posterior_obj.naive_psi))
-            print("for id {}, likelihood[0, 1] = {}".format(_id, posterior_obj.posterior[0, 1]))
-            print(p0_all[0], psi0_all[1]) 
-            lnlikeout = lnlikelihood(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all[0], psi0_all[1])
-            print("for id {}, lnlikelihood[0, 1] = {}".format(_id, lnlikeout[0]))
-            print(np.exp(lnlikeout[0]))
-            
-            #testing
-            if sampletype is "mean_bayes":
-                all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = verbose, tol=tol)
-            elif sampletype is "MAP":
-                all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
-            if verbose is True:
-                print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
+        #if _id[0] in [3400757, 793551, 2447655]:
+        posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, adaptivep0 = adaptivep0)
+        #print("for id {}, p0 grid is {}".format(_id, posterior_obj.sample_p0))
+        #print("for id {}, pmeas is {}, psimeas is {}, psi naive is {}".format(_id, posterior_obj.pmeas, posterior_obj.psimeas, posterior_obj.naive_psi))
+        #print("for id {}, likelihood[0, 1] = {}".format(_id, posterior_obj.posterior[0, 1]))
+        #print(p0_all[0], psi0_all[1]) 
+        #lnlikeout = lnlikelihood(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all[0], psi0_all[1])
+        #print("for id {}, lnlikelihood[0, 1] = {}".format(_id, lnlikeout[0]))
+        #print(np.exp(lnlikeout[0]))
         
-            update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
+        #testing
+        if sampletype is "mean_bayes":
+            all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = verbose, tol=tol)
+        elif sampletype is "MAP":
+            all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
+        if verbose is True:
+            print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
+    
+        update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
     
     return all_pMB, all_psiMB
     
@@ -1304,10 +1400,10 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
-    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP")
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP")
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
     
-    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="MAP")
+    #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="MAP")
     """
     allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz_take2.fits")
     allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_DR2_SC_241_353GHz_take2.fits")
