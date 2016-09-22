@@ -1075,6 +1075,7 @@ def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region 
     if rht_cursor is None:
         print("Loading default rht_cursor by region because it was not provided")
         rht_cursor, tablename = get_rht_cursor(region = region)
+        print("name is", tablename)
         
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
