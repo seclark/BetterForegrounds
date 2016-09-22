@@ -514,7 +514,7 @@ def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, verbose = False, region 
         
     return np.log(np.interp(psi0, sample_psi0, normed_prior, period=np.pi))
       
-def lnposterior(p0psi0, hp_index, lowerp0bound, upperp0bound, region, rht_cursor):
+def lnposterior(p0psi0, hp_index, lowerp0bound, upperp0bound, region, rht_cursor, planck_tqu_cursor, planck_cov_cursor):
     
     p0, psi0 = p0psi0
     
@@ -562,7 +562,7 @@ def MCMC_posterior(hp_index, region="SC_241"):
     startpos[:, 1] = np.mod(startpos[:, 1], np.pi)
     
     # MCMC chain. ndim =2
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnposterior, args=[hp_index, lowerp0bound, upperp0bound, region, rht_cursor])
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnposterior, args=[hp_index, lowerp0bound, upperp0bound, region, rht_cursor, planck_tqu_cursor, planck_cov_cursor])
     posout, probout, stateout = sampler.run_mcmc(startpos, 50)
     sampler.reset()
     posout[:, 1] = np.mod(posout[:, 1], np.pi)
