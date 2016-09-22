@@ -1086,7 +1086,7 @@ def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region 
                 all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
             
             print(all_pMB[i], all_psiMB[i])
-            MCMC_posterior(_id)
+            MCMC_posterior(_id[0])
         
             update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
     
