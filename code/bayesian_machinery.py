@@ -1077,14 +1077,14 @@ def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region 
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
         if _id[0] in [3400757, 793551, 2447655]:
-            posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
+            #posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
         
-            if sampletype is "mean_bayes":
-                all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, tol=tol)
-            elif sampletype is "MAP":
-                all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
+            #if sampletype is "mean_bayes":
+            #    all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, tol=tol)
+            #elif sampletype is "MAP":
+            #    all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
             
-            print("MB p", all_pMB[i], "MB psi", all_psiMB[i])
+            #print("MB p", all_pMB[i], "MB psi", all_psiMB[i])
             MCMC_posterior(_id[0], rht_cursor = rht_cursor)
         
             update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
