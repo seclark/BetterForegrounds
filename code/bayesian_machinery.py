@@ -1024,10 +1024,8 @@ def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = Non
             posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, adaptivep0 = adaptivep0)
             print("for id {}, p0 grid is {}".format(_id, posterior_obj.sample_p0))
             print("for id {}, pmeas is {}, psimeas is {}, psi naive is {}".format(_id, posterior_obj.pmeas, posterior_obj.psimeas, posterior_obj.naive_psi))
-            print("for id {}, likelihood[0, 1] = {}".format(_id, posterior_obj.likelihood[0, 1])
-            print(psi0_all[1])
-            lnlikeout = lnlikelihood(_id, planck_tqu_cursor, planck_cov_cursor, p0_all[0], psi0_all[1])
-            print("for id {}, lnlikelihood[0, 1] = {}".format(_id, lnlikeout))
+            print("for id {}, likelihood[0, 1] = {}".format(_id, posterior_obj.likelihood[0, 1]))
+            print("for id {}, lnlikelihood[0, 1] = {}".format(_id, lnlikelihood(_id, planck_tqu_cursor, planck_cov_cursor, p0_all[0], psi0_all[1])))
             
             #testing
         if sampletype is "mean_bayes":
