@@ -1075,7 +1075,6 @@ def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region 
     if rht_cursor is None:
         print("Loading default rht_cursor by region because it was not provided")
         rht_cursor, tablename = get_rht_cursor(region = region)
-        print("name is", tablename)
         
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
@@ -1165,6 +1164,7 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
 
     # Get ids of all pixels that contain RHT data
     rht_cursor, tablename = get_rht_cursor(region = region, velrangestring = velrangestring)
+    print("table name is", tablename)
     all_ids = get_all_rht_ids(rht_cursor, tablename)
     
     if limitregion is True:
