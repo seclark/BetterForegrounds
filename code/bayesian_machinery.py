@@ -1024,7 +1024,7 @@ def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = Non
             posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, adaptivep0 = adaptivep0)
             print("for id {}, p0 grid is {}".format(_id, posterior_obj.sample_p0))
             print("for id {}, pmeas is {}, psimeas is {}, psi naive is {}".format(_id, posterior_obj.pmeas, posterior_obj.psimeas, posterior_obj.naive_psi))
-            print("for id {}, likelihood[0, 1] = {}".format(_id, posterior_obj.likelihood[0, 1]))
+            print("for id {}, likelihood[0, 1] = {}".format(_id, posterior_obj.likelihood[0, 1])) 
             print("for id {}, lnlikelihood[0, 1] = {}".format(_id, lnlikelihood(_id, planck_tqu_cursor, planck_cov_cursor, p0_all[0], psi0_all[1])))
             
             #testing
@@ -1304,7 +1304,7 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP")
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
     
-    #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="MAP")
+    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="MAP")
     """
     allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz_take2.fits")
     allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_DR2_SC_241_353GHz_take2.fits")
