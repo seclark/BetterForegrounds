@@ -1026,7 +1026,7 @@ def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = Non
             print("for id {}, pmeas is {}, psimeas is {}, psi naive is {}".format(_id, posterior_obj.pmeas, posterior_obj.psimeas, posterior_obj.naive_psi))
             print("for id {}, likelihood[0, 1] = {}".format(_id, posterior_obj.posterior[0, 1]))
             print(p0_all[0], psi0_all[1]) 
-            lnlikeout = lnlikelihood(_id, planck_tqu_cursor, planck_cov_cursor, p0_all[0], psi0_all[1])
+            lnlikeout = lnlikelihood(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all[0], psi0_all[1])
             print("for id {}, lnlikelihood[0, 1] = {}".format(_id, lnlikeout))
             
             #testing
