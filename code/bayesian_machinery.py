@@ -508,9 +508,9 @@ def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_cursor, region, gaus
     psi_dx = sample_psi0[1] - sample_psi0[0]
         
     integrated_over_psi = np.trapz(prior, dx = psi_dx)
-    print("integral", integrated_over_psi)
     normed_prior = (prior/integrated_over_psi)/(upperp0bound - lowerp0bound) # integrate over p0 too
-    print("normed prior sum", np.sum(normed_prior))
+    
+    print("interp", np.interp(psi0, sample_psi0, normed_prior, period=np.pi))
         
     return np.log(np.interp(psi0, sample_psi0, normed_prior, period=np.pi))
       
