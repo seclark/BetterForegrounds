@@ -604,7 +604,7 @@ def MCMC_posterior_interpolated(bayesian_object):
     startpos[:, 1] = np.mod(startpos[:, 1], np.pi)
     
     # MCMC chain. ndim =2
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnposterior, args=[bayesian_object, lowerp0bound, upperp0bound])
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnposterior_interpolated, args=[bayesian_object, lowerp0bound, upperp0bound])
     posout, probout, stateout = sampler.run_mcmc(startpos, 50)
     sampler.reset()
     posout[:, 1] = np.mod(posout[:, 1], np.pi)
