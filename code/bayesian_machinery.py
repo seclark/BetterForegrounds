@@ -506,11 +506,8 @@ def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_cursor, region, gaus
     prior = (np.array(rht_data) + 0.7)*75
         
     psi_dx = sample_psi0[1] - sample_psi0[0]
-    
-    print(psi_dx)
-    print("sample psi0", sample_psi0)
-    print("prior", prior)
         
+    # -psi_dx because sample_psi0 decreases
     integrated_over_psi = np.trapz(prior, dx = -psi_dx)
     normed_prior = (prior/integrated_over_psi)/(upperp0bound - lowerp0bound) # integrate over p0 too
     
