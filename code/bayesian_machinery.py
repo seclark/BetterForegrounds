@@ -534,8 +534,14 @@ def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None):
     nwalkers = 250
     ndim = 2
     
-    lowerp0bound = 0#np.nanmin(bayesian_object.sample_p0)
-    upperp0bound = 1#np.nanmax(bayesian_object.sample_p0)
+    bayesiantool = BayesianComponent(hp_index)
+    p0grid = bayesiantool.get_adaptive_p_grid(hp_index)
+    
+    lowerp0bound = np.nanmin(p0grid)
+    upperp0bound = np.nanmax(p0grid)
+    
+    #lowerp0bound = 0#np.nanmin(bayesian_object.sample_p0)
+    #upperp0bound = 1#np.nanmax(bayesian_object.sample_p0)
     
     # Planck covariance database
     planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
