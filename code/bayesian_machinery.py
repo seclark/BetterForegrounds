@@ -565,7 +565,8 @@ def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None):
     posout, probout, stateout = sampler.run_mcmc(startpos, 50)
     sampler.reset()
     posout[:, 1] = np.mod(posout[:, 1], np.pi)
-    sampler.run_mcmc(posout, 500)
+    sampler.run_mcmc(posout, 250)
+    sampler.flatchain[:, 1] = np.mod(sampler.flatchain[:, 1], np.pi)
     
     pmed, psimed = np.percentile(sampler.flatchain, 50, axis=0)
     pmed16, psimed16 = np.percentile(sampler.flatchain, 16, axis=0)
