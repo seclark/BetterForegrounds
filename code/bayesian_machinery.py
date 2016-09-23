@@ -528,20 +528,21 @@ def lnposterior(p0psi0, hp_index, lowerp0bound, upperp0bound, region, rht_cursor
         
         return lnlikeout + lnpriorout
 
-def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None):
+def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = True):
     time0 = time.time()
     
     nwalkers = 250
     ndim = 2
     
-    bayesiantool = BayesianComponent(hp_index)
-    p0grid = bayesiantool.get_adaptive_p_grid(hp_index)
+    if adaptivep0 is True:
+        bayesiantool = BayesianComponent(hp_index)
+        p0grid = bayesiantool.get_adaptive_p_grid(hp_index)
     
-    lowerp0bound = np.nanmin(p0grid)
-    upperp0bound = np.nanmax(p0grid)
-    
-    #lowerp0bound = 0#np.nanmin(bayesian_object.sample_p0)
-    #upperp0bound = 1#np.nanmax(bayesian_object.sample_p0)
+        lowerp0bound = np.nanmin(p0grid)
+        upperp0bound = np.nanmax(p0grid)
+    else:
+        lowerp0bound = 0.0
+        upperp0bound = 1.0 
     
     # Planck covariance database
     planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
@@ -1084,6 +1085,10 @@ def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region 
     for i, _id in enumerate(all_ids):
         if _id[0] in [3400757, 793551, 2447655]:
             posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
+            
+            fits.writeto("posterior_{}.fits".format(_id[0]), posterior_obj.normed_posterior)
+            fits.writeto("likelihood_{}.fits".format(_id[0]), posterior_obj.planck_likelihood)
+            fits.writeto("prior_{}.fits".format(_id[0]), posterior_obj.normed_prior)
         
             if sampletype is "mean_bayes":
                 all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol=tol)
