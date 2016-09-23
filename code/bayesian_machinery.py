@@ -522,7 +522,7 @@ def lnposterior(p0psi0, hp_index, lowerp0bound, upperp0bound, region, rht_cursor
     else:
         lnlikeout = lnlikelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, p0, psi0)
         lnpriorout = lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_cursor, region)
-        
+        print(lnlikeout, lnpriorout)
         return lnlikeout + lnpriorout
 
 def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None):
