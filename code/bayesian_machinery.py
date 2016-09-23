@@ -487,7 +487,7 @@ def lnlikelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, p0, psi0):
 
     return np.log(likelihood[0][0]) 
     
-def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_cursor, region, gausssmooth = False):
+def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_cursor, region, gausssmooth = False, verbose=False):
     
     rht_data = rht_cursor.execute("SELECT * FROM RHT_weights_allsky WHERE id = ?", (hp_index,)).fetchone()
     
