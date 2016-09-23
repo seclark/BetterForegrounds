@@ -443,9 +443,7 @@ class DummyPosterior(BayesianComponent):
         
         self.normed_prior = np.ones(self.normed_posterior.shape, np.float_)
         
-def lnlikelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, p0, psi0):    
-    (hp_index, T, Q, U) = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
-    (hp_index, TT, TQ, TU, TQa, QQ, QU, TUa, QUa, UU) = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (hp_index,)).fetchone()
+def lnlikelihood(hp_index, T, Q, U, QQ, QU, UU, p0, psi0):    
         
     # sigma_p as defined in arxiv:1407.0178v1 Eqn 3.
     sigma_p = np.zeros((2, 2), np.float_) # [sig_Q^2, sig_QU // sig_QU, UU]
@@ -487,12 +485,7 @@ def lnlikelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, p0, psi0):
 
     return np.log(likelihood[0][0]) 
     
-def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_cursor, region, gausssmooth = False, verbose=False):
-    
-    rht_data = rht_cursor.execute("SELECT * FROM RHT_weights_allsky WHERE id = ?", (hp_index,)).fetchone()
-    
-    # Discard first element because it is the healpix id
-    rht_data = rht_data[1:]
+def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_data, region, gausssmooth = False, verbose=False):
             
     if gausssmooth is True:
         # Gaussian smooth with sigma = 3, wrapped boundaries for filter
@@ -515,7 +508,7 @@ def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_cursor, region, gaus
         
     return np.log(np.interp(psi0, sample_psi0, normed_prior, period=np.pi))
       
-def lnposterior(p0psi0, hp_index, lowerp0bound, upperp0bound, region, rht_cursor, planck_tqu_cursor, planck_cov_cursor):
+def lnposterior(p0psi0, hp_index, lowerp0bound, upperp0bound, region, rht_data, T, Q, U, QQ, QU, UU):
     
     p0, psi0 = p0psi0
     
@@ -523,8 +516,8 @@ def lnposterior(p0psi0, hp_index, lowerp0bound, upperp0bound, region, rht_cursor
         return -np.inf
     
     else:
-        lnlikeout = lnlikelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, p0, psi0)
-        lnpriorout = lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_cursor, region)
+        lnlikeout = lnlikelihood(hp_index, T, Q, U, QQ, QU, UU, p0, psi0)
+        lnpriorout = lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_data, region)
         
         return lnlikeout + lnpriorout
 
@@ -552,8 +545,15 @@ def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = Tr
     planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
     planck_tqu_cursor = planck_tqu_db.cursor()
 
-    # get planck data once...
+    # Get planck data once
     (hp_index, T, Q, U) = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
+    (hp_index, TT, TQ, TU, TQa, QQ, QU, TUa, QUa, UU) = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (hp_index,)).fetchone()
+    
+    # Get RHT data once
+    rht_data = rht_cursor.execute("SELECT * FROM RHT_weights_allsky WHERE id = ?", (hp_index,)).fetchone()
+    
+    # Discard first element because it is the healpix id
+    rht_data = rht_data[1:]
     
     # measured naive polarization angle (psi_i = arctan(U_i/Q_i))
     psimeas = np.mod(0.5*np.arctan2(U, Q), np.pi)
@@ -566,7 +566,7 @@ def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = Tr
     startpos[:, 1] = np.mod(startpos[:, 1], np.pi)
     
     # MCMC chain. ndim =2
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnposterior, args=[hp_index, lowerp0bound, upperp0bound, region, rht_cursor, planck_tqu_cursor, planck_cov_cursor])
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnposterior, args=[hp_index, lowerp0bound, upperp0bound, region, rht_data, T, Q, U, QQ, QU, UU])
     posout, probout, stateout = sampler.run_mcmc(startpos, 50)
     sampler.reset()
     posout[:, 1] = np.mod(posout[:, 1], np.pi)
@@ -1072,7 +1072,7 @@ def get_rht_QU_cursors(local = False):
 
     return QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor
 
-def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_241", useprior="RHTPrior", gausssmooth_prior=False, tol=1E-5, sampletype="mean_bayes", verbose=False, mcmc=False):
+def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_241", useprior="RHTPrior", gausssmooth_prior=False, tol=1E-5, sampletype="mean_bayes", verbose=False, mcmc=True):
     
     all_pMB = np.zeros(len(all_ids))
     all_psiMB = np.zeros(len(all_ids))
