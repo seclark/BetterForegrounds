@@ -499,7 +499,7 @@ def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_cursor, region, gaus
         rht_data = scipy.ndimage.gaussian_filter1d(rht_data, 3, mode = "wrap")
         
     # Get sample psi data
-    bayesiantool = BayesianComponent()
+    bayesiantool = BayesianComponent(hp_index)
     sample_psi0 = bayesiantool.get_psi0_sampling_grid(hp_index, verbose = verbose)
 
     # Add 0.7 because that was the RHT threshold 
