@@ -592,7 +592,7 @@ def lnposterior_interpolated(pt, bayesian_object, lowerp0bound, upperp0bound):
         return np.interp(psi0, bayesian_object.sample_psi0, psiarr, period=np.pi)
         
 def MCMC_posterior_interpolated(bayesian_object):
-    #time0 = time.time()
+    time0 = time.time()
     nwalkers = 250
     ndim = 2
     
@@ -614,11 +614,11 @@ def MCMC_posterior_interpolated(bayesian_object):
     pmed16, psimed16 = np.percentile(sampler.flatchain, 16, axis=0)
     pmed84, psimed84 = np.percentile(sampler.flatchain, 84, axis=0)
     print(np.mean(sampler.flatchain, axis=0))
-    #time1 = time.time()
+    time1 = time.time()
     print("Mean acceptance fraction: {0:.3f}".format(np.mean(sampler.acceptance_fraction)))
     print(pmed, psimed)
     print(pmed16, pmed84, psimed16, psimed84)
-    #print("time:", time1 - time0)
+    print("time:", time1 - time0)
     
     #return pmed, psimed, 
 
@@ -1084,7 +1084,10 @@ def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region 
             elif sampletype is "MAP":
                 all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
             
+            print("mean bayes sampling")
             print("MB p", all_pMB[i], "MB psi", all_psiMB[i])
+            MCMC_posterior_interpolated(posterior_obj)
+            print("new MCMC posterior")
             MCMC_posterior(_id[0], rht_cursor = rht_cursor)
         
             update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
