@@ -489,13 +489,7 @@ def lnlikelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, p0, psi0):
     
 def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_cursor, region):#, gausssmooth = False):
     
-    if region is "allsky":
-        rht_data = rht_cursor.execute("SELECT * FROM RHT_weights_allsky WHERE id = ?", (hp_index,)).fetchone()
-    if region is "SC_241":
-        print("is this where the problem is?")
-        print(rht_cursor)
-        rht_data = rht_cursor.execute("SELECT * FROM RHT_weights WHERE id = ?", (hp_index,)).fetchone()
-        print("yes")
+    rht_data = rht_cursor.execute("SELECT * FROM RHT_weights_allsky WHERE id = ?", (hp_index,)).fetchone()
     
     # Discard first element because it is the healpix id
     rht_data = rht_data[1:]
