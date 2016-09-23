@@ -528,7 +528,7 @@ def lnposterior(p0psi0, hp_index, lowerp0bound, upperp0bound, region, rht_cursor
         
         return lnlikeout + lnpriorout
 
-def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = True):
+def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = True, verbose=False):
     time0 = time.time()
     
     nwalkers = 250
@@ -554,7 +554,6 @@ def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = Tr
 
     # get planck data once...
     (hp_index, T, Q, U) = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
-    (hp_index, TT, TQ, TU, TQa, QQ, QU, TUa, QUa, UU) = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (hp_index,)).fetchone()
     
     # measured naive polarization angle (psi_i = arctan(U_i/Q_i))
     psimeas = np.mod(0.5*np.arctan2(U, Q), np.pi)
@@ -575,15 +574,17 @@ def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = Tr
     sampler.flatchain[:, 1] = np.mod(sampler.flatchain[:, 1], np.pi)
     
     pmed, psimed = np.percentile(sampler.flatchain, 50, axis=0)
-    pmed16, psimed16 = np.percentile(sampler.flatchain, 16, axis=0)
-    pmed84, psimed84 = np.percentile(sampler.flatchain, 84, axis=0)
+    #pmed16, psimed16 = np.percentile(sampler.flatchain, 16, axis=0)
+    #pmed84, psimed84 = np.percentile(sampler.flatchain, 84, axis=0)
     time1 = time.time()
-    print(time1 - time0)
-    print(np.mean(sampler.flatchain, axis=0))
-    print("Mean acceptance fraction: {0:.3f}".format(np.mean(sampler.acceptance_fraction)))
-    print(pmed, psimed)
-    print(pmed16, pmed84, psimed16, psimed84)
-  
+    print("time:", time1 - time0)
+    if verbose is True:
+        print(np.mean(sampler.flatchain, axis=0))
+        print("Mean acceptance fraction: {0:.3f}".format(np.mean(sampler.acceptance_fraction)))
+        print(pmed, psimed)
+        #print(pmed16, pmed84, psimed16, psimed84)
+    
+    return pmed, psimed
       
 def lnposterior_interpolated(pt, bayesian_object, lowerp0bound, upperp0bound):
     
@@ -1071,7 +1072,7 @@ def get_rht_QU_cursors(local = False):
 
     return QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor
 
-def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region = "SC_241", useprior = "RHTPrior", gausssmooth_prior = False, tol=1E-5, sampletype = "mean_bayes", verbose=False):
+def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_241", useprior="RHTPrior", gausssmooth_prior=False, tol=1E-5, sampletype="mean_bayes", verbose=False, mcmc=False):
     
     all_pMB = np.zeros(len(all_ids))
     all_psiMB = np.zeros(len(all_ids))
@@ -1084,24 +1085,18 @@ def sample_all_rht_points(all_ids, adaptivep0 = True, rht_cursor = None, region 
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
         if _id[0] in [3400757, 793551, 2447655]:
-            posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
-            
-            fits.writeto("posterior_{}.fits".format(_id[0]), posterior_obj.normed_posterior)
-            fits.writeto("likelihood_{}.fits".format(_id[0]), posterior_obj.planck_likelihood)
-            fits.writeto("prior_{}.fits".format(_id[0]), posterior_obj.normed_prior)
         
-            if sampletype is "mean_bayes":
-                all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol=tol)
-            elif sampletype is "MAP":
-                all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
-            
-            print("mean bayes sampling")
-            print("MB p", all_pMB[i], "MB psi", all_psiMB[i])
-            MCMC_posterior_interpolated(posterior_obj)
-            print("new MCMC posterior")
-            MCMC_posterior(_id[0], rht_cursor = rht_cursor)
+            if mcmc is False:
+                posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
         
-            update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
+                if sampletype is "mean_bayes":
+                    all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol=tol)
+                elif sampletype is "MAP":
+                    all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
+            else:
+                MCMC_posterior(_id[0], rht_cursor = rht_cursor)
+    
+        update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
     
     return all_pMB, all_psiMB
     
