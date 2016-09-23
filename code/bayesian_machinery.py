@@ -508,7 +508,9 @@ def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_cursor, region, gaus
     psi_dx = sample_psi0[1] - sample_psi0[0]
         
     integrated_over_psi = np.trapz(prior, dx = psi_dx)
+    print("integral", integrated_over_psi)
     normed_prior = (prior/integrated_over_psi)/(upperp0bound - lowerp0bound) # integrate over p0 too
+    print("normed prior sum", np.sum(normed_prior))
         
     return np.log(np.interp(psi0, sample_psi0, normed_prior, period=np.pi))
       
@@ -522,7 +524,7 @@ def lnposterior(p0psi0, hp_index, lowerp0bound, upperp0bound, region, rht_cursor
     else:
         lnlikeout = lnlikelihood(hp_index, planck_tqu_cursor, planck_cov_cursor, p0, psi0)
         lnpriorout = lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_cursor, region)
-        print(lnlikeout, lnpriorout)
+        
         return lnlikeout + lnpriorout
 
 def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None):
