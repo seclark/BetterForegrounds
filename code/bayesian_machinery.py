@@ -481,11 +481,13 @@ def lnlikelihood(hp_index, T, Q, U, QQ, QU, UU, p0, psi0):
     lharr[0, 0] = measpart0 - truepart0
     lharr[0, 1] = measpart1 - truepart1
 
-    likelihood = (1.0/(np.pi*sigpGsq))*np.exp(-0.5*np.einsum('ij,jk->ik', lharr, np.einsum('ij,jk->ik', invsig, rharr)))
+    #likelihood = (1.0/(np.pi*sigpGsq))*np.exp(-0.5*np.einsum('ij,jk->ik', lharr, np.einsum('ij,jk->ik', invsig, rharr)))
+    lnlike = np.log(1.0/(np.pi*sigpGsq)) + -0.5*np.einsum('ij,jk->ik', lharr, np.einsum('ij,jk->ik', invsig, rharr))
 
-    return np.log(likelihood[0][0]) 
+    #return np.log(likelihood[0][0]) 
+    return lnlike[0][0]
     
-def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_data, region, gausssmooth = False, verbose=False):
+def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_data, region, gausssmooth = True, verbose=False):
             
     if gausssmooth is True:
         # Gaussian smooth with sigma = 3, wrapped boundaries for filter
@@ -504,6 +506,8 @@ def lnprior(hp_index, psi0, lowerp0bound, upperp0bound, rht_data, region, gausss
     integrated_over_psi = np.trapz(prior, dx = -psi_dx)
     normed_prior = (prior/integrated_over_psi)/(upperp0bound - lowerp0bound) # integrate over p0 too
     
+    #normed_prior = prior
+    
     #print("interp", np.interp(psi0, sample_psi0, normed_prior, period=np.pi))
         
     return np.log(np.interp(psi0, sample_psi0, normed_prior, period=np.pi))
@@ -521,10 +525,10 @@ def lnposterior(p0psi0, hp_index, lowerp0bound, upperp0bound, region, rht_data, 
         
         return lnlikeout + lnpriorout
 
-def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = True, verbose=False):
+def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = True, verbose=False, local=False, proposal_scale=2.0):
     time0 = time.time()
     
-    nwalkers = 250
+    nwalkers = 500
     ndim = 2
     
     if adaptivep0 is True:
@@ -536,6 +540,8 @@ def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = Tr
     else:
         lowerp0bound = 0.0
         upperp0bound = 1.0 
+        
+    print("lower {}, upper {}".format(lowerp0bound, upperp0bound))
     
     # Planck covariance database
     planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
@@ -550,7 +556,10 @@ def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = Tr
     (hp_index, TT, TQ, TU, TQa, QQ, QU, TUa, QUa, UU) = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (hp_index,)).fetchone()
     
     # Get RHT data once
-    rht_data = rht_cursor.execute("SELECT * FROM RHT_weights_allsky WHERE id = ?", (hp_index,)).fetchone()
+    if local is True:
+        rht_data = rht_cursor.execute("SELECT * FROM RHT_weights WHERE id = ?", (hp_index,)).fetchone()
+    else:
+        rht_data = rht_cursor.execute("SELECT * FROM RHT_weights_allsky WHERE id = ?", (hp_index,)).fetchone()
     
     # Discard first element because it is the healpix id
     rht_data = rht_data[1:]
@@ -560,18 +569,26 @@ def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = Tr
 
     # measured polarization fraction
     pmeas = np.sqrt(Q**2 + U**2)/T
+    
+    if verbose is True:
+        print("naive p: {}, naive psi: {}".format(pmeas, psimeas))
 
     # walkers begin clustered around naive values
     startpos=np.array([[pmeas,psimeas] + 1e-2*np.random.randn(ndim) for i in range(nwalkers)])
     startpos[:, 1] = np.mod(startpos[:, 1], np.pi)
     
     # MCMC chain. ndim =2
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnposterior, args=[hp_index, lowerp0bound, upperp0bound, region, rht_data, T, Q, U, QQ, QU, UU])
-    posout, probout, stateout = sampler.run_mcmc(startpos, 50)
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnposterior, a=proposal_scale, args=[hp_index, lowerp0bound, upperp0bound, region, rht_data, T, Q, U, QQ, QU, UU])
+    posout, probout, stateout = sampler.run_mcmc(startpos, 100)
     sampler.reset()
     posout[:, 1] = np.mod(posout[:, 1], np.pi)
-    sampler.run_mcmc(posout, 250)
+    sampler.run_mcmc(posout, 400)
     sampler.flatchain[:, 1] = np.mod(sampler.flatchain[:, 1], np.pi)
+    
+    #test
+    #posout = copy.copy(startpos)
+    #sampler.run_mcmc(startpos, 300)
+    #sampler.flatchain[:, 1] = np.mod(sampler.flatchain[:, 1], np.pi)
     
     pmed, psimed = np.percentile(sampler.flatchain, 50, axis=0)
     #pmed16, psimed16 = np.percentile(sampler.flatchain, 16, axis=0)
@@ -584,7 +601,7 @@ def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = Tr
         print(pmed, psimed)
         #print(pmed16, pmed84, psimed16, psimed84)
     
-    return pmed, psimed
+    return pmed, psimed, sampler, startpos, posout
       
 def lnposterior_interpolated(pt, bayesian_object, lowerp0bound, upperp0bound):
     
@@ -1084,23 +1101,23 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
         
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        if _id[0] in [3400757, 793551, 2447655]:
+        #if _id[0] in [3400757, 793551, 2447655]:
         
-            if mcmc is False:
-                posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
-                
-                p0psi0 = np.zeros((2, len(posterior_obj.sample_p0)), np.float_)
-                p0psi0[0, :] = posterior_obj.sample_p0
-                p0psi0[1, :] = posterior_obj.sample_psi0
-                fits.writeto("sample_p0psi0_{}.fits".format(_id[0]), p0psi0)
-        
-                if sampletype is "mean_bayes":
-                    all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol=tol)
-                elif sampletype is "MAP":
-                    all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
-            else:
-                MCMC_posterior(_id[0], rht_cursor = rht_cursor)
+        if mcmc is False:
+            posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
+            
+            p0psi0 = np.zeros((2, len(posterior_obj.sample_p0)), np.float_)
+            p0psi0[0, :] = posterior_obj.sample_p0
+            p0psi0[1, :] = posterior_obj.sample_psi0
+            fits.writeto("sample_p0psi0_{}.fits".format(_id[0]), p0psi0)
     
+            if sampletype is "mean_bayes":
+                all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol=tol)
+            elif sampletype is "MAP":
+                all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
+        else:
+            MCMC_posterior(_id[0], rht_cursor = rht_cursor)
+
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
     
     return all_pMB, all_psiMB
@@ -1167,7 +1184,7 @@ def sample_all_rht_points_ThetaRHTPrior(all_ids, adaptivep0 = True, region = "SC
         
     return all_pMB, all_psiMB
     
-def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=1E-5, sampletype = "mean_bayes"):
+def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=1E-5, sampletype = "mean_bayes", mcmc=True):
     """
     Sample psi_MB and p_MB from whole GALFA-HI sky
     """
@@ -1188,7 +1205,7 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
     print("beginning creation of all posteriors")
     
     # Create and sample posteriors for all pixels
-    all_pMB, all_psiMB = sample_all_rht_points(all_ids, adaptivep0 = adaptivep0, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior, tol=tol, sampletype = sampletype)
+    all_pMB, all_psiMB = sample_all_rht_points(all_ids, adaptivep0 = adaptivep0, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior, tol=tol, sampletype = sampletype, mcmc = mcmc)
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
@@ -1199,12 +1216,16 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
         psiMB_out_fn = "psiMB_allsky_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
         pMB_out_fn = "pMB_allsky_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
     elif limitregion is True:
-        if sampletype is "mean_bayes":
-            psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
-            pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
-        elif sampletype is "MAP":
-            psiMB_out_fn = "psiMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
-            pMB_out_fn = "pMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
+        if mcmc is True:
+            psiMB_out_fn = "psiMB_DR2_SC_241_mcmc_50_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
+            pMB_out_fn = "pMB_DR2_SC_241_mcmc_50_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
+        else:
+            if sampletype is "mean_bayes":
+                psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
+                pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
+            elif sampletype is "MAP":
+                psiMB_out_fn = "psiMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
+                pMB_out_fn = "pMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
         
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
@@ -1414,7 +1435,7 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP")
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP", mcmc=True)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
     
     #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="MAP")
