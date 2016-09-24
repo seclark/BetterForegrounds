@@ -526,9 +526,9 @@ def lnposterior(p0psi0, hp_index, lowerp0bound, upperp0bound, region, rht_data, 
         return lnlikeout + lnpriorout
 
 def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = True, verbose=False, local=False, proposal_scale=2.0):
-    time0 = time.time()
+    #time0 = time.time()
     
-    nwalkers = 500
+    nwalkers = 250
     ndim = 2
     
     if adaptivep0 is True:
@@ -540,8 +540,9 @@ def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = Tr
     else:
         lowerp0bound = 0.0
         upperp0bound = 1.0 
-        
-    print("lower {}, upper {}".format(lowerp0bound, upperp0bound))
+    
+    if verbose is True:
+        print("lower {}, upper {}".format(lowerp0bound, upperp0bound))
     
     # Planck covariance database
     planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
@@ -579,10 +580,10 @@ def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = Tr
     
     # MCMC chain. ndim =2
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnposterior, a=proposal_scale, args=[hp_index, lowerp0bound, upperp0bound, region, rht_data, T, Q, U, QQ, QU, UU])
-    posout, probout, stateout = sampler.run_mcmc(startpos, 100)
+    posout, probout, stateout = sampler.run_mcmc(startpos, 50)
     sampler.reset()
     posout[:, 1] = np.mod(posout[:, 1], np.pi)
-    sampler.run_mcmc(posout, 400)
+    sampler.run_mcmc(posout, 250)
     sampler.flatchain[:, 1] = np.mod(sampler.flatchain[:, 1], np.pi)
     
     #test
@@ -593,8 +594,8 @@ def MCMC_posterior(hp_index, region="SC_241", rht_cursor = None, adaptivep0 = Tr
     pmed, psimed = np.percentile(sampler.flatchain, 50, axis=0)
     #pmed16, psimed16 = np.percentile(sampler.flatchain, 16, axis=0)
     #pmed84, psimed84 = np.percentile(sampler.flatchain, 84, axis=0)
-    time1 = time.time()
-    print("time:", time1 - time0)
+    #time1 = time.time()
+    #print("time:", time1 - time0)
     if verbose is True:
         print(np.mean(sampler.flatchain, axis=0))
         print("Mean acceptance fraction: {0:.3f}".format(np.mean(sampler.acceptance_fraction)))
@@ -1435,7 +1436,8 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP", mcmc=True)
+    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP", mcmc=False)
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP", mcmc=True)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
     
     #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="MAP")
