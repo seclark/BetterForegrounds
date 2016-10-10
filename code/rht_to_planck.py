@@ -132,11 +132,64 @@ def interpolate_thetas(vstart = 1019, vstop = 1023, wlen = 75):
     out_hdr = hdulist[0].header
 
     return final_data, out_hdr
+    
+def NHI_masks():
+    coldensname = "GALFA-HI_NHImap_SRcorr_VLSR-090+0090kms"
+    coldensmap = fits.getdata("/Volumes/DataDavy/GALFA/DR2/NHIMaps/"+coldensname+".fits")
+    coldensmap_hdr = fits.getheader("/Volumes/DataDavy/GALFA/DR2/NHIMaps/"+coldensname+".fits")
+    
+    nhicuts = [30, 50, 70]
+    
+    for n in nhicuts:
+        nhipercentile = np.nanpercentile(coldensmap, n)
+        cutmap = np.zeros(coldensmap.shape, np.float_)
+        cutmap[np.where(coldensmap > nhipercentile)] = 1
+        
+        proj_data, proj_hdr = interpolate_data_to_hp_galactic(cutmap, coldensmap_hdr)
+        fits.writeto("/Volumes/DataDavy/GALFA/DR2/NHIMaps/"+coldensname+"_NHI_over_percentile_{}.fits".format(n), proj_data)
+
+def lensing_maps(local=False):
+    if local is True:
+        root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/thetarht_maps/"
+    else:
+        root = "/disks/jansky/a/users/goldston/susan/Wide_maps/QUmaps/"
+    Qmap_fn = "QRHT_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70.fits"
+    Umap_fn = "URHT_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70.fits"
+    Imap_fn = "intrht_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70.fits"
+    
+    Qmap = fits.getdata(root + Qmap_fn)
+    #Qmap=hp.fitsfunc.read_map(root + Qmap_fn)
+    Umap = fits.getdata(root + Umap_fn)
+    Imap = fits.getdata(root + Imap_fn)
+    
+    #coldensname = "GALFA-HI_NHImap_SRcorr_VLSR-090+0090kms"
+    coldensname = "GALFA-HI_VLSR-036+0037kms_NHImap_noTcut"
+    if local is True:
+        nhiroot = "/Volumes/DataDavy/GALFA/DR2/NHIMaps/"
+    else:
+        nhiroot = "/disks/jansky/a/users/goldston/zheng/151019_NHImaps_SRcorr/data/GNHImaps/"
+        
+    coldensmap_hdr = fits.getheader(nhiroot+coldensname+".fits")
+    
+    hp_Q, hp_hdr = interpolate_data_to_hp_galactic(Qmap, coldensmap_hdr)
+    hp_U, hp_hdr = interpolate_data_to_hp_galactic(Umap, coldensmap_hdr)
+    hp_T, hp_hdr = interpolate_data_to_hp_galactic(Imap, coldensmap_hdr)
+    
+    TQU = np.zeros((len(proj_data), 3), np.float_)
+    TQU[:, 0] = hp_T
+    TQU[:, 1] = hp_Q
+    TQU[:, 2] = hp_U
+    
+    hp_hdr['HISTORY'] = 'TQU RHT data made by Susan Clark, 2016'
+    
+    fits.writeto(root + "DR2_allsky_TQU_hp_w75_s15_t70.fits", TQU, hp_hdr)
+    
 
 def interpolate_data_to_hp_galactic(data, data_hdr):    
 
     # Planck file in galactic coordinates -- NOTE these are Nested
-    planck_root = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/"
+    #planck_root = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/"
+    planck_root = "/Volumes/DataDavy/Planck/"
     Pfile = planck_root + "HFI_SkyMap_353_2048_R2.02_full.fits"
 
     # Planck data
@@ -147,7 +200,8 @@ def interpolate_data_to_hp_galactic(data, data_hdr):
     gwcs = wcs.WCS(data_hdr)
     xax = np.linspace(1, data_hdr["NAXIS1"], data_hdr["NAXIS1"]).reshape(data_hdr["NAXIS1"], 1)
     yax = np.linspace(1, data_hdr["NAXIS2"], data_hdr["NAXIS2"]).reshape(1, data_hdr["NAXIS2"])
-    test = gwcs.all_pix2world(xax, yax, 1, 1)
+    #test = gwcs.all_pix2world(xax, yax, 1, 1)
+    test = gwcs.all_pix2world(xax, yax, 1)
     RA = test[0]
     Dec = test[1]
     c = SkyCoord(ra=RA*u.degree, dec=Dec*u.degree, frame="icrs")
@@ -441,7 +495,8 @@ def plot_by_thetabin():
     im2 = ax2.imshow(np.log10(single_theta_backprojection), cmap = cmap)
     plt.colorbar(im2, orientation = "horizontal")
 
-#if __name__ == "__main__":
+if __name__ == "__main__":
 #    plot_by_thetabin()
+     lensing_maps()
 
     
