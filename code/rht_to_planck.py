@@ -171,9 +171,9 @@ def lensing_maps(local=False):
         
     coldensmap_hdr = fits.getheader(nhiroot+coldensname+".fits")
     
-    hp_Q, hp_hdr = interpolate_data_to_hp_galactic(Qmap, coldensmap_hdr)
-    hp_U, hp_hdr = interpolate_data_to_hp_galactic(Umap, coldensmap_hdr)
-    hp_T, hp_hdr = interpolate_data_to_hp_galactic(Imap, coldensmap_hdr)
+    hp_Q, hp_hdr = interpolate_data_to_hp_galactic(Qmap, coldensmap_hdr, local=False)
+    hp_U, hp_hdr = interpolate_data_to_hp_galactic(Umap, coldensmap_hdr, local=False)
+    hp_T, hp_hdr = interpolate_data_to_hp_galactic(Imap, coldensmap_hdr, local=False)
     
     TQU = np.zeros((len(proj_data), 3), np.float_)
     TQU[:, 0] = hp_T
@@ -185,11 +185,14 @@ def lensing_maps(local=False):
     fits.writeto(root + "DR2_allsky_TQU_hp_w75_s15_t70.fits", TQU, hp_hdr)
     
 
-def interpolate_data_to_hp_galactic(data, data_hdr):    
+def interpolate_data_to_hp_galactic(data, data_hdr, local=True):    
 
     # Planck file in galactic coordinates -- NOTE these are Nested
     #planck_root = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/"
-    planck_root = "/Volumes/DataDavy/Planck/"
+    if local is True:
+        planck_root = "/Volumes/DataDavy/Planck/"
+    else:
+        planck_root = "/disks/jansky/a/users/goldston/susan/Planck/"
     Pfile = planck_root + "HFI_SkyMap_353_2048_R2.02_full.fits"
 
     # Planck data
