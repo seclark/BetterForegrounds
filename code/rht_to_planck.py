@@ -175,7 +175,9 @@ def lensing_maps(local=False):
     hp_U, hp_hdr = interpolate_data_to_hp_galactic(Umap, coldensmap_hdr, local=False)
     hp_T, hp_hdr = interpolate_data_to_hp_galactic(Imap, coldensmap_hdr, local=False)
     
-    TQU = np.zeros((len(proj_data), 3), np.float_)
+    print(len(hp_Q))
+    
+    TQU = np.zeros((len(hp_Q), 3), np.float_)
     TQU[:, 0] = hp_T
     TQU[:, 1] = hp_Q
     TQU[:, 2] = hp_U
