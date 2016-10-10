@@ -172,8 +172,11 @@ def lensing_maps(local=False):
     coldensmap_hdr = fits.getheader(nhiroot+coldensname+".fits")
     
     hp_Q, hp_hdr = interpolate_data_to_hp_galactic(Qmap, coldensmap_hdr, local=False)
+    fits.writeto(root + "DR2_allsky_Q_RHT_hp_w75_s15_t70.fits", hp_Q, hp_hdr)
     hp_U, hp_hdr = interpolate_data_to_hp_galactic(Umap, coldensmap_hdr, local=False)
+    fits.writeto(root + "DR2_allsky_U_RHT_hp_w75_s15_t70.fits", hp_U, hp_hdr)
     hp_T, hp_hdr = interpolate_data_to_hp_galactic(Imap, coldensmap_hdr, local=False)
+    fits.writeto(root + "DR2_allsky_int_RHT_hp_w75_s15_t70.fits", hp_T, hp_hdr)
     
     print(len(hp_Q))
     
