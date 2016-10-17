@@ -411,7 +411,7 @@ class DummyPosterior(BayesianComponent):
       def __init__(self, verbose=True):
         BayesianComponent.__init__(self, 0)  
         
-        self.sample_p0 = np.linspace(0, 1, 165)
+        self.sample_p0 = np.linspace(0, 1, 180)
         self.sample_psi0 = np.linspace(0, np.pi, 165)#, endpoint=False)
     
         self.psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
@@ -427,12 +427,15 @@ class DummyPosterior(BayesianComponent):
         psi_y = self.sample_psi0[:, np.newaxis]
         p_x = self.sample_p0
         
-        self.psimeas = np.pi
-        self.pmeas = 0.0
+        self.psimeas = np.pi/2.
+        self.pmeas = 0.2
         
-        self.fwhm = 0.03
+        self.fwhm = 0.3
         
         gaussian = np.exp(-4*np.log(2) * ((p_x-self.pmeas)**2 + (psi_y-self.psimeas)**2) / self.fwhm**2)
+        
+        # test different center
+        newpsi0, gaussian = center_posterior_psi_given(self.sample_psi0, gaussian, np.pi/3, verbose = False)
         
         self.planck_likelihood = gaussian
         
@@ -925,6 +928,40 @@ def maximum_a_posteriori(posterior_obj, verbose = False):
     
     return p_map, psi_map
     
+def mean_bayesian_posterior_testQU(posterior_obj, center = "naive", verbose = False, tol=1E-5):
+    """
+    Integrated first order moments of the posterior PDF
+    """
+    
+    posterior = copy.copy(posterior_obj.normed_posterior)
+    
+    sample_p0 = posterior_obj.sample_p0
+    sample_psi0 = posterior_obj.sample_psi0
+    
+    # Sampling widths
+    pdx = sample_p0[1] - sample_p0[0]
+    psidx = sample_psi0[1] - sample_psi0[0]
+    
+    # pMB integrand is p0*B2D. This can happen once only, before centering. # note: circularize psi integral?
+    pMB_integrand = posterior*sample_p0
+    pMB_integrated_over_psi0 = posterior_obj.integrate_highest_dimension(pMB_integrand, dx = psidx)
+    pMB = posterior_obj.integrate_highest_dimension(pMB_integrated_over_psi0, dx = pdx)
+    
+    # psiMB integrand is psi0*B2D.
+    UMB_integrand = posterior*np.sin(2*sample_psi0[:, np.newaxis])
+    QMB_integrand = posterior*np.cos(2*sample_psi0[:, np.newaxis])
+    #UMB_integrated_over_psi0 = posterior_obj.integrate_highest_dimension(UMB_integrand, dx=psidx)
+    #QMB_integrated_over_psi0 = posterior_obj.integrate_highest_dimension(QMB_integrand, dx=psidx)
+    #psiMB_integrated_over_psi0 = np.mod(0.5*np.arctan2(UMB_integrated_over_psi0, QMB_integrated_over_psi0), np.pi)
+    psiMB_integrand = np.mod(0.5*np.arctan2(UMB_integrand, QMB_integrand), np.pi)
+    psiMB_integrated_over_psi0 = posterior_obj.integrate_highest_dimension(psiMB_integrand, dx=psidx)
+    psiMB = posterior_obj.integrate_highest_dimension(psiMB_integrated_over_psi0, dx=pdx)
+    
+    print("pMB is {}".format(pMB))
+    print("psiMB is {}".format(psiMB))
+    
+    return pMB_integrated_over_psi0, pMB_integrand
+    
 def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, tol=1E-5):
     """
     Integrated first order moments of the posterior PDF
@@ -961,6 +998,9 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         pnaive = posterior_obj.pmeas
         psi0new, centered_posterior = center_posterior_psi_given(sample_psi0, posterior, psinaive, verbose = verbose)
         psidx = psi0new[1] - psi0new[0]
+        
+        if verbose is True:
+            print("psinaive = {}, pnaive = {}".format(psinaive, pnaive))
         
     elif center == "MAP":
         print("WARNING: MAP center may not be correctly implemented")
@@ -1000,9 +1040,9 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         print("initial psiMB is {}".format(psiMB))
     
     # Set parameters for convergence
-    psi_last = copy.copy(psinaive) + tol*2
+    psi_last = copy.copy(psinaive) #+ tol*2
     i = 0
-    itertol = 10#10#0
+    itertol = 30#10#0
     if verbose is True:
         print("Using tolerance of {}".format(tol))
         
@@ -1010,6 +1050,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         if verbose is True:
             print("Convergence at {}".format(np.abs(np.mod(psi_last, np.pi) - np.mod(psiMB, np.pi))))
             print("i = {}".format(i))
+            print("centering on psi = {}".format(psiMB))
         psi_last = copy.copy(psiMB) # to compare next round with
     
         psi0new, centered_posterior = center_posterior_psi_given(psi0new, centered_posterior, psiMB, verbose = verbose)
@@ -1147,15 +1188,15 @@ def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = Non
 
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        #if _id[0] in [3400757, 793551, 2447655]:
-        posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, adaptivep0 = adaptivep0)
-        #print("for id {}, p0 grid is {}".format(_id, posterior_obj.sample_p0))
-        #print("for id {}, pmeas is {}, psimeas is {}, psi naive is {}".format(_id, posterior_obj.pmeas, posterior_obj.psimeas, posterior_obj.naive_psi))
-        #print("for id {}, likelihood[0, 1] = {}".format(_id, posterior_obj.posterior[0, 1]))
-        #print(p0_all[0], psi0_all[1]) 
-        #lnlikeout = lnlikelihood(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all[0], psi0_all[1])
-        #print("for id {}, lnlikelihood[0, 1] = {}".format(_id, lnlikeout[0]))
-        #print(np.exp(lnlikeout[0]))
+        if _id[0] in [3400757, 793551, 2447655]:
+            posterior_obj = PlanckPosterior(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, adaptivep0 = adaptivep0)
+            #print("for id {}, p0 grid is {}".format(_id, posterior_obj.sample_p0))
+            print("for id {}, pmeas is {}, psimeas is {}, psi naive is {}".format(_id, posterior_obj.pmeas, posterior_obj.psimeas, posterior_obj.naive_psi))
+            #print("for id {}, likelihood[0, 1] = {}".format(_id, posterior_obj.posterior[0, 1]))
+            #print(p0_all[0], psi0_all[1]) 
+            #lnlikeout = lnlikelihood(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all[0], psi0_all[1])
+            #print("for id {}, lnlikelihood[0, 1] = {}".format(_id, lnlikeout[0]))
+            #print(np.exp(lnlikeout[0]))
         
         #testing
         if sampletype is "mean_bayes":
@@ -1437,10 +1478,10 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP", mcmc=False)
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP", mcmc=True)
+    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP", mcmc=True)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
     
-    #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="MAP")
+    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="MAP")
     """
     allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz_take2.fits")
     allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_DR2_SC_241_353GHz_take2.fits")
