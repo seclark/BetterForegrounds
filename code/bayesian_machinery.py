@@ -972,6 +972,9 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     sample_p0 = posterior_obj.sample_p0
     sample_psi0 = posterior_obj.sample_psi0
     
+    # put on [-pi/2, pi/2] grid
+    sample_psi0 = polarization_tools.mod_halfpolar_center_0(sample_psi0)
+    
     # Sampling widths
     pdx = sample_p0[1] - sample_p0[0]
     psidx = sample_psi0[1] - sample_psi0[0]
@@ -997,6 +1000,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         psinaive = posterior_obj.psimeas
         pnaive = posterior_obj.pmeas
         psi0new, centered_posterior = center_posterior_psi_given(sample_psi0, posterior, psinaive, verbose = verbose)
+        print("max psi0new: ", np.max(psi0new))
         psidx = psi0new[1] - psi0new[0]
         
         if verbose is True:
@@ -1054,6 +1058,8 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         psi_last = copy.copy(psiMB) # to compare next round with
     
         psi0new, centered_posterior = center_posterior_psi_given(psi0new, centered_posterior, psiMB, verbose = verbose)
+
+        print("max psi0new: ", np.max(psi0new))
 
         psiMB_integrand = centered_posterior*psi0new[:, np.newaxis]
         psiMB_integrated_over_psi0 = posterior_obj.integrate_highest_dimension(psiMB_integrand, dx=psidx)
@@ -1478,10 +1484,10 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP", mcmc=False)
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP", mcmc=True)
+    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP", mcmc=True)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
     
-    #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = True, tol=0, sampletype="mean_bayes")
+    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = True, tol=0, sampletype="mean_bayes")
     """
     allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz_take2.fits")
     allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_DR2_SC_241_353GHz_take2.fits")
