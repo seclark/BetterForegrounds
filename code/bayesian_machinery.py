@@ -1053,7 +1053,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         
     while (np.abs(angle_residual(psi_last, psiMB, degrees = False)) > tol) and (i < itertol):
         if verbose is True:
-            print("Convergence at {}".format(np.abs(np.mod(psi_last, np.pi) - np.mod(psiMB, np.pi))))
+            print("Last: {}, now: {}, Convergence at {}".format(psi_last, psiMB, np.abs(angle_residual(psi_last, psiMB, degrees = False))))
             print("i = {}".format(i))
             print("centering on psi = {}".format(psiMB))
         psi_last = copy.copy(psiMB) # to compare next round with
