@@ -1164,7 +1164,7 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
                 p0psi0 = np.zeros((2, len(posterior_obj.sample_p0)), np.float_)
                 p0psi0[0, :] = posterior_obj.sample_p0
                 p0psi0[1, :] = posterior_obj.sample_psi0
-                fits.writeto("sample_p0psi0_{}.fits".format(_id[0]), p0psi0)
+                #fits.writeto("sample_p0psi0_{}.fits".format(_id[0]), p0psi0)
     
                 if sampletype is "mean_bayes":
                     all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol=tol)
