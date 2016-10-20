@@ -996,6 +996,10 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         #rolled_sample_psi0, rolled_posterior = center_posterior_naive_psi(posterior_obj, sample_psi0, posterior, verbose = verbose)
         #pnaive, psinaive = naive_planck_measurements(posterior_obj.hp_index)
         psinaive = posterior_obj.psimeas
+        
+        # testing ludo's method (maybe?)
+        psinaive = polarization_tools.mod_halfpolar_center_0(psinaive)
+        
         pnaive = posterior_obj.pmeas
         psi0new, centered_posterior = center_posterior_psi_given(sample_psi0, posterior, psinaive, verbose = verbose)
         print("max psi0new: ", np.max(psi0new))
