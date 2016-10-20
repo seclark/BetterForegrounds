@@ -879,8 +879,6 @@ def periodic_interpolation_2D(x, xp, fp, period=0):
     fp = fp[asort_xp]
     xp = np.concatenate((xp[[-1]]-period, xp, xp[[0]]+period))
     fp = np.concatenate((fp[[-1], :], fp, fp[[0], :]))
-    
-    
 
     if return_array:
         return compiled_interp(x, xp, fp, left, right)
@@ -1034,6 +1032,9 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     if psidx != psi0new[1] - psi0new[0]:
         print("Caution: old psidx = {}, new psidx = {}".format(psidx, psi0new[1] - psi0new[0]))
     
+    # testing ludo's method (maybe?)
+    psi0new = polarization_tools.mod_halfpolar_center_0(psi0new)
+    
     # psiMB integrand is psi0*B2D.
     psiMB_integrand = centered_posterior*psi0new[:, np.newaxis]
     psiMB_integrated_over_psi0 = posterior_obj.integrate_highest_dimension(psiMB_integrand, dx=psidx)
@@ -1058,7 +1059,9 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         psi_last = copy.copy(psiMB) # to compare next round with
     
         psi0new, centered_posterior = center_posterior_psi_given(psi0new, centered_posterior, psiMB, verbose = verbose)
-
+        # testing ludo's method (maybe?)
+        psi0new = polarization_tools.mod_halfpolar_center_0(psi0new)
+    
         print("max psi0new: ", np.max(psi0new))
 
         psiMB_integrand = centered_posterior*psi0new[:, np.newaxis]
