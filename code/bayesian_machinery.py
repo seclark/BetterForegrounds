@@ -1173,8 +1173,8 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
             else:
                 MCMC_posterior(_id[0], rht_cursor = rht_cursor)
 
-            if verbose is True:
-                print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
+            
+            print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
 
             update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
     
