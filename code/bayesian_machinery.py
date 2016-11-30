@@ -105,20 +105,22 @@ class BayesianComponent():
         pgridmin = max(0, pmeas - 7*sigmameas)
         pgridmax = min(1, pmeas + 7*sigmameas)
         
-        # grid must be centered on p0
-        mindist = min(pmeas - pgridmin, pgridmax - pmeas)
+        # grid must be centered on p0 # why?
+        #mindist = min(pmeas - pgridmin, pgridmax - pmeas)
         
-        pgridstart = pmeas - mindist
-        pgridstop = pmeas + mindist
+        #pgridstart = pmeas - mindist
+        #pgridstop = pmeas + mindist
         
-        pgrid = np.linspace(pgridstart, pgridstop, 165)
+        #pgrid = np.linspace(pgridstart, pgridstop, 165)
+        
+        pgrid = np.linspace(pgridmin, pgridmax, 165)
         
         #diagnostics
         #print("naive p = {}, sigma = {}, therefore bounds are p = {} to {}".format(pmeas, sigmameas, pgridstart, pgridstop))
-        if pgridstart < 0.0:
-            print("CAUTION: pgridstart = {} for index {}".format(pgridstart, hp_index))
-        if pgridstop > 1.0:
-            print("CAUTION: pgridstop = {} for index {}".format(pgridstop, hp_index))
+        #if pgridstart < 0.0:
+        #    print("CAUTION: pgridstart = {} for index {}".format(pgridstart, hp_index))
+        #if pgridstop > 1.0:
+        #    print("CAUTION: pgridstop = {} for index {}".format(pgridstop, hp_index))
         
         return pgrid
         
@@ -366,6 +368,8 @@ class Posterior(BayesianComponent):
         
         psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
         p_dx = self.sample_p0[1] - self.sample_p0[0]
+        self.psi_dx = psi_dx
+        self.p_dx = p_dx
         
         self.posterior_integrated_over_psi = self.integrate_highest_dimension(self.posterior, dx = psi_dx)
         self.posterior_integrated_over_p_and_psi = self.integrate_highest_dimension(self.posterior_integrated_over_psi, dx = p_dx)
@@ -397,6 +401,8 @@ class PlanckPosterior(BayesianComponent):
     
         psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
         p_dx = self.sample_p0[1] - self.sample_p0[0]
+        self.psi_dx = psi_dx
+        self.p_dx = p_dx
     
         self.posterior_integrated_over_psi = self.integrate_highest_dimension(self.posterior, dx = psi_dx)
         self.posterior_integrated_over_p_and_psi = self.integrate_highest_dimension(self.posterior_integrated_over_psi, dx = p_dx)
@@ -701,11 +707,16 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     
     #plt.subplots_adjust(wspace = 0.2)
     
-    pMB, psiMB = mean_bayesian_posterior(posterior_obj, center = "naive")
+    pMB, psiMB, psi0_ludo_new = mean_bayesian_posterior(posterior_obj, center = "naive")
     ax3.plot(pMB, np.mod(psiMB, np.pi), '+', ms = 10, mew = 2, color = "gray")
     
-    pMB, psiMB = mean_bayesian_posterior(posterior_obj, center = "MAP")
-    ax3.plot(pMB, np.mod(psiMB, np.pi), '+', ms = 10, mew = 2, color = "teal")
+    ax3.plot(pMB, np.mod(psi0_ludo_new, np.pi), '+', ms = 10, mew = 2, color = "pink")
+    
+    pMB_myQU, psiMB_myQU = mean_bayesian_posterior_testQU(posterior_obj, center = "naive")
+    ax3.plot(pMB_myQU, np.mod(psiMB_myQU, np.pi), '+', ms = 10, mew = 2, color = "teal")
+    
+    #pMB, psiMB = mean_bayesian_posterior(posterior_obj, center = "MAP")
+    #ax3.plot(pMB, np.mod(psiMB, np.pi), '+', ms = 10, mew = 2, color = "teal")
     
     p_map, psi_map = maximum_a_posteriori(posterior_obj)
     ax3.plot(p_map, np.mod(psi_map, np.pi), '+', ms = 10, mew = 2, color = "red")
@@ -956,11 +967,124 @@ def mean_bayesian_posterior_testQU(posterior_obj, center = "naive", verbose = Fa
     psiMB = posterior_obj.integrate_highest_dimension(psiMB_integrated_over_psi0, dx=pdx)
     
     print("pMB is {}".format(pMB))
-    print("psiMB is {}".format(psiMB))
+    print("psiMB computed with QU is {}".format(psiMB))
     
-    return pMB_integrated_over_psi0, pMB_integrand
+    #return pMB_integrated_over_psi0, pMB_integrand
+    return pMB, psiMB
     
-def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, tol=1E-5):
+def compute_pMB(posterior_obj):
+    
+    posterior = copy.copy(posterior_obj.normed_posterior)
+    
+    sample_p0 = posterior_obj.sample_p0
+    sample_psi0 = posterior_obj.sample_psi0
+    
+    # put on [-pi/2, pi/2] grid
+    #sample_psi0 = polarization_tools.mod_halfpolar_center_0(sample_psi0)
+    
+    # Sampling widths
+    pdx = sample_p0[1] - sample_p0[0]
+    psidx = sample_psi0[1] - sample_psi0[0]
+    
+    # pMB integrand is p0*B2D. This can happen once only, before centering. # note: circularize psi integral?
+    pMB_integrand = posterior*sample_p0
+    pMB_integrated_over_psi0 = posterior_obj.integrate_highest_dimension(pMB_integrand, dx = psidx)
+    pMB = posterior_obj.integrate_highest_dimension(pMB_integrated_over_psi0, dx = pdx)
+    
+    print(pMB)
+    
+    return pMB_integrand, pMB_integrated_over_psi0
+    
+def compare_ludo(save=False):
+    
+    rht_cursor, tablename = get_rht_cursor(local=True)
+    
+    pp793551 = Posterior(793551, rht_cursor=rht_cursor, adaptivep0=True, gausssmooth_prior=True)
+    pp2447655 = Posterior(2447655, rht_cursor=rht_cursor, adaptivep0=True, gausssmooth_prior=True)
+    pp3400757 = Posterior(3400757, rht_cursor=rht_cursor, adaptivep0=True, gausssmooth_prior=True)
+    
+    if save is True:
+        for id, posterior_obj in zip([793551, 2447655, 3400757], [pp793551, pp2447655, pp3400757]):
+            fits.writeto("posterior_new_{}.fits".format(id), posterior_obj.normed_posterior)
+            fits.writeto("likelihood_new_{}.fits".format(id), posterior_obj.planck_likelihood)
+            fits.writeto("prior_new_{}.fits".format(id), posterior_obj.normed_prior)
+        
+            p0psi0 = np.zeros((2, len(posterior_obj.sample_p0)), np.float_)
+            p0psi0[0, :] = posterior_obj.sample_p0
+            p0psi0[1, :] = posterior_obj.sample_psi0
+            fits.writeto("sample_p0psi0_new_{}.fits".format(id), p0psi0)
+    
+    pMB793551, psiMB793551 = mean_bayesian_posterior(pp793551, tol=pp793551.sample_psi0[1] - pp793551.sample_psi0[0])
+    pMB2447655, psiMB2447655 = mean_bayesian_posterior(pp2447655, tol=pp2447655.sample_psi0[1] - pp2447655.sample_psi0[0])
+    pMB3400757, psiMB3400757 = mean_bayesian_posterior(pp3400757, tol=pp3400757.sample_psi0[1] - pp3400757.sample_psi0[0])
+    
+    psiMB793551 = polarization_tools.mod_halfpolar_center_0(psiMB793551)
+    psiMB2447655 = polarization_tools.mod_halfpolar_center_0(psiMB2447655)
+    psiMB3400757 = polarization_tools.mod_halfpolar_center_0(psiMB3400757)
+    
+    print(793551, pMB793551, psiMB793551)
+    print(2447655, pMB2447655, psiMB2447655)
+    print(3400757, pMB3400757, psiMB3400757)
+    
+    # MCMC RHT+Planck
+    pmed, psimed, sampler, startpos, posout = MCMC_posterior(793551, rht_cursor=rht_cursor, local=True)
+    print("MCMC 793551", pmed, psimed)
+    pmed, psimed, sampler, startpos, posout = MCMC_posterior(2447655, rht_cursor=rht_cursor, local=True)
+    print("MCMC 2447655", pmed, psimed)
+    pmed, psimed, sampler, startpos, posout = MCMC_posterior(3400757, rht_cursor=rht_cursor, local=True)
+    print("MCMC 3400757", pmed, psimed)
+    
+    # QU test
+    mean_bayesian_posterior_testQU(pp793551)
+    mean_bayesian_posterior_testQU(pp2447655)
+    mean_bayesian_posterior_testQU(pp3400757)
+    
+    # Planck-only
+    planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+    planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
+    planck_tqu_cursor = planck_tqu_db.cursor()
+    planck_cov_cursor = planck_cov_db.cursor()
+    
+    planck793551 = PlanckPosterior(793551, planck_tqu_cursor, planck_cov_cursor, pp793551.sample_p0, pp793551.sample_psi0, adaptivep0=True)
+    planck2447655 = PlanckPosterior(2447655, planck_tqu_cursor, planck_cov_cursor, pp2447655.sample_p0, pp2447655.sample_psi0, adaptivep0=True)
+    planck3400757 = PlanckPosterior(3400757, planck_tqu_cursor, planck_cov_cursor, pp3400757.sample_p0, pp3400757.sample_psi0, adaptivep0=True)
+    
+    pplanckMB793551, psiplanckMB793551 = mean_bayesian_posterior(planck793551, tol=planck793551.sample_psi0[1] - planck793551.sample_psi0[0])
+    pplanckMB2447655, psiplanckMB2447655 = mean_bayesian_posterior(planck2447655, tol=planck2447655.sample_psi0[1] - planck2447655.sample_psi0[0])
+    pplanckMB3400757, psiplanckMB3400757 = mean_bayesian_posterior(planck3400757, tol=planck3400757.sample_psi0[1] - planck3400757.sample_psi0[0])
+    
+    psiplanckMB793551 = polarization_tools.mod_halfpolar_center_0(psiplanckMB793551)
+    psiplanckMB2447655 = polarization_tools.mod_halfpolar_center_0(psiplanckMB2447655)
+    psiplanckMB3400757 = polarization_tools.mod_halfpolar_center_0(psiplanckMB3400757)
+    
+    print(793551, pplanckMB793551, psiplanckMB793551)
+    print(2447655, pplanckMB2447655, psiplanckMB2447655)
+    print(3400757, pplanckMB3400757, psiplanckMB3400757)
+    
+def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol=0.1):#1E-5):
+    """
+    Integrated first order moments of the posterior PDF
+    """
+    posterior = copy.copy(posterior_obj.normed_posterior)
+    
+    sample_p0 = posterior_obj.sample_p0
+    sample_psi0 = posterior_obj.sample_psi0
+    
+    # determine pMB
+    pMB_integrand = posterior*sample_p0
+    pMB_integrated_over_psi0 = posterior_obj.integrate_highest_dimension(pMB_integrand, dx = psidx)
+    pMB = posterior_obj.integrate_highest_dimension(pMB_integrated_over_psi0, dx = pdx)
+    
+    # determine psiMB
+    sin_nocenter_psiMB_integrand = posterior_obj.normed_posterior*np.sin(2*sample_psi0[:, np.newaxis])
+    cos_nocenter_psiMB_integrand = posterior_obj.normed_posterior*np.cos(2*sample_psi0[:, np.newaxis])
+    sin_nocenter_pdf = np.trapz(sin_nocenter_psiMB_integrand, dx = pdx, axis=0)
+    cos_nocenter_pdf = np.trapz(cos_nocenter_psiMB_integrand, dx = pdx, axis=0)
+    psiMB = 0.5*np.arctan2(np.sum(sin_nocenter_pdf), np.sum(cos_nocenter_pdf))
+    
+    return pMB, psiMB
+    
+def mean_bayesian_posterior_old(posterior_obj, center = "naive", verbose = True, tol=0.1):#1E-5):
     """
     Integrated first order moments of the posterior PDF
     """
@@ -971,7 +1095,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     sample_psi0 = posterior_obj.sample_psi0
     
     # put on [-pi/2, pi/2] grid
-    sample_psi0 = polarization_tools.mod_halfpolar_center_0(sample_psi0)
+    #sample_psi0 = polarization_tools.mod_halfpolar_center_0(sample_psi0)
     
     # Sampling widths
     pdx = sample_p0[1] - sample_p0[0]
@@ -988,6 +1112,20 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     # Test that normed posterior is normed
     if verbose is True:
         norm_posterior_test = test_normalization(posterior_obj, pdx, psidx)
+        
+    # pre-centering test
+    nocenter_psiMB_integrand = posterior_obj.normed_posterior*sample_psi0[:, np.newaxis]
+    nocenter_pdf = np.trapz(nocenter_psiMB_integrand, dx = pdx, axis=0)
+    nocenter_psi0_ludo_new = 0.5*np.arctan2(np.sum(np.sin(2*sample_psi0)*nocenter_pdf), np.sum(np.cos(2*sample_psi0)*nocenter_pdf))
+    
+    sin_nocenter_psiMB_integrand = posterior_obj.normed_posterior*np.sin(2*sample_psi0[:, np.newaxis])
+    cos_nocenter_psiMB_integrand = posterior_obj.normed_posterior*np.cos(2*sample_psi0[:, np.newaxis])
+    sin_nocenter_pdf = np.trapz(sin_nocenter_psiMB_integrand, dx = pdx, axis=0)
+    cos_nocenter_pdf = np.trapz(cos_nocenter_psiMB_integrand, dx = pdx, axis=0)
+    my_new_psi0 = 0.5*np.arctan2(np.sum(sin_nocenter_pdf), np.sum(cos_nocenter_pdf))
+    
+    print("nocenter_psi0_ludo_new", np.mod(nocenter_psi0_ludo_new, np.pi))
+    print("my_new_psi0", np.mod(my_new_psi0, np.pi))
     
     # Center on the naive psi
     if center == "naive":
@@ -998,11 +1136,11 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         psinaive = posterior_obj.psimeas
         
         # testing ludo's method (maybe?)
-        psinaive = polarization_tools.mod_halfpolar_center_0(psinaive)
+        #psinaive = polarization_tools.mod_halfpolar_center_0(psinaive)
         
         pnaive = posterior_obj.pmeas
         psi0new, centered_posterior = center_posterior_psi_given(sample_psi0, posterior, psinaive, verbose = verbose)
-        print("max psi0new: ", np.max(psi0new))
+        #print("max psi0new: ", np.max(psi0new))
         psidx = psi0new[1] - psi0new[0]
         
         if verbose is True:
@@ -1013,6 +1151,59 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         if verbose is True:
             print("Centering initial integral on psi_MAP")
         rolled_sample_psi0, rolled_posterior = center_posterior_psi_MAP(posterior_obj, sample_psi0, posterior, verbose = verbose)
+    
+    
+    # Ludo's method
+    """
+    v0 = psiref
+    dpsi =  ((psi_grid)[1]-(psi_grid)[0])
+    v0_new = total(pol_angle_diff(psi_grid,v0)*pdf) * dpsi
+    v0 = v0_new + v0
+    ok = 0
+    while ok eq 0 do begin
+        v0_new = total(pol_angle_diff(psi_grid,v0)*pdf) * dpsi
+        if v0_new le dpsi then ok = 1
+        v0 = v0_new + v0
+    endwhile
+    """
+    
+    v0 = posterior_obj.psimeas
+    v0 = polarization_tools.mod_halfpolar_center_0(v0)
+    print(v0)
+    psiMB_integrand = posterior_obj.normed_posterior*sample_psi0[:, np.newaxis]
+    pdf = np.trapz(psiMB_integrand, dx = pdx, axis=0)
+    
+    # center pdf
+    #psi0new = np.linspace(v0 - np.pi/2, v0 + np.pi/2, len(sample_psi0), endpoint=True)
+    #pdf = np.interp(psi0new, sample_psi0, pdf, period=np.pi)
+    #sample_psi0 = polarization_tools.mod_halfpolar_center_0(psi0new)
+    
+    # don't center pdf
+    #pdf = sample_psi0
+    
+    # normalize pdf? doesn't matter.
+    #pdf = pdf/np.sum(pdf)
+    
+    # psi_MB = 0.5 * atan2 ( total(sin(2*psi_grid) * pdf_psi ),   total(cos(2*psi_grid) * pdf_psi )  )
+    
+    v0_new = np.sum(angle_residual(sample_psi0, v0, degrees=False)*pdf) * psidx
+    print(v0_new)
+    v0 = v0_new + v0
+    print(v0)
+    ok = 0
+    i = 0
+    while ok is 0:
+        v0_new = np.sum(angle_residual(sample_psi0, v0, degrees=False)*pdf) * psidx
+        if v0_new <= psidx:
+            ok = 1
+        v0 = v0_new + v0
+        print(v0)
+        i = i + 1
+    print(i)
+    print("psi0 determined ludo's way: {}".format(v0))
+    
+    psi0_ludo_new = 0.5*np.arctan2(np.sum(np.sin(2*sample_psi0)*pdf), np.sum(np.cos(2*sample_psi0)*pdf))
+    print("psi0 determined ludo's new way: {}".format(psi0_ludo_new))
     
     #posterior = rolled_posterior
     #sample_psi0 = rolled_sample_psi0
@@ -1051,7 +1242,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     # Set parameters for convergence
     psi_last = copy.copy(psinaive) #+ tol*2
     i = 0
-    itertol = 30#10#0
+    itertol = 3000#10#0
     if verbose is True:
         print("Using tolerance of {}".format(tol))
         
@@ -1066,7 +1257,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
         # testing ludo's method (maybe?)
         psi0new = polarization_tools.mod_halfpolar_center_0(psi0new)
     
-        print("max psi0new: ", np.max(psi0new))
+        #print("max psi0new: ", np.max(psi0new))
 
         psiMB_integrand = centered_posterior*psi0new[:, np.newaxis]
         psiMB_integrated_over_psi0 = posterior_obj.integrate_highest_dimension(psiMB_integrand, dx=psidx)
@@ -1087,8 +1278,8 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, to
     #    pMB = copy.copy(pnaive)
     #    psiMB = copy.copy(psinaive)
     #    print("Iteration tolerance reached. setting naive values")
-        
-    return pMB, psiMB#, pMB1, psiMB1, sample_psi0, sample_p0
+    print(i)    
+    return pMB, psiMB, my_new_psi0#, pMB1, psiMB1, sample_psi0, sample_p0
 
 def test_normalization(posterior_obj, pdx, psidx):
     norm_posterior_test = posterior_obj.integrate_highest_dimension(posterior_obj.normed_posterior, dx = psidx)
@@ -1161,9 +1352,9 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
             if mcmc is False:
                 posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
             
-                p0psi0 = np.zeros((2, len(posterior_obj.sample_p0)), np.float_)
-                p0psi0[0, :] = posterior_obj.sample_p0
-                p0psi0[1, :] = posterior_obj.sample_psi0
+                #p0psi0 = np.zeros((2, len(posterior_obj.sample_p0)), np.float_)
+                #p0psi0[0, :] = posterior_obj.sample_p0
+                #p0psi0[1, :] = posterior_obj.sample_psi0
                 #fits.writeto("sample_p0psi0_{}.fits".format(_id[0]), p0psi0)
     
                 if sampletype is "mean_bayes":
@@ -1492,8 +1683,8 @@ if __name__ == "__main__":
     #gauss_sample_region(local = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
-    fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
-    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP", mcmc=False)
+    #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False)
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP", mcmc=True)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
     
