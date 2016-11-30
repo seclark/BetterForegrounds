@@ -1070,6 +1070,10 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol
     sample_p0 = posterior_obj.sample_p0
     sample_psi0 = posterior_obj.sample_psi0
     
+    # Sampling widths
+    pdx = sample_p0[1] - sample_p0[0]
+    psidx = sample_psi0[1] - sample_psi0[0]
+    
     # determine pMB
     pMB_integrand = posterior*sample_p0
     pMB_integrated_over_psi0 = posterior_obj.integrate_highest_dimension(pMB_integrand, dx = psidx)
