@@ -1086,6 +1086,8 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol
     cos_nocenter_pdf = np.trapz(cos_nocenter_psiMB_integrand, dx = pdx, axis=0)
     psiMB = 0.5*np.arctan2(np.sum(sin_nocenter_pdf), np.sum(cos_nocenter_pdf))
     
+    psiMB = np.mod(psiMB, np.pi)
+    
     return pMB, psiMB
     
 def mean_bayesian_posterior_old(posterior_obj, center = "naive", verbose = True, tol=0.1):#1E-5):
@@ -1351,28 +1353,28 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
         
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        if _id[0] in [3400757, 793551, 2447655]:
+        #if _id[0] in [3400757, 793551, 2447655]:
         
-            if mcmc is False:
-                posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
-            
-                #p0psi0 = np.zeros((2, len(posterior_obj.sample_p0)), np.float_)
-                #p0psi0[0, :] = posterior_obj.sample_p0
-                #p0psi0[1, :] = posterior_obj.sample_psi0
-                #fits.writeto("sample_p0psi0_{}.fits".format(_id[0]), p0psi0)
-    
-                if sampletype is "mean_bayes":
-                    all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol=tol)
-                elif sampletype is "MAP":
-                    all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
-            else:
-                MCMC_posterior(_id[0], rht_cursor = rht_cursor)
+        if mcmc is False:
+            posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior)
+        
+            #p0psi0 = np.zeros((2, len(posterior_obj.sample_p0)), np.float_)
+            #p0psi0[0, :] = posterior_obj.sample_p0
+            #p0psi0[1, :] = posterior_obj.sample_psi0
+            #fits.writeto("sample_p0psi0_{}.fits".format(_id[0]), p0psi0)
 
-            
-            print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
+            if sampletype is "mean_bayes":
+                all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol=tol)
+            elif sampletype is "MAP":
+                all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
+        else:
+            MCMC_posterior(_id[0], rht_cursor = rht_cursor)
 
-            update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
-    
+        
+        #print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
+
+        update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
+
     return all_pMB, all_psiMB
     
 def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241", verbose = False, tol=1E-5, sampletype = "mean_bayes"):
