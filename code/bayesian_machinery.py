@@ -1525,8 +1525,8 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
         pMB_out_fn = "pMB_allsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
     elif limitregion is True:
         if sampletype is "mean_bayes":
-            psiMB_out_fn = "psiMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
-            pMB_out_fn = "pMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
+            psiMB_out_fn = "psiMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_new.fits"
+            pMB_out_fn = "pMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_new.fits"
         elif sampletype is "MAP":
             psiMB_out_fn = "psiMB_MAP_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
             pMB_out_fn = "pMB_MAP_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
@@ -1693,11 +1693,11 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
     #fully_sample_sky(region = "allsky", useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True)
     #fully_sample_sky(region = "allsky", limitregion = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False)
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False)
+    ##fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False)
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP", mcmc=True)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
     
-    #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = True, tol=0, sampletype="mean_bayes")
+    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = True, tol=0, sampletype="mean_bayes")
     """
     allskypmb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/pMB_DR2_SC_241_353GHz_take2.fits")
     allskypsimb = hp.fitsfunc.read_map("/disks/jansky/a/users/goldston/susan/Wide_maps/psiMB_DR2_SC_241_353GHz_take2.fits")
