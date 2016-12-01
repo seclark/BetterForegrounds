@@ -1531,7 +1531,7 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
             psiMB_out_fn = "psiMB_MAP_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
             pMB_out_fn = "pMB_MAP_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
    
-    test = True
+    test = False
     if test is False:
         hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
         hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
