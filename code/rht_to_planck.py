@@ -623,6 +623,6 @@ def plot_by_thetabin():
 
 if __name__ == "__main__":
 #    plot_by_thetabin()
-     lensing_maps()
-
+     #lensing_maps()
+    single_thetabin_single_vel_allsky()
     
