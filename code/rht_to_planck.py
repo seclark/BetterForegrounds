@@ -362,6 +362,124 @@ def get_extra0_sstring(cstart, cstop):
         extra_0 = ""
         
     return s_string, extra_0
+    
+def single_thetabin_single_vel_allsky(velnum=0):
+
+    # Everything is in chunks of 5 channels. e.g. 1024_1028 includes [1024, 1028] inclusive.
+    cstart = 1024 + velnum*cstep
+    cstop = cstart + cstep - 1
+    s_string, extra_0 = get_extra0_sstring(cstart, cstop)
+    
+    velrangestring = s_string+str(cstart)+"_"+extra_0+str(cstop)
+
+    root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
+    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/"+velrangestring+"/"
+    wlen = 75
+    cstep = 5 
+    
+    # Overlapping/stepping parameters
+    step = 3600
+    filler_overlap = 60 #50
+    normal_overlap = 50
+    leftstop = 111
+    rightstart = 21488
+
+    xstart0_normal = max((step*num - normal_overlap), 0)
+    xstop0_normal = step*(num + 1) + normal_overlap
+    xstart0_filler = max((step*num - filler_overlap), 0)
+    xstop0_filler = step*(num + 1) + filler_overlap
+    
+    # Shape of the all-sky data
+    nyfull = 2432
+    nxfull = 21600
+    fulldata = np.zeros((nyfull, nxfull), np.float_)
+    
+    # Loop through thetas - should be xrange(ntheta) but just testing now
+    for theta_index in xrange(1):
+        time0 = time.time()
+        
+        # New single theta backprojection
+        single_theta_backprojection = np.zeros(fulldata.shape)
+    
+        for num in [0, 1, 2, 3, 4, 5]:
+            time2 = time.time()
+            
+            # Load normal xyt data
+            rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_"+str(num)+"_SRcorr_xyt_w"+str(wlen)+"_s15_t70.fits"
+            ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+            single_theta_backprojection_chunk = single_theta_slice(theta_index, ipoints, jpoints, rthetas, naxis1, naxis2)
+            single_theta_backprojection_chunk = np.ones(single_theta_backprojection_chunk)
+            
+            fulldata = place_filler_data(fulldata, single_theta_backprojection_chunk, xstart0_normal, xstop0_normal)
+
+            # Load filler xyt data
+            rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_filler"+str(num)+"_SRcorr_xyt_w"+str(wlen)+"_s15_t70.fits"
+            ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+            single_theta_backprojection_chunk = single_theta_slice(theta_index, ipoints, jpoints, rthetas, naxis1, naxis2)
+            single_theta_backprojection_chunk = np.ones(single_theta_backprojection_chunk)
+            
+            fulldata = place_filler_data(fulldata, single_theta_backprojection_chunk, xstart0_filler, xstop0_filler)
+            
+        # Load seam xyt data
+        rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_seam_SRcorr_xyt_w"+str(wlen)+"_s15_t70.fits"
+        ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+        single_theta_backprojection_chunk = single_theta_slice(theta_index, ipoints, jpoints, rthetas, naxis1, naxis2)
+        single_theta_backprojection_chunk = np.ones(single_theta_backprojection_chunk)
+        
+        fulldata = place_seam_data(fulldata, single_theta_backprojection_chunk, leftstop, rightstart)
+        
+        print(np.nansum(fulldata))
+            
+def place_filler_data(holey_data, filler_data, xstart0, xstop0):
+
+    # Add filler, blanking regions that already contain data
+    filler_data[np.where(holey_data[:, xstart0:xstop0] != 0)] = 0
+    holey_data[:, xstart0:xstop0] += filler_data
+    
+    return holey_data
+    
+def place_seam_data(holey_data, seam_data, leftstop, rightstart):
+    
+    # Blank seam regions that already contain data
+    ny_left, nx_left = holey_data[:, :leftstop].shape
+    ny_right, nx_right = holey_data[:, rightstart:].shape
+    
+    left_seam_data = seam_data[:, :nx_right]
+    right_seam_data = seam_data[:, nx_right:] 
+    
+    left_seam_data[np.where(holey_data[:, rightstart:] != 0)] = 0
+    right_seam_data[np.where(holey_data[:, :leftstop] != 0)] = 0
+    
+    seam_data[np.where(np.isnan(seam_data) == True)] = 0
+    
+    holey_data[:, :leftstop] += right_seam_data
+    holey_data[:, rightstart:] += left_seam_data
+    
+    return holey_data
+    
+def get_start_stop_from_fillernum(fillernum, overlap):
+    
+    if fillernum == 1:
+        xstart0 = 3598 - overlap
+        xstop0 = 3601 + overlap
+        
+    if fillernum == 2:
+        xstart0 = 7198 - overlap
+        xstop0 = 7201 + overlap
+    
+    if fillernum == 3:
+        xstart0 = 10798 - overlap
+        xstop0 = 10801 + overlap
+    
+    if fillernum == 4:
+        xstart0 = 14398 - overlap
+        xstop0 = 14401 + overlap
+        
+    if fillernum == 5:
+        xstart0 = 17998 - overlap
+        xstop0 = 18001 + overlap
+        
+    return xstart0, xstop0
         
 def reproject_by_thetabin_allsky():
     """
