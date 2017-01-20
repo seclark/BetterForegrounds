@@ -598,8 +598,7 @@ def plot_by_thetabin():
         single_theta_backprojection += single_theta_slice(theta_index, ipoints21, jpoints21, rthetas21, naxis1, naxis2)
         single_theta_backprojection += single_theta_slice(theta_index, ipoints22, jpoints22, rthetas22, naxis1, naxis2)
         single_theta_backprojection += single_theta_slice(theta_index, ipoints23, jpoints23, rthetas23, naxis1, naxis2)
-        single_theta_backprojection += single_theta_slice(theta_index, ipoints24, jpoints24, rthetas24, naxis1, naxis2)
-        
+        single_theta_backprojection += single_theta_slice(theta_index, ipoints24, jpoints24, rthetas24, naxis1, naxis2)        
     
     projected_root = "/Volumes/DataDavy/GALFA/SC_241/cleaned/galfapix_corrected/theta_backprojections/"
     projected_fn = "SC_241.66_28.675.best_16_24_w75_s15_t70_galfapixcorr_thetabin_99.fits"
