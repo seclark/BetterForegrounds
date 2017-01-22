@@ -364,6 +364,22 @@ def get_extra0_sstring(cstart, cstop):
         
     return s_string, extra_0
     
+def get_extra0_startstop(cstart, cstop):
+    """
+    For naming convention
+    """
+    if cstart <= 999:
+        start_0 = "0"
+        end_0 = "0"
+    else:
+        start_0 = ""
+        end_0 = ""
+    if cstart == 999:
+        start_0 = "0"
+        end_0 = ""
+        
+    return start_0, end_0
+    
 def single_thetabin_single_vel_allsky(velnum=-8):
 
     wlen = 75
@@ -532,9 +548,10 @@ def redo_local_intrhts(velnum=-10):
     # Everything is in chunks of 5 channels. e.g. 1024_1028 includes [1024, 1028] inclusive.
     cstart = 1024 + velnum*cstep
     cstop = cstart + cstep - 1
-    s_string, extra_0 = get_extra0_sstring(cstart, cstop)
+    start_0, end_0 = get_extra0_startstop(cstart, cstop)
     
-    velrangestring = s_string+str(cstart)+"_"+extra_0+str(cstop)
+    # vel range string when no leading S
+    velrangestring = start_0+str(cstart)+"_"+end_0+str(cstop)
     
     root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/thetarht_maps/"
     
@@ -546,9 +563,9 @@ def redo_local_intrhts(velnum=-10):
         holey_intrht = place_filler_data(holey_intrht, filler_intrht, num, filler_overlap)
         
     seam_intrht = np.load(root + "intrht_allsky_ch"+velrangestring+"_seam_SRcorr_w75_s15_t70.npy")
-    holey_intrht = place_seam_data(holey_intrht, seam_intrht, leftstop, rightstart)
+    final_intrht = place_seam_data(holey_intrht, seam_intrht, leftstop, rightstart)
     
-    return holey_intrht
+    return final_intrht
         
 def reproject_by_thetabin_allsky():
     """
