@@ -728,7 +728,7 @@ def intRHT_QU_maps_per_vel(velstr="S0974_0978"):
     nxfull = 21600
     intRHT = np.zeros((nyfull, nxfull), np.float_)
 
-    for _thetabin_i in xrange(nthets):
+    for _thetabin_i in xrange(165):
         time0 = time.time()
     
         # Load in single-theta backprojection
@@ -736,6 +736,9 @@ def intRHT_QU_maps_per_vel(velstr="S0974_0978"):
         unprojdata = fits.getdata(unprojected_fn)  
         
         intRHT += unprojdata
+        
+        time1 = time.time()
+        print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
     
     hdr = fits.getheader(unprojected_fn)    
     fits.writeto(unprojected_root+"intrht_"+velstr+".fits", intRHT, hdr)
