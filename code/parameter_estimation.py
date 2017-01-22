@@ -630,6 +630,94 @@ def project_allsky_thetaweights_to_database(update = False):
 
     conn.close()            
     
+def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0974_0978"):
+    """
+    Projects allsky weights to healpix Galactic.
+    Writes all projected weights from region to an SQL database.
+    NOTE :: id = primary key, pixel index in NESTED order
+    This version is for a *single* velocity slice
+    """
+    
+    # Pull in each unprojected theta bin
+    unprojected_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/"+velstr+"/"
+
+    # Full GALFA file header for projection
+    galfa_hdr = fits.getheader("/disks/jansky/a/users/goldston/zheng/151019_NHImaps_SRcorr/data/GNHImaps_SRcorr/GALFA-HI_NHI_VLSR-90+90kms/data/GALFA-HI_NHI_VLSR-90+90kms.fits")
+
+    nthets = 165 
+
+    # Arbitrary 2-letter SQL storage value names
+    value_names = [''.join(i) for i in itertools.permutations(string.lowercase,2)]
+
+    # Remove protected words from value names
+    if "as" in value_names: value_names.remove("as")
+    if "is" in value_names: value_names.remove("is")
+    if "in" in value_names: value_names.remove("in")
+    if "if" in value_names: value_names.remove("if")
+
+    # Comma separated list of nthets column names
+    column_names = " FLOAT DEFAULT 0.0,".join(value_names[:nthets])
+
+    # Name table
+    tablename = "RHT_weights_allsky_"+velstr
+    #tablename = "RHT_weights_allsky_testtrans"
+
+    # Statement for creation of SQL database
+    createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+" FLOAT DEFAULT 0.0);"
+
+    # Instantiate database
+    #conn = sqlite3.connect(":memory:")
+    #conn = sqlite3.connect("/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/allsky_RHTweights_db_testtrans.sqlite")
+    conn = sqlite3.connect(unprojected_root + "GALFA_HI_allsky_"+velstr+"_w75_s15_t70_RHTweights_db.sqlite")
+    c = conn.cursor()
+    
+    if update is True:
+        print("table already created -- this is simply an update")
+    else:
+        c.execute(createstatement)
+        conn.commit()
+
+    # try setting isolation level
+    #conn.isolation_level = None
+
+    #for _thetabin_i in range(23, nthets, 1):
+    for _thetabin_i in xrange(nthets):
+        time0 = time.time()
+    
+        # Load in single-theta backprojection
+        unprojected_fn = unprojected_root + "GALFA_HI_allsky_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+".fits"
+        unprojdata = fits.getdata(unprojected_fn)
+
+        # Project data to hp galactic
+        projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr)
+        print("Data successfully projected")
+        
+        #projected_fn = unprojected_root + "GALFA_HI_allsky_-10_10_w75_s15_t70_thetabin_"+str(_thetabin_i)+"_healpixproj.fits"
+        #projdata = fits.getdata(projected_fn)
+    
+        # Some data stored as -999 for 'none'
+        projdata[projdata == -999] = 0
+
+        # The healpix indices we keep will be the ones where there is nonzero data
+        nonzero_index = np.nonzero(projdata)[0]
+        print("there are {} nonzero elements in thetabin {}".format(len(nonzero_index), _thetabin_i))
+        
+        # Try wrapping this in a transaction
+        #c.execute("begin")
+        # Either inserts new ID with given value or ignores if id already exists 
+        c.executemany("INSERT OR IGNORE INTO "+tablename+" (id, "+value_names[_thetabin_i]+") VALUES (?, ?)", [(i, projdata[i]) for i in nonzero_index])
+    
+        # Inserts data to new ids
+        c.executemany("UPDATE "+tablename+" SET "+value_names[_thetabin_i]+"=? WHERE id=?", [(projdata[i], i) for i in nonzero_index])
+        #c.execute("commit")
+        
+        conn.commit()
+    
+        time1 = time.time()
+        print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
+
+    conn.close()      
+    
 def reproject_allsky_data():
     
     # Pull in each unprojected theta bin
@@ -1419,7 +1507,8 @@ class Posterior(BayesianComponent):
     
 if __name__ == "__main__":
     #planck_data_to_database(Nside = 2048, covdata = True)
-    project_allsky_thetaweights_to_database(update = True)
+    #project_allsky_thetaweights_to_database(update = True)
     #reproject_allsky_data()
+    project_allsky_singlevel_thetaweights_to_database(update=False)
 
 
