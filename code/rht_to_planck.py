@@ -565,7 +565,8 @@ def redo_local_intrhts(velnum=-10):
     seam_intrht = np.load(root + "intrht_allsky_ch"+velrangestring+"_seam_SRcorr_w75_s15_t70.npy")
     final_intrht = place_seam_data(holey_intrht, seam_intrht, leftstop, rightstart)
     
-    return final_intrht
+    np.save(root + "intrht_filled_allsky_ch"+velrangestring+"_SRcorr_w75_s15_t70.npy", final_intrht)
+    
         
 def reproject_by_thetabin_allsky():
     """
