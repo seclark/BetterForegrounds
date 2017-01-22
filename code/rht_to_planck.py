@@ -9,6 +9,7 @@ from astropy.coordinates import SkyCoord
 import copy
 import time
 import matplotlib.pyplot as plt
+import os
 
 # RHT helper code
 import sys 
@@ -363,7 +364,10 @@ def get_extra0_sstring(cstart, cstop):
         
     return s_string, extra_0
     
-def single_thetabin_single_vel_allsky(velnum=0):
+def single_thetabin_single_vel_allsky(velnum=-9):
+
+    wlen = 75
+    cstep = 5 
 
     # Everything is in chunks of 5 channels. e.g. 1024_1028 includes [1024, 1028] inclusive.
     cstart = 1024 + velnum*cstep
@@ -374,8 +378,9 @@ def single_thetabin_single_vel_allsky(velnum=0):
 
     root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
     out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/"+velrangestring+"/"
-    wlen = 75
-    cstep = 5 
+    
+    if not os.path.exists(out_root):
+        os.makedirs(out_root)
     
     # Overlapping/stepping parameters
     step = 3600
@@ -383,11 +388,6 @@ def single_thetabin_single_vel_allsky(velnum=0):
     normal_overlap = 50
     leftstop = 111
     rightstart = 21488
-
-    xstart0_normal = max((step*num - normal_overlap), 0)
-    xstop0_normal = step*(num + 1) + normal_overlap
-    xstart0_filler = max((step*num - filler_overlap), 0)
-    xstop0_filler = step*(num + 1) + filler_overlap
     
     # Shape of the all-sky data
     nyfull = 2432
@@ -395,46 +395,67 @@ def single_thetabin_single_vel_allsky(velnum=0):
     fulldata = np.zeros((nyfull, nxfull), np.float_)
     
     # Loop through thetas - should be xrange(ntheta) but just testing now
-    for theta_index in xrange(1):
+    for theta_index in np.arange(25, 166):#xrange(166):#xrange(1):
         time0 = time.time()
         
         # New single theta backprojection
         single_theta_backprojection = np.zeros(fulldata.shape)
     
         for num in [0, 1, 2, 3, 4, 5]:
-            time2 = time.time()
             
+            # get normal start/stop
+            xstart0_normal = max((step*num - normal_overlap), 0)
+            xstop0_normal = step*(num + 1) + normal_overlap
+
             # Load normal xyt data
-            rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_"+str(num)+"_SRcorr_xyt_w"+str(wlen)+"_s15_t70.fits"
+            if num == 3:
+                rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_"+str(num)+"_SRcorr_fakecrpix1_xyt_w"+str(wlen)+"_s15_t70.fits"
+            else:
+                rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_"+str(num)+"_SRcorr_xyt_w"+str(wlen)+"_s15_t70.fits"
             ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
             single_theta_backprojection_chunk = single_theta_slice(theta_index, ipoints, jpoints, rthetas, naxis1, naxis2)
-            single_theta_backprojection_chunk = np.ones(single_theta_backprojection_chunk)
             
             fulldata = place_filler_data(fulldata, single_theta_backprojection_chunk, xstart0_normal, xstop0_normal)
 
             # Load filler xyt data
-            rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_filler"+str(num)+"_SRcorr_xyt_w"+str(wlen)+"_s15_t70.fits"
-            ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
-            single_theta_backprojection_chunk = single_theta_slice(theta_index, ipoints, jpoints, rthetas, naxis1, naxis2)
-            single_theta_backprojection_chunk = np.ones(single_theta_backprojection_chunk)
-            
-            fulldata = place_filler_data(fulldata, single_theta_backprojection_chunk, xstart0_filler, xstop0_filler)
+            if num > 0:
+                # get filler start/stop
+                xstart0_filler, xstop0_filler = get_start_stop_from_fillernum(num, filler_overlap)
+                
+                if num == 3:
+                    rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_filler"+str(num)+"_SRcorr_fakecrpix1_xyt_w"+str(wlen)+"_s15_t70.fits"
+                else:
+                    rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_filler"+str(num)+"_SRcorr_xyt_w"+str(wlen)+"_s15_t70.fits"
+                ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
+                single_theta_backprojection_chunk = single_theta_slice(theta_index, ipoints, jpoints, rthetas, naxis1, naxis2)
+                
+                fulldata = place_filler_data(fulldata, single_theta_backprojection_chunk, xstart0_filler, xstop0_filler)
             
         # Load seam xyt data
-        rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_seam_SRcorr_xyt_w"+str(wlen)+"_s15_t70.fits"
+        rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_seam_SRcorr_fakecrpix1_xyt_w"+str(wlen)+"_s15_t70.fits"
         ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
         single_theta_backprojection_chunk = single_theta_slice(theta_index, ipoints, jpoints, rthetas, naxis1, naxis2)
-        single_theta_backprojection_chunk = np.ones(single_theta_backprojection_chunk)
         
         fulldata = place_seam_data(fulldata, single_theta_backprojection_chunk, leftstop, rightstart)
-        
+            
+        hdr = fits.getheader("/disks/jansky/a/users/goldston/zheng/151019_NHImaps_SRcorr/data/GNHImaps_SRcorr/GALFA-HI_NHI_VLSR-90+90kms/data/GALFA-HI_NHI_VLSR-90+90kms.fits")
+        hdr['VMIN'] = cstart
+        hdr['VMAX'] = cstop
+        hdr['THET'] = theta_index
+        fits.writeto(out_root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_SRcorr_w"+str(wlen)+"_s15_t70_theta_"+str(theta_index)+".fits", fulldata, hdr)
+
+        time1 = time.time()
         print(np.nansum(fulldata))
+        print("theta %f took %f minutes" %(theta_index, (time1 - time0)/60.))
             
 def place_filler_data(holey_data, filler_data, xstart0, xstop0):
 
     # Add filler, blanking regions that already contain data
-    filler_data[np.where(holey_data[:, xstart0:xstop0] != 0)] = 0
-    holey_data[:, xstart0:xstop0] += filler_data
+    #filler_data[np.where(holey_data[:, xstart0:xstop0] != 0)] = 0
+    #holey_data[:, xstart0:xstop0] += filler_data
+    
+    # instead, just replace rather than add.
+    holey_data[:, xstart0:xstop0] = filler_data
     
     return holey_data
     
@@ -623,5 +644,5 @@ def plot_by_thetabin():
 if __name__ == "__main__":
 #    plot_by_thetabin()
      #lensing_maps()
-    single_thetabin_single_vel_allsky()
+     single_thetabin_single_vel_allsky()
     
