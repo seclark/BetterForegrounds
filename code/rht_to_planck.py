@@ -521,9 +521,34 @@ def get_placement_from_fillernum(fillernum, overlap):
     return infiller0, infiller1, tofiller0, tofiller1
     
     
-def redo_local_intrhts():
-    #testing
-    print('hello')
+def redo_local_intrhts(velnum=-10):
+    
+    wlen = 75
+    cstep = 5 
+    filler_overlap = 60
+    leftstop = 111 # seam info
+    rightstart = 21488
+
+    # Everything is in chunks of 5 channels. e.g. 1024_1028 includes [1024, 1028] inclusive.
+    cstart = 1024 + velnum*cstep
+    cstop = cstart + cstep - 1
+    s_string, extra_0 = get_extra0_sstring(cstart, cstop)
+    
+    velrangestring = s_string+str(cstart)+"_"+extra_0+str(cstop)
+    
+    root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/thetarht_maps/"
+    
+    holey_intrht = np.load(root + "intrht_allsky_ch"+velrangestring+"_SRcorr_w75_s15_t70.npy")
+    
+    for num in [1, 2, 3, 4, 5]:
+        
+        filler_intrht = np.load(root + "intrht_allsky_ch"+velrangestring+"_filler"+str(num)+"_SRcorr_w75_s15_t70.npy")
+        holey_intrht = place_filler_data(holey_intrht, filler_intrht, num, filler_overlap)
+        
+    seam_intrht = np.load(root + "intrht_allsky_ch"+velrangestring+"_seam_SRcorr_w75_s15_t70.npy")
+    holey_intrht = place_seam_data(holey_intrht, seam_intrht, leftstop, rightstart)
+    
+    return holey_intrht
         
 def reproject_by_thetabin_allsky():
     """
