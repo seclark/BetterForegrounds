@@ -689,7 +689,7 @@ def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0
         unprojdata = fits.getdata(unprojected_fn)
 
         # Project data to hp galactic
-        projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr)
+        projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr, local=False)
         print("Data successfully projected")
         
         #projected_fn = unprojected_root + "GALFA_HI_allsky_-10_10_w75_s15_t70_thetabin_"+str(_thetabin_i)+"_healpixproj.fits"
