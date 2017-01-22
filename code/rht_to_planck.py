@@ -415,7 +415,7 @@ def single_thetabin_single_vel_allsky(velnum=-8):
             ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
             single_theta_backprojection_chunk = single_theta_slice(theta_index, ipoints, jpoints, rthetas, naxis1, naxis2)
             
-            fulldata = place_filler_data(fulldata, single_theta_backprojection_chunk, xstart0_normal, xstop0_normal)
+            fulldata = place_normal_data(fulldata, single_theta_backprojection_chunk, xstart0_normal, xstop0_normal)
 
             # Load filler xyt data
             if num > 0:
@@ -448,6 +448,11 @@ def single_thetabin_single_vel_allsky(velnum=-8):
         time1 = time.time()
         print(np.nansum(fulldata))
         print("theta %f took %f minutes" %(theta_index, (time1 - time0)/60.))
+            
+def place_normal_data(holey_data, filler_data, xstart0, xstop0):
+    holey_data[:, xstart0:xstop0] = filler_data
+    
+    return holey_data
             
 def place_filler_data(holey_data, filler_data, fillernum, overlap):
 
