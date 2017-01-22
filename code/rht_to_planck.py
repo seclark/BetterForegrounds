@@ -517,6 +517,7 @@ def get_placement_from_fillernum(fillernum, overlap):
     
 def redo_local_intrhts():
     #testing
+    print('hello')
         
 def reproject_by_thetabin_allsky():
     """
