@@ -450,12 +450,15 @@ def single_thetabin_single_vel_allsky(velnum=-9):
             
 def place_filler_data(holey_data, filler_data, xstart0, xstop0):
 
-    # Add filler, blanking regions that already contain data
+    # Add filler, blanking regions that already contain data. THIS IS WRONG - creates small hole
     #filler_data[np.where(holey_data[:, xstart0:xstop0] != 0)] = 0
     #holey_data[:, xstart0:xstop0] += filler_data
     
-    # instead, just replace rather than add.
-    holey_data[:, xstart0:xstop0] = filler_data
+    # instead, just replace rather than add. THIS IS WRONG because edges are 0
+    #holey_data[:, xstart0:xstop0] = filler_data
+    
+    infiller0, infiller1, tofiller0, tofiller1 = get_placement_from_fillernum(fillernum, overlap)
+    holey_data[:, tofiller0:tofiller1] = filler_data[:, infiller0:infiller1]
     
     return holey_data
     
@@ -501,6 +504,19 @@ def get_start_stop_from_fillernum(fillernum, overlap):
         xstop0 = 18001 + overlap
         
     return xstart0, xstop0
+    
+def get_placement_from_fillernum(fillernum, overlap):
+    xstart0, xstop0 = get_start_stop_from_fillernum(fillernum, overlap)
+    infiller0 = overlap - 2
+    infiller1 = xstop0 - overlap + 2 - xstart0
+    tofiller0 = xstart0 + infiller0
+    tofiller1 = xstart0 + infiller1
+    
+    return infiller0, infiller1, tofiller0, tofiller1
+    
+    
+def redo_local_intrhts():
+    #testing
         
 def reproject_by_thetabin_allsky():
     """
