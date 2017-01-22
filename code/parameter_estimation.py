@@ -685,7 +685,7 @@ def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0
         time0 = time.time()
     
         # Load in single-theta backprojection
-        unprojected_fn = unprojected_root + "GALFA_HI_allsky_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+".fits"
+        unprojected_fn = unprojected_root + "GALFA_HI_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+".fits"
         unprojdata = fits.getdata(unprojected_fn)
 
         # Project data to hp galactic
