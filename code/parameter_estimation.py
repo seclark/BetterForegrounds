@@ -716,7 +716,30 @@ def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0
         time1 = time.time()
         print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
 
-    conn.close()      
+    conn.close()
+    
+def intRHT_QU_maps_per_vel(velstr="S0974_0978"):
+    
+    # Pull in each unprojected theta bin
+    unprojected_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/"+velstr+"/"
+
+    # Shape of the all-sky data
+    nyfull = 2432
+    nxfull = 21600
+    intRHT = np.zeros((nyfull, nxfull), np.float_)
+
+    for _thetabin_i in xrange(nthets):
+        time0 = time.time()
+    
+        # Load in single-theta backprojection
+        unprojected_fn = unprojected_root + "GALFA_HI_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+".fits"
+        unprojdata = fits.getdata(unprojected_fn)  
+        
+        intRHT += unprojdata
+    
+    hdr = fits.getheader(unprojected_fn)    
+    fits.writeto(unprojected_root+"intrht_"+velstr+".fits", intRHT, hdr)
+    
     
 def reproject_allsky_data():
     
@@ -1509,6 +1532,8 @@ if __name__ == "__main__":
     #planck_data_to_database(Nside = 2048, covdata = True)
     #project_allsky_thetaweights_to_database(update = True)
     #reproject_allsky_data()
-    project_allsky_singlevel_thetaweights_to_database(update=False)
+    
+    #project_allsky_singlevel_thetaweights_to_database(update=False)
+    intRHT_QU_maps_per_vel(velstr="S0974_0978")
 
 
