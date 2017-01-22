@@ -420,7 +420,7 @@ def single_thetabin_single_vel_allsky(velnum=-8):
             # Load filler xyt data
             if num > 0:
                 # get filler start/stop
-                xstart0_filler, xstop0_filler = get_start_stop_from_fillernum(num, filler_overlap)
+                #xstart0_filler, xstop0_filler = get_start_stop_from_fillernum(num, filler_overlap)
                 
                 if num == 3:
                     rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_filler"+str(num)+"_SRcorr_fakecrpix1_xyt_w"+str(wlen)+"_s15_t70.fits"
@@ -429,7 +429,8 @@ def single_thetabin_single_vel_allsky(velnum=-8):
                 ipoints, jpoints, rthetas, naxis1, naxis2, nthetas = get_RHT_data(rht_fn)
                 single_theta_backprojection_chunk = single_theta_slice(theta_index, ipoints, jpoints, rthetas, naxis1, naxis2)
                 
-                fulldata = place_filler_data(fulldata, single_theta_backprojection_chunk, xstart0_filler, xstop0_filler)
+                #fulldata = place_filler_data(fulldata, single_theta_backprojection_chunk, xstart0_filler, xstop0_filler)
+                fulldata = place_filler_data(fulldata, single_theta_backprojection_chunk, num, filler_overlap)
             
         # Load seam xyt data
         rht_fn = root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_seam_SRcorr_fakecrpix1_xyt_w"+str(wlen)+"_s15_t70.fits"
@@ -448,7 +449,7 @@ def single_thetabin_single_vel_allsky(velnum=-8):
         print(np.nansum(fulldata))
         print("theta %f took %f minutes" %(theta_index, (time1 - time0)/60.))
             
-def place_filler_data(holey_data, filler_data, xstart0, xstop0):
+def place_filler_data(holey_data, filler_data, fillernum, overlap):
 
     # Add filler, blanking regions that already contain data. THIS IS WRONG - creates small hole
     #filler_data[np.where(holey_data[:, xstart0:xstop0] != 0)] = 0
