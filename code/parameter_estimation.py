@@ -727,6 +727,14 @@ def intRHT_QU_maps_per_vel(velstr="S0974_0978"):
     nyfull = 2432
     nxfull = 21600
     intRHT = np.zeros((nyfull, nxfull), np.float_)
+    QRHT = np.zeros((nyfull, nxfull), np.float_)
+    URHT = np.zeros((nyfull, nxfull), np.float_)
+    QRHTsq = np.zeros((nyfull, nxfull), np.float_)
+    URHTsq = np.zeros((nyfull, nxfull), np.float_)
+    
+    thets = RHT_tools.get_thets(75)
+    
+    thetshist = np.zeros(len(thets))
 
     for _thetabin_i in xrange(165):
         time0 = time.time()
@@ -736,12 +744,23 @@ def intRHT_QU_maps_per_vel(velstr="S0974_0978"):
         unprojdata = fits.getdata(unprojected_fn)  
         
         intRHT += unprojdata
+        QRHT += np.cos(2*thets[_thetabin_i])*unprojdata
+        URHT += np.sin(2*thets[_thetabin_i])*unprojdata
+        QRHTsq += np.cos(2*thets[_thetabin_i])**2*unprojdata
+        URHTsq += np.sin(2*thets[_thetabin_i])**2*unprojdata
+        
+        thetshist[_thetabin_i] = np.nansum(unprojdata)
         
         time1 = time.time()
         print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
     
     hdr = fits.getheader(unprojected_fn)    
     fits.writeto(unprojected_root+"intrht_"+velstr+".fits", intRHT, hdr)
+    fits.writeto(unprojected_root+"QRHT_"+velstr+".fits", QRHT, hdr)
+    fits.writeto(unprojected_root+"URHT_"+velstr+".fits", URHT, hdr)
+    fits.writeto(unprojected_root+"QRHTsq_"+velstr+".fits", QRHTsq, hdr)
+    fits.writeto(unprojected_root+"URHTsq_"+velstr+".fits", URHTsq, hdr)
+    np.save(unprojected_root+"thets_hist_"+velstr+".fits", thetshist)
     
     
 def reproject_allsky_data():
@@ -1536,7 +1555,8 @@ if __name__ == "__main__":
     #project_allsky_thetaweights_to_database(update = True)
     #reproject_allsky_data()
     
-    #project_allsky_singlevel_thetaweights_to_database(update=False)
-    intRHT_QU_maps_per_vel(velstr="S0974_0978")
+    project_allsky_singlevel_thetaweights_to_database(update=False, velstr="S0984_0988")
+    #intRHT_QU_maps_per_vel(velstr="S0974_0978") #haven't done yet
+    #intRHT_QU_maps_per_vel(velstr="S0984_0988")
 
 
