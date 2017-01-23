@@ -628,7 +628,64 @@ def project_allsky_thetaweights_to_database(update = False):
         time1 = time.time()
         print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
 
-    conn.close()            
+    conn.close()  
+    
+def write_allsky_singlevel_thetaweights_to_database_RADEC(update = False, velstr="S0974_0978"):
+    """
+    Writes all projected weights from region to an SQL database.
+    primary key is flattened index of array with shape of total galfa area
+    This version is for a *single* velocity slice
+    """          
+    
+    # Pull in each unprojected theta bin
+    unprojected_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/"+velstr+"/"
+
+    nthets = 165 
+
+    # Arbitrary 2-letter SQL storage value names
+    value_names = [''.join(i) for i in itertools.permutations(string.lowercase,2)]
+
+    # Remove protected words from value names
+    if "as" in value_names: value_names.remove("as")
+    if "is" in value_names: value_names.remove("is")
+    if "in" in value_names: value_names.remove("in")
+    if "if" in value_names: value_names.remove("if")
+
+    # Comma separated list of nthets column names
+    column_names = " FLOAT DEFAULT 0.0,".join(value_names[:nthets])
+
+    # Name table
+    tablename = "RHT_weights_allsky_"+velstr
+
+    # Statement for creation of SQL database
+    createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+" FLOAT DEFAULT 0.0);"
+
+    # Instantiate database
+    conn = sqlite3.connect(unprojected_root + "GALFA_HI_allsky_"+velstr+"_RADEC_w75_s15_t70_RHTweights_db.sqlite")
+    c = conn.cursor()
+    
+    if update is True:
+        print("table already created -- this is simply an update")
+    else:
+        c.execute(createstatement)
+        conn.commit()
+        
+    # Shape of the all-sky data
+    nyfull = 2432
+    nxfull = 21600
+    fulldata = np.arange(nyfull*nxfull).reshape(nyfull, nxfull)
+        
+    for _thetabin_i in xrange(nthets):
+        time0 = time.time()
+        
+        # Load in single-theta backprojection
+        unprojected_fn = unprojected_root + "GALFA_HI_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+".fits"
+        unprojdata = fits.getdata(unprojected_fn)
+        
+        nonzero_index = np.nonzero(unprojdata)[0]
+        print("there are {} nonzero elements in thetabin {}".format(len(nonzero_index), _thetabin_i))
+        
+    
     
 def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0974_0978"):
     """
@@ -1555,8 +1612,8 @@ if __name__ == "__main__":
     #project_allsky_thetaweights_to_database(update = True)
     #reproject_allsky_data()
     
-    project_allsky_singlevel_thetaweights_to_database(update=False, velstr="S0984_0988")
+    #project_allsky_singlevel_thetaweights_to_database(update=False, velstr="S0984_0988")
     #intRHT_QU_maps_per_vel(velstr="S0974_0978") #haven't done yet
-    #intRHT_QU_maps_per_vel(velstr="S0984_0988")
+    intRHT_QU_maps_per_vel(velstr="S0984_0988")
 
 
