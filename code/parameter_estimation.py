@@ -1555,8 +1555,8 @@ if __name__ == "__main__":
     #project_allsky_thetaweights_to_database(update = True)
     #reproject_allsky_data()
     
-    #project_allsky_singlevel_thetaweights_to_database(update=False, velstr="S0984_0988")
+    project_allsky_singlevel_thetaweights_to_database(update=False, velstr="S0984_0988")
     #intRHT_QU_maps_per_vel(velstr="S0974_0978") #haven't done yet
-    intRHT_QU_maps_per_vel(velstr="S0984_0988")
+    #intRHT_QU_maps_per_vel(velstr="S0984_0988")
 
 
