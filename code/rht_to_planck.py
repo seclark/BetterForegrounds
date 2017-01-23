@@ -411,11 +411,11 @@ def single_thetabin_single_vel_allsky(velnum=-8):
     fulldata = np.zeros((nyfull, nxfull), np.float_)
     
     # Loop through thetas - should be xrange(ntheta) but just testing now
-    for theta_index in np.arange(0, 165):#xrange(166):#xrange(1):
+    for theta_index in np.arange(0, 20):#xrange(166):#xrange(1):
         time0 = time.time()
         
         # New single theta backprojection
-        single_theta_backprojection = np.zeros(fulldata.shape)
+        fulldata = np.zeros(fulldata.shape)
     
         for num in [0, 1, 2, 3, 4, 5]:
             
@@ -714,7 +714,7 @@ def plot_by_thetabin():
 if __name__ == "__main__":
 #    plot_by_thetabin()
      #lensing_maps()
-     single_thetabin_single_vel_allsky(velnum=-3) # running: -10, -9, -8
+     single_thetabin_single_vel_allsky(velnum=-8) # running: -10, -9, -8
      
      #redo_local_intrhts(velnum=-9)
     
