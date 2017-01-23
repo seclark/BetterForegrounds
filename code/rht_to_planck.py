@@ -411,7 +411,7 @@ def single_thetabin_single_vel_allsky(velnum=-8):
     fulldata = np.zeros((nyfull, nxfull), np.float_)
     
     # Loop through thetas - should be xrange(ntheta) but just testing now
-    for theta_index in np.arange(0, 20):#xrange(166):#xrange(1):
+    for theta_index in np.arange(20, 40):#xrange(166):#xrange(1):
         time0 = time.time()
         
         # New single theta backprojection
