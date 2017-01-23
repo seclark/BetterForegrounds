@@ -694,7 +694,7 @@ def write_allsky_singlevel_thetaweights_to_database_RADEC(update = False, velstr
         conn.commit()
     
         time1 = time.time()
-        print("theta bin {} took {} minutes".format(_thetabin_i, time1 - time0)/60.)
+        print("theta bin {} took {} minutes".format(_thetabin_i, (time1 - time0)/60.))
 
     conn.close()
     
@@ -1625,7 +1625,7 @@ if __name__ == "__main__":
     #reproject_allsky_data()
     
     #project_allsky_singlevel_thetaweights_to_database(update=False, velstr="S0984_0988")
-    write_allsky_singlevel_thetaweights_to_database_RADEC(update = False, velstr="S0974_0978")
+    write_allsky_singlevel_thetaweights_to_database_RADEC(update = False, velstr="S0984_0988")
     #intRHT_QU_maps_per_vel(velstr="S0974_0978") #haven't done yet
     #intRHT_QU_maps_per_vel(velstr="S0984_0988")
 
