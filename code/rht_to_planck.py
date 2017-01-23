@@ -411,7 +411,7 @@ def single_thetabin_single_vel_allsky(velnum=-8):
     fulldata = np.zeros((nyfull, nxfull), np.float_)
     
     # Loop through thetas - should be xrange(ntheta) but just testing now
-    for theta_index in [40]:#np.arange(47, 50):#xrange(166):#xrange(1):
+    for theta_index in np.arange(0, 20):#xrange(166):#xrange(1):
         time0 = time.time()
         
         # New single theta backprojection
@@ -459,7 +459,7 @@ def single_thetabin_single_vel_allsky(velnum=-8):
         hdr['VMIN'] = cstart
         hdr['VMAX'] = cstop
         hdr['THET'] = theta_index
-        fits.writeto(out_root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_SRcorr_w"+str(wlen)+"_s15_t70_theta_"+str(theta_index)+"_newtest.fits", fulldata, hdr)
+        fits.writeto(out_root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_SRcorr_w"+str(wlen)+"_s15_t70_theta_"+str(theta_index)+".fits", fulldata, hdr)
 
         time1 = time.time()
         print(np.nansum(fulldata))
