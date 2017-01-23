@@ -250,10 +250,11 @@ def interpolate_data_to_hp_galactic(data, data_hdr, local=True):
 
 # If we want to pull data from multiple velocity slices, we need to combine their RHT weights theta-bin by theta-bin.
 
-def get_RHT_data(rht_fn):
+def get_RHT_data(rht_fn, verbose=False):
     ipoints, jpoints, rthetas, naxis1, naxis2 = RHT_tools.get_RHT_data(rht_fn)
     npoints, nthetas = rthetas.shape
-    print("There are %d theta bins" %nthetas)
+    if verbose:
+        print("There are %d theta bins" %nthetas)
     
     return ipoints, jpoints, rthetas, naxis1, naxis2, nthetas
 
@@ -714,7 +715,7 @@ def plot_by_thetabin():
 if __name__ == "__main__":
 #    plot_by_thetabin()
      #lensing_maps()
-     single_thetabin_single_vel_allsky(velnum=-10) # running: -10, -9, -8
+     single_thetabin_single_vel_allsky(velnum=-9) # running: -10, -9, -8
      
      #redo_local_intrhts(velnum=-9)
     
