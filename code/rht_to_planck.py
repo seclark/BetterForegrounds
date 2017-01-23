@@ -411,7 +411,7 @@ def single_thetabin_single_vel_allsky(velnum=-8):
     fulldata = np.zeros((nyfull, nxfull), np.float_)
     
     # Loop through thetas - should be xrange(ntheta) but just testing now
-    for theta_index in np.arange(47, 50):#xrange(166):#xrange(1):
+    for theta_index in [40]:#np.arange(47, 50):#xrange(166):#xrange(1):
         time0 = time.time()
         
         # New single theta backprojection
@@ -459,14 +459,17 @@ def single_thetabin_single_vel_allsky(velnum=-8):
         hdr['VMIN'] = cstart
         hdr['VMAX'] = cstop
         hdr['THET'] = theta_index
-        fits.writeto(out_root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_SRcorr_w"+str(wlen)+"_s15_t70_theta_"+str(theta_index)+".fits", fulldata, hdr)
+        fits.writeto(out_root+"GALFA_HI_W_"+s_string+str(cstart)+"_"+extra_0+str(cstop)+"_newhdr_SRcorr_w"+str(wlen)+"_s15_t70_theta_"+str(theta_index)+"_newtest.fits", fulldata, hdr)
 
         time1 = time.time()
         print(np.nansum(fulldata))
         print("theta %f took %f minutes" %(theta_index, (time1 - time0)/60.))
             
 def place_normal_data(holey_data, filler_data, xstart0, xstop0):
-    holey_data[:, xstart0:xstop0] = filler_data
+    #holey_data[:, xstart0:xstop0] = filler_data
+    
+    filler_data[np.where(holey_data[:, xstart0:xstop0] != 0)] = 0
+    holey_data[:, xstart0:xstop0] += filler_data
     
     return holey_data
             
@@ -481,6 +484,7 @@ def place_filler_data(holey_data, filler_data, fillernum, overlap):
     
     infiller0, infiller1, tofiller0, tofiller1 = get_placement_from_fillernum(fillernum, overlap)
     holey_data[:, tofiller0:tofiller1] = filler_data[:, infiller0:infiller1]
+    print('placing data from {} to {}'.format(tofiller0, tofiller1))
     
     return holey_data
     
