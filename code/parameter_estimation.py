@@ -671,9 +671,9 @@ def write_allsky_singlevel_thetaweights_to_database_RADEC(update = False, velstr
         conn.commit()
         
     # Shape of the all-sky data
-    nyfull = 2432
-    nxfull = 21600
-    fulldata = np.arange(nyfull*nxfull).reshape(nyfull, nxfull)
+    #nyfull = 2432
+    #nxfull = 21600
+    #fulldata = np.arange(nyfull*nxfull).reshape(nyfull, nxfull)
         
     for _thetabin_i in xrange(nthets):
         time0 = time.time()
@@ -685,6 +685,18 @@ def write_allsky_singlevel_thetaweights_to_database_RADEC(update = False, velstr
         nonzero_index = np.nonzero(unprojdata)[0]
         print("there are {} nonzero elements in thetabin {}".format(len(nonzero_index), _thetabin_i))
         
+        # Either inserts new ID with given value or ignores if id already exists 
+        c.executemany("INSERT OR IGNORE INTO "+tablename+" (id, "+value_names[_thetabin_i]+") VALUES (?, ?)", [(i, unprojdata.flat[i]) for i in nonzero_index])
+    
+        # Inserts data to new ids
+        c.executemany("UPDATE "+tablename+" SET "+value_names[_thetabin_i]+"=? WHERE id=?", [(unprojdata.flat[i], i) for i in nonzero_index])
+    
+        conn.commit()
+    
+        time1 = time.time()
+        print("theta bin {} took {} minutes".format(_thetabin_i, time1 - time0)/60.)
+
+    conn.close()
     
     
 def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0974_0978"):
@@ -1613,7 +1625,8 @@ if __name__ == "__main__":
     #reproject_allsky_data()
     
     #project_allsky_singlevel_thetaweights_to_database(update=False, velstr="S0984_0988")
+    write_allsky_singlevel_thetaweights_to_database_RADEC(update = False, velstr="S0974_0978")
     #intRHT_QU_maps_per_vel(velstr="S0974_0978") #haven't done yet
-    intRHT_QU_maps_per_vel(velstr="S0984_0988")
+    #intRHT_QU_maps_per_vel(velstr="S0984_0988")
 
 
