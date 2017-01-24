@@ -1625,8 +1625,12 @@ if __name__ == "__main__":
     #reproject_allsky_data()
     
     #project_allsky_singlevel_thetaweights_to_database(update=False, velstr="S0984_0988")
-    write_allsky_singlevel_thetaweights_to_database_RADEC(update = False, velstr="S0984_0988")
+    #write_allsky_singlevel_thetaweights_to_database_RADEC(update = False, velstr="S0984_0988")
     #intRHT_QU_maps_per_vel(velstr="S0974_0978") #haven't done yet
     #intRHT_QU_maps_per_vel(velstr="S0984_0988")
+    
+    velstr = "S1024_1028"
+    intRHT_QU_maps_per_vel(velstr=velstr)
+    write_allsky_singlevel_thetaweights_to_database_RADEC(update = False, velstr=velstr)
 
 
