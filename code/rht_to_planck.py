@@ -715,7 +715,7 @@ def plot_by_thetabin():
 if __name__ == "__main__":
 #    plot_by_thetabin()
      #lensing_maps()
-     single_thetabin_single_vel_allsky(velnum=3) #running: -10 ran: -8 (still need 0 to 100 of 3, 4)
+     single_thetabin_single_vel_allsky(velnum=4) #running: -10 ran: -8 (still need 0 to 100 of 3, 4)
      
      #redo_local_intrhts(velnum=-9)
     
