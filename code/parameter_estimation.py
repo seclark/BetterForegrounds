@@ -1629,7 +1629,7 @@ if __name__ == "__main__":
     #intRHT_QU_maps_per_vel(velstr="S0974_0978") #haven't done yet
     #intRHT_QU_maps_per_vel(velstr="S0984_0988")
     
-    velstr = "S1074_1078"
+    velstr = "S1069_1073"
     print('beginning ', velstr)
     intRHT_QU_maps_per_vel(velstr=velstr)
     #write_allsky_singlevel_thetaweights_to_database_RADEC(update = False, velstr=velstr)
