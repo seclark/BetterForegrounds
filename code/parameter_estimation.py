@@ -876,8 +876,8 @@ def coadd_QU_maps():
     cbegin = 1024 + -10*cstep
     cend = 1024 + 9*cstep
         
-    fits.writeto("/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/QRHT_coadd_"+str(cbegin)+"_"+str(cend)+".fits", Qdata, hdr)
-    fits.writeto("/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/URHT_coadd_"+str(cbegin)+"_"+str(cend)+".fits", Udata, hdr)
+    fits.writeto("/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/QRHT_coadd_"+str(cbegin)+"_"+str(cend)+".fits", Qdata, outhdr)
+    fits.writeto("/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/URHT_coadd_"+str(cbegin)+"_"+str(cend)+".fits", Udata, outhdr)
         
     
 def reproject_allsky_data():
