@@ -830,7 +830,23 @@ def intRHT_QU_maps_per_vel(velstr="S0974_0978"):
     fits.writeto(unprojected_root+"QRHTsq_"+velstr+".fits", QRHTsq, hdr)
     fits.writeto(unprojected_root+"URHTsq_"+velstr+".fits", URHTsq, hdr)
     np.save(unprojected_root+"thets_hist_"+velstr+".fits", thetshist)
-    
+
+def get_extra0_sstring(cstart, cstop):
+    """
+    For naming convention
+    """
+    if cstart <= 999:
+        s_string = "S0"
+        extra_0 = "0"
+    else:
+        s_string = "S"
+        extra_0 = ""
+    if cstart == 999:
+        s_string = "S0"
+        extra_0 = ""
+        
+    return s_string, extra_0
+  
 def coadd_QU_maps():
     wlen = 75
     cstep = 5 
