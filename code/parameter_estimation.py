@@ -831,6 +831,38 @@ def intRHT_QU_maps_per_vel(velstr="S0974_0978"):
     fits.writeto(unprojected_root+"URHTsq_"+velstr+".fits", URHTsq, hdr)
     np.save(unprojected_root+"thets_hist_"+velstr+".fits", thetshist)
     
+def coadd_QU_maps():
+    wlen = 75
+    cstep = 5 
+    
+    # Shape of the all-sky data
+    nyfull = 2432
+    nxfull = 21600
+    Qdata = np.zeros((nyfull, nxfull), np.float_)
+    Udata = np.zeros((nyfull, nxfull), np.float_)
+
+    for velnum in np.arange(-10, 10):
+    
+        # Everything is in chunks of 5 channels. e.g. 1024_1028 includes [1024, 1028] inclusive.
+        cstart = 1024 + velnum*cstep
+        cstop = cstart + cstep - 1
+        s_string, extra_0 = get_extra0_sstring(cstart, cstop)
+    
+        velrangestring = s_string+str(cstart)+"_"+extra_0+str(cstop)
+
+        in_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/"+velrangestring+"/"
+        
+        Qdata += fits.getdata(in_root + "QRHT_"+velrangestring+".fits")
+        Udata += fits.getdata(in_root + "URHT_"+velrangestring+".fits")
+    
+    outhdr = fits.getheader(in_root + "QRHT_"+velrangestring+".fits")
+        
+    cbegin = 1024 + -10*cstep
+    cend = 1024 + 9*cstep
+        
+    fits.writeto("/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/QRHT_coadd_"+str(cbegin)+"_"+str(cend)+".fits", Qdata, hdr)
+    fits.writeto("/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/URHT_coadd_"+str(cbegin)+"_"+str(cend)+".fits", Udata, hdr)
+        
     
 def reproject_allsky_data():
     
