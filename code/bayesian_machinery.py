@@ -1087,7 +1087,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol
     psiMB_integrand = posterior_obj.normed_posterior*sample_psi0[:, np.newaxis]
     pdf = np.trapz(psiMB_integrand, dx = pdx, axis=0)
     psi0_ludo_new = 0.5*np.arctan2(np.sum(np.sin(2*sample_psi0)*pdf), np.sum(np.cos(2*sample_psi0)*pdf))
-    print("psi0 determined ludo's new way: {}".format(psi0_ludo_new))
+    #print("psi0 determined ludo's new way: {}".format(psi0_ludo_new))
     
     # determine psiMB
     sin_nocenter_psiMB_integrand = posterior_obj.normed_posterior*np.sin(2*sample_psi0[:, np.newaxis])
@@ -1098,7 +1098,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol
     
     psiMB = np.mod(psiMB, np.pi)
     
-    return pMB, psiMB, psi0_ludo_new
+    return pMB, psiMB#, psi0_ludo_new
     
 def mean_bayesian_posterior_old(posterior_obj, center = "naive", verbose = True, tol=0.1):#1E-5):
     """
