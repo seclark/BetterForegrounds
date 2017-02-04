@@ -26,8 +26,13 @@ def plot_psi_p_hists(*plotdata, **kwargs):
     ax1 = fig.add_subplot(121)
     ax2 = fig.add_subplot(122)
     
-    for data in plotdata:
-        ax1.hist(data, bins=nbins)
+    ax = [ax1, ax2]
+    
+    for i, data in enumerate(plotdata):
+        ax[i].hist(data, **kwargs)
         
 p1 = get_nonzero_data(root + pdeltafunc_fn)
-plot_psi_p_hists(p1, nbins=100)
+psi1 = get_nonzero_data(root + psideltafunc_fn)
+
+histkwargs = {'bins': 100, 'histtype': 'step'}
+plot_psi_p_hists(p1, psi1, **histkwargs)
