@@ -1,4 +1,5 @@
 from __future__ import division, print_function
+import matplotlib.pyplot as plt
 import numpy as np
 import healpy as hp
 
@@ -29,4 +30,4 @@ def plot_psi_p_hists(*plotdata, **kwargs):
         ax1.hist(data, bins=nbins)
         
 p1 = get_nonzero_data(root + pdeltafunc_fn)
-plot_psi_p_hists(p1)
+plot_psi_p_hists(p1, nbins=100)
