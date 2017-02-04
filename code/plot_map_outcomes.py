@@ -34,8 +34,8 @@ def plot_psi_p_hists(*plotdata, **kwargs):
     ax = [ax1, ax2]
     
     for i, data in enumerate(plotdata):
-        ax[0].hist(data[0], label=data[2], **kwargs)
-        ax[1].hist(data[1], label=data[2], **kwargs)
+        ax[0].hist(data[0], label=data[2], color=data[3], **kwargs)
+        ax[1].hist(data[1], label=data[2], color=data[3], **kwargs)
     
     ax1.set_title('p')
     ax2.set_title('psi')    
@@ -49,4 +49,4 @@ p2 = get_nonzero_data(pMLmap_fn)
 psi2 = get_nonzero_data(psiMLmap_fn)
 
 histkwargs = {'bins': 100, 'histtype': 'step'}
-plot_psi_p_hists([p1, psi1, 'delta func'], [p2, psi2, 'RHT'], **histkwargs)
+plot_psi_p_hists([p1, psi1, 'delta func', 'red'], [p2, psi2, 'RHT', 'teal'], **histkwargs)
