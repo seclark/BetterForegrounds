@@ -3,7 +3,30 @@ import numpy as np
 import healpy as hp
 
 
-root = "/Volumes/DataDavy/Foregrounds/BayesianMap/"
+root = "/Volumes/DataDavy/Foregrounds/BayesianMaps/"
 pdeltafunc_fn = "pMB_DR2_SC_241_-4_3_smoothprior_True_adaptivep0_False_deltafuncprior_True.fits"  
 psideltafunc_fn = "psiMB_DR2_SC_241_-4_3_smoothprior_True_adaptivep0_False_deltafuncprior_True.fits"
 
+def get_nonzero_data(hp_data_fn, mask=None):
+
+    data = hp.fitsfunc.read_map(hp_data_fn)
+
+    if mask is not None:
+        data = data[mask]
+    else:
+        data[np.where(data == 0)] = None
+        data = data[~np.isnan(data)]
+    
+    return data
+    
+def plot_psi_p_hists(*plotdata, **kwargs):
+    
+    fig = plt.figure(facecolor="white")
+    ax1 = fig.add_subplot(121)
+    ax2 = fig.add_subplot(122)
+    
+    for data in plotdata:
+        ax1.hist(data, bins=nbins)
+        
+p1 = get_nonzero_data(root + pdeltafunc_fn)
+plot_psi_p_hists(p1)
