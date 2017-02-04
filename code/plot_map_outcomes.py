@@ -4,9 +4,14 @@ import numpy as np
 import healpy as hp
 
 
+# delta function test data
 root = "/Volumes/DataDavy/Foregrounds/BayesianMaps/"
 pdeltafunc_fn = "pMB_DR2_SC_241_-4_3_smoothprior_True_adaptivep0_False_deltafuncprior_True.fits"  
 psideltafunc_fn = "psiMB_DR2_SC_241_-4_3_smoothprior_True_adaptivep0_False_deltafuncprior_True.fits"
+
+# legit process data
+pMLmap_fn = "/Users/susanclark/BetterForegrounds/data/pMB_DR2_SC_241_353GHz_adaptivep0_True_new.fits"
+psiMLmap_fn = "/Users/susanclark/BetterForegrounds/data/psiMB_DR2_SC_241_353GHz_adaptivep0_True_new.fits"
 
 def get_nonzero_data(hp_data_fn, mask=None):
 
@@ -29,10 +34,14 @@ def plot_psi_p_hists(*plotdata, **kwargs):
     ax = [ax1, ax2]
     
     for i, data in enumerate(plotdata):
-        ax[i].hist(data, **kwargs)
+        ax[i].hist(data[0], **kwargs)
+        ax[i].hist(data[1], **kwargs)
         
 p1 = get_nonzero_data(root + pdeltafunc_fn)
 psi1 = get_nonzero_data(root + psideltafunc_fn)
 
+p2 = get_nonzero_data(pMLmap_fn)
+psi2 = get_nonzero_data(psiMLmap_fn)
+
 histkwargs = {'bins': 100, 'histtype': 'step'}
-plot_psi_p_hists(p1, psi1, **histkwargs)
+plot_psi_p_hists([p1, psi1], [p2, psi2] **histkwargs)
