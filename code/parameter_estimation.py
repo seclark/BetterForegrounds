@@ -856,6 +856,7 @@ def coadd_QU_maps():
     nxfull = 21600
     Qdata = np.zeros((nyfull, nxfull), np.float_)
     Udata = np.zeros((nyfull, nxfull), np.float_)
+    intdata = np.zeros((nyfull, nxfull), np.float_)
 
     for velnum in np.arange(-10, 10):
     
@@ -870,12 +871,14 @@ def coadd_QU_maps():
         
         Qdata += fits.getdata(in_root + "QRHT_"+velrangestring+".fits")
         Udata += fits.getdata(in_root + "URHT_"+velrangestring+".fits")
+        intdata += fits.getdata(in_root + "intrht_"+velrangestring+".fits")
     
     outhdr = fits.getheader(in_root + "QRHT_"+velrangestring+".fits")
         
     cbegin = 1024 + -10*cstep
     cend = 1024 + 9*cstep
         
+    fits.writeto("/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/intrht_coadd_"+str(cbegin)+"_"+str(cend)+".fits", intdata, outhdr)
     fits.writeto("/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/QRHT_coadd_"+str(cbegin)+"_"+str(cend)+".fits", Qdata, outhdr)
     fits.writeto("/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/URHT_coadd_"+str(cbegin)+"_"+str(cend)+".fits", Udata, outhdr)
         
