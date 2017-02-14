@@ -172,7 +172,8 @@ class Prior(BayesianComponent):
                 self.rht_data = self.rht_data[::-1]
                 self.sample_psi0 = self.sample_psi0[::-1]
             
-            self.prior = (np.array([self.rht_data]*npsample).T + 0.7)*75
+            #self.prior = (np.array([self.rht_data]*npsample).T + 0.7)*75
+            self.prior = np.array([self.rht_data]).T # hack: setting raw RHT as prior instead.
             
             self.psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
             self.p_dx = self.sample_p0[1] - self.sample_p0[0]
@@ -1488,8 +1489,8 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
             if sampletype is "mean_bayes":
                 #psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
                 #pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
-                psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+".fits"
-                pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+".fits"
+                psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_2.fits"
+                pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_2.fits"
             
             elif sampletype is "MAP":
                 psiMB_out_fn = "psiMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
