@@ -9,6 +9,10 @@ root = "/Volumes/DataDavy/Foregrounds/BayesianMaps/"
 pdeltafunc_fn = "pMB_DR2_SC_241_-4_3_smoothprior_True_adaptivep0_False_deltafuncprior_True.fits"  
 psideltafunc_fn = "psiMB_DR2_SC_241_-4_3_smoothprior_True_adaptivep0_False_deltafuncprior_True.fits"
 
+# delta func #2 where I didn't convert to pixels
+pdeltafunc_fn2 = "pMB_DR2_SC_241_-4_3_smoothprior_True_adaptivep0_False_deltafuncprior_True_2.fits"  
+psideltafunc_fn2 = "psiMB_DR2_SC_241_-4_3_smoothprior_True_adaptivep0_False_deltafuncprior_True_2.fits"
+
 # legit process data
 pMLmap_fn = "/Users/susanclark/BetterForegrounds/data/pMB_DR2_SC_241_353GHz_adaptivep0_True_new.fits"
 psiMLmap_fn = "/Users/susanclark/BetterForegrounds/data/psiMB_DR2_SC_241_353GHz_adaptivep0_True_new.fits"
@@ -48,5 +52,8 @@ psi1 = get_nonzero_data(root + psideltafunc_fn)
 p2 = get_nonzero_data(pMLmap_fn)
 psi2 = get_nonzero_data(psiMLmap_fn)
 
+p3 = get_nonzero_data(pMLmap_fn)
+psi3 = get_nonzero_data(psiMLmap_fn)
+
 histkwargs = {'bins': 100, 'histtype': 'step'}
-plot_psi_p_hists([p1, psi1, 'delta func', 'red'], [p2, psi2, 'RHT', 'teal'], **histkwargs)
+plot_psi_p_hists([p1, psi1, 'delta func', 'red'], [p2, psi2, 'RHT', 'teal'], [p3, psi3, 'delta 2', 'orange'], **histkwargs)
