@@ -66,7 +66,7 @@ def plot_psi_p_hists(*plotdata, **kwargs):
 def plot_psi_hists(*plotdata, **kwargs):
     
     fig = plt.figure(facecolor="white")
-    ax1 = fig.add_subplot(121)
+    ax1 = fig.add_subplot(111)
     
     for i, data in enumerate(plotdata):
         ax1.hist(data[0], label=data[1], color=data[2], **kwargs)
@@ -91,4 +91,4 @@ rhtpsi = nonzero_data(theta_rht, mask=intrhtmask)
 histkwargs = {'bins': 100, 'histtype': 'step'}
 #plot_psi_p_hists([p1, psi1, 'delta func', 'red'], [p2, psi2, 'RHT', 'teal'], [p3, psi3, 'delta 2', 'orange'], **histkwargs)
 
-plot_psi_hists([psi1, 'delta func', 'red'], [psi3, 'RHT prior', 'teal'], [planckpsi, 'planck orig', 'orange'], [rhtpsi, 'RHT orig', 'blue'])
+plot_psi_hists([psi1, 'delta func', 'red'], [psi3, 'RHT prior', 'teal'], [planckpsi, 'planck orig', 'orange'], [rhtpsi, 'RHT orig', 'blue'], **histkwargs)
