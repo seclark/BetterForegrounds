@@ -68,7 +68,7 @@ def plot_psi_hists(*plotdata, **kwargs):
     ax1 = fig.add_subplot(121)
     
     for i, data in enumerate(plotdata):
-        ax1.hist(data[0], label=data[2], color=data[3], **kwargs)
+        ax1.hist(data[0], label=data[1], color=data[2], **kwargs)
     
     ax1.set_title('psi')  
         
