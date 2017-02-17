@@ -33,7 +33,8 @@ def nonzero_data(data, mask=None):
         data = data[np.where(mask == 1)]
     else:
         data[np.where(data == 0)] = None
-        data = data[~np.isnan(data)]
+    
+    data = data[~np.isnan(data)]
     
     return data
 
