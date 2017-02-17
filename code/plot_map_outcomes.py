@@ -30,7 +30,7 @@ intrhtmask[np.where(int_rhtunsmoothed > 0)] = 1
 def nonzero_data(data, mask=None):
 
     if mask is not None:
-        data = data[mask]
+        data = data[np.where(mask == 1)]
     else:
         data[np.where(data == 0)] = None
         data = data[~np.isnan(data)]
