@@ -90,4 +90,4 @@ rhtpsi = nonzero_data(theta_rht, mask=intrhtmask)
 histkwargs = {'bins': 100, 'histtype': 'step'}
 #plot_psi_p_hists([p1, psi1, 'delta func', 'red'], [p2, psi2, 'RHT', 'teal'], [p3, psi3, 'delta 2', 'orange'], **histkwargs)
 
-plot_psi_hists([psi1, 'delta func', 'red'], [psi2, 'RHT', 'teal'], [planckpsi, 'planck orig', 'orange'], [rhtpsi, 'RHT orig', 'blue'])
+plot_psi_hists([psi1, 'delta func', 'red'], [psi3, 'RHT prior', 'teal'], [planckpsi, 'planck orig', 'orange'], [rhtpsi, 'RHT orig', 'blue'])
