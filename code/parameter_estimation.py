@@ -846,7 +846,7 @@ def make_single_theta_int_vel_map(thetabin=0):
     # Shape of the all-sky data
     nyfull = 2432
     nxfull = 21600
-    single_vel_map = np.zeros(nyfull, nxfull), np.float_)   
+    single_vel_map = np.zeros((nyfull, nxfull), np.float_)   
     
     for _velstr in velstrs:
         single_theta_fn = in_root+_velstr+"/GALFA_HI_W_"+_velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(thetabin)+".fits"
