@@ -831,6 +831,31 @@ def intRHT_QU_maps_per_vel(velstr="S0974_0978"):
     fits.writeto(unprojected_root+"URHTsq_"+velstr+".fits", URHTsq, hdr)
     np.save(unprojected_root+"thets_hist_"+velstr+".fits", thetshist)
 
+def make_single_theta_int_vel_map(thetabin=0):
+    """
+    Make a single theta map that has the total weight at that thetabin for all velocities. 
+    """
+    
+    velstrs=["S0974_0978", "S0979_0983", "S0984_0988", "S0989_0993", "S0994_0998", "S0999_1003",
+             "S1004_1008", "S1009_1013", "S1014_1018", "S1019_1023", "S1024_1028", "S1029_1033",
+             "S1034_1038", "S1039_1043", "S1044_1048", "S1049_1053", "S1054_1058", "S1059_1063",
+             "S1064_1068", "S1069_1073", "S1074_1078"]
+    
+    in_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/"
+    out_root = in_root + "single_theta_0974_1078_sum/" 
+    # Shape of the all-sky data
+    nyfull = 2432
+    nxfull = 21600
+    single_vel_map = np.zeros(nyfull, nxfull), np.float_)   
+    
+    for _velstr in velstrs:
+        single_theta_fn = in_root+_velstr+"/GALFA_HI_W_"+_velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(thetabin)+".fits"
+        single_vel_map += fits.getdata(single_theta_fn)    
+        print(_velstr, np.nansum(single_vel_map))
+
+    hdr = fits.getheader(single_theta_fn)
+    fits.writeto(out_root+"total_rht_power_0974_1078_thetabin_"+str(thetabin)+".fits", single_vel_map)
+
 def get_extra0_sstring(cstart, cstop):
     """
     For naming convention
@@ -1686,4 +1711,6 @@ if __name__ == "__main__":
     
     #write_allsky_singlevel_thetaweights_to_database_RADEC(update = False, velstr=velstr)
 
-    coadd_QU_maps()
+    #coadd_QU_maps()
+    
+    make_single_theta_int_vel_map(thetabin=0)
