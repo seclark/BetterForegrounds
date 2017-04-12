@@ -1610,7 +1610,7 @@ def gauss_sample_region(region = "SC_241", useprior = "ThetaRHT", local = True):
     hp.fitsfunc.write_map(out_root + "psiMB_SC_241_thetaRHT_test0.fits", hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + "pMB_SC_241_thetaRHT_test0.fits", hp_pMB, coord = "C", nest = True) 
 
-def map_all_sig_p(limitregion=False):
+def map_all_sig_p(limitregion=False, region="SC_241"):
     """
     Get all sigpGsq values in map
     """
