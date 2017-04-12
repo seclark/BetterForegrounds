@@ -1658,8 +1658,10 @@ def map_all_sig_p(limitregion=False):
     hp_sigpGsq = make_hp_map(all_sigpGsq, all_ids, Nside = 2048, nest = True)
     
     out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
-    hp.fitsfunc.write_map(out_root + "planck_sigpGsq_SC_241.fits", hp_sigpGsq, coord = "G", nest = True) 
-    
+    if limitregion:
+        hp.fitsfunc.write_map(out_root + "planck_sigpGsq_SC_241.fits", hp_sigpGsq, coord = "G", nest = True) 
+    else:
+        hp.fitsfunc.write_map(out_root + "planck_sigpGsq_DR2sky.fits", hp_sigpGsq, coord = "G", nest = True) 
     
 def make_hp_map(data, hp_indices, Nside = 2048, nest = True):
     """
@@ -1782,7 +1784,7 @@ if __name__ == "__main__":
         print("psi is ", allskypsimb_nest[hpnum])
         print("p is ", allskypmb_nest[hpnum])
     """
-    
+    map_all_sig_p(limitregion=True)
     
     
     
