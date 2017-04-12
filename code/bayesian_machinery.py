@@ -365,6 +365,7 @@ class Posterior(BayesianComponent):
         self.naive_psi = likelihood.naive_psi
         self.psimeas = likelihood.psimeas
         self.pmeas = likelihood.pmeas
+        self.likelihood = likelihood # store entire likelihood object
         
         self.normed_prior = prior.normed_prior#/np.max(prior.normed_prior)
         self.planck_likelihood = likelihood.likelihood
@@ -1609,6 +1610,56 @@ def gauss_sample_region(region = "SC_241", useprior = "ThetaRHT", local = True):
     hp.fitsfunc.write_map(out_root + "psiMB_SC_241_thetaRHT_test0.fits", hp_psiMB, coord = "C", nest = True) 
     hp.fitsfunc.write_map(out_root + "pMB_SC_241_thetaRHT_test0.fits", hp_pMB, coord = "C", nest = True) 
 
+def map_all_sig_p(limitregion=False):
+    """
+    Get all sigpGsq values in map
+    """
+    
+    # Get ids of all pixels that contain RHT data
+    rht_cursor, tablename = get_rht_cursor(region = region)
+    all_ids = get_all_rht_ids(rht_cursor, tablename)
+    
+    planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
+    planck_tqu_cursor = planck_tqu_db.cursor()
+    planck_cov_db = sqlite3.connect("planck_cov_gal_2048_db.sqlite")
+    planck_cov_cursor = planck_cov_db.cursor()
+    
+    if limitregion is True:
+        print("Loading all allsky data points that are in the SC_241 region")
+        # Get all ids that are in both allsky data and SC_241
+        all_ids_SC = pickle.load(open("SC_241_healpix_ids.p", "rb"))
+        all_ids = list(set(all_ids).intersection(all_ids_SC))
+        
+    all_sigpGsq = np.zeros(len(all_ids))
+
+    update_progress(0.0)
+    for i, hp_index in enumerate(all_ids):
+        #likelihood = Likelihood(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, adaptivep0 = adaptivep0)
+        
+        (hp_index, T, Q, U) = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
+        (hp_index, TT, TQ, TU, TQa, QQ, QU, TUa, QUa, UU) = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (hp_index,)).fetchone()
+        
+        # sigma_p as defined in arxiv:1407.0178v1 Eqn 3.
+        sigma_p = np.zeros((2, 2), np.float_) # [sig_Q^2, sig_QU // sig_QU, UU]
+        sigma_p[0, 0] = (1.0/T**2)*QQ #QQ
+        sigma_p[0, 1] = (1.0/T**2)*QU #QU
+        sigma_p[1, 0] = (1.0/T**2)*QU #QU
+        sigma_p[1, 1] = (1.0/T**2)*UU #UU
+          
+        # det(sigma_p) = sigma_p,G^4
+        det_sigma_p = np.linalg.det(sigma_p)
+        sigpGsq = np.sqrt(det_sigma_p)
+        
+        all_sigpGsq[i] = sigpGsq
+        
+        update_progress((i+1.0)/len(all_ids), message='Calculating: ', final_message='Finished Calculating: ')
+    
+    # Place into healpix map
+    hp_sigpGsq = make_hp_map(all_sigpGsq, all_ids, Nside = 2048, nest = True)
+    
+    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
+    hp.fitsfunc.write_map(out_root + "planck_sigpGsq_SC_241.fits", hp_sigpGsq, coord = "G", nest = True) 
+    
     
 def make_hp_map(data, hp_indices, Nside = 2048, nest = True):
     """
