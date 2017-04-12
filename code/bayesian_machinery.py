@@ -1636,7 +1636,7 @@ def map_all_sig_p(limitregion=False, region="allsky"):
     for i, hp_index in enumerate(all_ids):
         #likelihood = Likelihood(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, adaptivep0 = adaptivep0)
         print(hp_index)
-        (hp_index, T, Q, U) = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", hp_index[0]).fetchone()
+        (hp_index, T, Q, U) = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", hp_index).fetchone()
         (hp_index, TT, TQ, TU, TQa, QQ, QU, TUa, QUa, UU) = planck_cov_cursor.execute("SELECT * FROM Planck_Nside_2048_cov_Galactic WHERE id = ?", (hp_index,)).fetchone()
         
         # sigma_p as defined in arxiv:1407.0178v1 Eqn 3.
