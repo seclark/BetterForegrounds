@@ -1633,7 +1633,7 @@ def map_all_sig_p(limitregion=False, region="allsky"):
     all_sigpGsq = np.zeros(len(all_ids))
 
     update_progress(0.0)
-    for i, hp_index in enumerate(all_ids):
+    for i, hp_index[0] in enumerate(all_ids):
         #likelihood = Likelihood(_id[0], planck_tqu_cursor, planck_cov_cursor, p0_all, psi0_all, adaptivep0 = adaptivep0)
         
         (hp_index, T, Q, U) = planck_tqu_cursor.execute("SELECT * FROM Planck_Nside_2048_TQU_Galactic WHERE id = ?", (hp_index,)).fetchone()
