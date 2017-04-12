@@ -404,6 +404,10 @@ class PlanckPosterior(BayesianComponent):
         self.naive_psi = likelihood.naive_psi
         self.psimeas = likelihood.psimeas
         self.pmeas = likelihood.pmeas
+        
+        # for plotting, make sure all components are present
+        self.planck_likelihood = likelihood.likelihood
+        self.normed_prior = np.zeros(self.planck_likelihood.shape)
     
         psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
         p_dx = self.sample_p0[1] - self.sample_p0[0]
