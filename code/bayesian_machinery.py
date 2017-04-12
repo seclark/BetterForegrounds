@@ -172,8 +172,8 @@ class Prior(BayesianComponent):
                 self.rht_data = self.rht_data[::-1]
                 self.sample_psi0 = self.sample_psi0[::-1]
             
-            #self.prior = (np.array([self.rht_data]*npsample).T + 0.7)*75
-            self.prior = np.array([self.rht_data]).T # hack: setting raw RHT as prior instead.
+            self.prior = (np.array([self.rht_data]*npsample).T + 0.7)*75
+            #self.prior = np.array([self.rht_data]).T # hack: setting raw RHT as prior instead.
             
             self.psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
             self.p_dx = self.sample_p0[1] - self.sample_p0[0]
@@ -698,7 +698,7 @@ def plot_bayesian_component_from_posterior(posterior_obj, component = "posterior
     cax = div.append_axes("right", size="15%", pad=0.05)#, aspect = 100./15)
     cbar = plt.colorbar(im, cax=cax, format=ticker.FuncFormatter(latex_formatter))
     
-def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix"):
+def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix", returnax=False):
     
     fig = plt.figure(figsize = (14, 4), facecolor = "white")
     gs = gridspec.GridSpec(1, 3)
@@ -713,10 +713,11 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     
     #plt.subplots_adjust(wspace = 0.2)
     
-    pMB, psiMB, psi0_ludo_new = mean_bayesian_posterior(posterior_obj, center = "naive")
+    #pMB, psiMB, psi0_ludo_new = mean_bayesian_posterior(posterior_obj, center = "naive")
+    pMB, psiMB = mean_bayesian_posterior(posterior_obj, center = "naive")
     ax3.plot(pMB, np.mod(psiMB, np.pi), '+', ms = 10, mew = 2, color = "gray")
     
-    ax3.plot(pMB, np.mod(psi0_ludo_new, np.pi), '+', ms = 10, mew = 2, color = "pink")
+    #ax3.plot(pMB, np.mod(psi0_ludo_new, np.pi), '+', ms = 10, mew = 2, color = "pink")
     
     #pMB_myQU, psiMB_myQU = mean_bayesian_posterior_testQU(posterior_obj, center = "naive")
     #ax3.plot(pMB_myQU, np.mod(psiMB_myQU, np.pi), '+', ms = 10, mew = 2, color = "teal")
@@ -740,6 +741,9 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
             ax.set_ylim(np.mod(posterior_obj.sample_psi0[0], np.pi), np.mod(posterior_obj.sample_psi0[-1], np.pi))
         ax.set_ylabel(r"$\psi_0$", size = 15)
         ax.set_xlabel(r"$p_0$", size = 15)
+    
+    if returnax:
+        return axs
         
 def naive_planck_measurements(hp_index, verbose=False):
     
@@ -1087,7 +1091,7 @@ def mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol
     
     psiMB_integrand = posterior_obj.normed_posterior*sample_psi0[:, np.newaxis]
     pdf = np.trapz(psiMB_integrand, dx = pdx, axis=0)
-    psi0_ludo_new = 0.5*np.arctan2(np.sum(np.sin(2*sample_psi0)*pdf), np.sum(np.cos(2*sample_psi0)*pdf))
+    #psi0_ludo_new = 0.5*np.arctan2(np.sum(np.sin(2*sample_psi0)*pdf), np.sum(np.cos(2*sample_psi0)*pdf))
     #print("psi0 determined ludo's new way: {}".format(psi0_ludo_new))
     
     # determine psiMB
@@ -1496,8 +1500,8 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
                 psiMB_out_fn = "psiMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
                 pMB_out_fn = "pMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
         
-    hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
-    hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
+    hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "G", nest = True) 
+    hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "G", nest = True) 
     
 def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = False, local = False, verbose = False, tol=1E-5, sampletype = "mean_bayes"):
     """
@@ -1544,8 +1548,8 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
    
     test = False
     if test is False:
-        hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "C", nest = True) 
-        hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "C", nest = True) 
+        hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "G", nest = True) 
+        hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "G", nest = True) 
 
     
 def gauss_sample_sky(region = "allsky", useprior = "ThetaRHT"):
@@ -1708,7 +1712,7 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="MAP", mcmc=True)
     #fully_sample_planck_sky(region = "allsky", limitregion = False)
     
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, deltafuncprior=True)
+    ##fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, deltafuncprior=True)
     
     #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="mean_bayes")
     """
