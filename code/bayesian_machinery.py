@@ -1512,10 +1512,14 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
     """
     Sample Planck 353 GHz psi_MB and p_MB from whole GALFA-HI sky
     """
-    
-    # Get ids of all pixels that contain RHT data
-    rht_cursor, tablename = get_rht_cursor(region = region)
-    all_ids = get_all_rht_ids(rht_cursor, tablename)
+    if region == "trueallsky":
+        Npix = hp.pixelfunc.nside2npix(2048)
+        all_ids = list(np.arange(Npix))
+        print("Sampling entire sky, {} pixels".format(Npix))
+    else:
+        # Get ids of all pixels that contain RHT data
+        rht_cursor, tablename = get_rht_cursor(region = region)
+        all_ids = get_all_rht_ids(rht_cursor, tablename)
     
     planck_tqu_db = sqlite3.connect("planck_TQU_gal_2048_db.sqlite")
     planck_tqu_cursor = planck_tqu_db.cursor()
@@ -1541,8 +1545,12 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
         out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
         
     if limitregion is False:
-        psiMB_out_fn = "psiMB_allsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
-        pMB_out_fn = "pMB_allsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
+        if region == "trueallsky":
+            psiMB_out_fn = "psiMB_trueallsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
+            pMB_out_fn = "pMB_trueallsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
+        else:
+            psiMB_out_fn = "psiMB_allsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
+            pMB_out_fn = "pMB_allsky_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
     elif limitregion is True:
         if sampletype is "mean_bayes":
             psiMB_out_fn = "psiMB_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+"_new.fits"
@@ -1783,7 +1791,7 @@ if __name__ == "__main__":
         print("psi is ", allskypsimb_nest[hpnum])
         print("p is ", allskypmb_nest[hpnum])
     """
-    map_all_sig_p(limitregion=True)
-    
+    #map_all_sig_p(limitregion=True)
+    fully_sample_planck_sky(region = "trueallsky", limitregion=False, local=False)
     
     
