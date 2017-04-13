@@ -1514,7 +1514,7 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
     """
     if region == "trueallsky":
         Npix = hp.pixelfunc.nside2npix(2048)
-        all_ids = list(np.arange(Npix))
+        all_ids = [(i_,) for i_ in xrange(Npix)]
         print("Sampling entire sky, {} pixels".format(Npix))
     else:
         # Get ids of all pixels that contain RHT data
