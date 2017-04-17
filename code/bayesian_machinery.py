@@ -332,7 +332,7 @@ class Posterior(BayesianComponent):
     Class for building a posterior composed of a Planck-based likelihood and an RHT prior
     """
     
-    def __init__(self, hp_index, sample_p0 = None, adaptivep0 = False, region = "SC_241", useprior = "RHTPrior", rht_cursor = None, QRHT_cursor = None, URHT_cursor = None, sig_QRHT_cursor = None, sig_URHT_cursor = None, gausssmooth_prior = False, deltafuncprior = False):
+    def __init__(self, hp_index, sample_p0 = None, adaptivep0 = False, region = "SC_241", useprior = "RHTPrior", rht_cursor = None, QRHT_cursor = None, URHT_cursor = None, sig_QRHT_cursor = None, sig_URHT_cursor = None, gausssmooth_prior = False, deltafuncprior = False, testpsiproj=False):
         BayesianComponent.__init__(self, hp_index)  
         
         if sample_p0 is None:
@@ -370,18 +370,21 @@ class Posterior(BayesianComponent):
         self.normed_prior = prior.normed_prior#/np.max(prior.normed_prior)
         self.planck_likelihood = likelihood.likelihood
         
-        #self.posterior = np.einsum('ij,jk->ik', self.planck_likelihood, self.normed_prior)
-        self.posterior = self.planck_likelihood*self.normed_prior
+        if testpsiproj is True:
+            self.normed_posterior = self.normed_prior
+        else:
+            #self.posterior = np.einsum('ij,jk->ik', self.planck_likelihood, self.normed_prior)
+            self.posterior = self.planck_likelihood*self.normed_prior
         
-        psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
-        p_dx = self.sample_p0[1] - self.sample_p0[0]
-        self.psi_dx = psi_dx
-        self.p_dx = p_dx
+            psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
+            p_dx = self.sample_p0[1] - self.sample_p0[0]
+            self.psi_dx = psi_dx
+            self.p_dx = p_dx
         
-        self.posterior_integrated_over_psi = self.integrate_highest_dimension(self.posterior, dx = psi_dx)
-        self.posterior_integrated_over_p_and_psi = self.integrate_highest_dimension(self.posterior_integrated_over_psi, dx = p_dx)
+            self.posterior_integrated_over_psi = self.integrate_highest_dimension(self.posterior, dx = psi_dx)
+            self.posterior_integrated_over_p_and_psi = self.integrate_highest_dimension(self.posterior_integrated_over_psi, dx = p_dx)
         
-        self.normed_posterior = self.posterior/self.posterior_integrated_over_p_and_psi
+            self.normed_posterior = self.posterior/self.posterior_integrated_over_p_and_psi
         
         self.prior_obj = prior
         
@@ -1361,7 +1364,7 @@ def get_rht_QU_cursors(local = False):
 
     return QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor
 
-def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_241", useprior="RHTPrior", gausssmooth_prior=False, tol=1E-5, sampletype="mean_bayes", verbose=False, mcmc=False, deltafuncprior=False):
+def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_241", useprior="RHTPrior", gausssmooth_prior=False, tol=1E-5, sampletype="mean_bayes", verbose=False, mcmc=False, deltafuncprior=False, testpsiproj=False):
     
     all_pMB = np.zeros(len(all_ids))
     all_psiMB = np.zeros(len(all_ids))
@@ -1376,7 +1379,7 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
         #if _id[0] in [3400757, 793551, 2447655]:
         
         if mcmc is False:
-            posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior, deltafuncprior = deltafuncprior)
+            posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior, deltafuncprior = deltafuncprior, testpsiproj=testpsiproj)
         
             #p0psi0 = np.zeros((2, len(posterior_obj.sample_p0)), np.float_)
             #p0psi0[0, :] = posterior_obj.sample_p0
@@ -1459,12 +1462,13 @@ def sample_all_rht_points_ThetaRHTPrior(all_ids, adaptivep0 = True, region = "SC
         
     return all_pMB, all_psiMB
     
-def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=1E-5, sampletype = "mean_bayes", mcmc=False, deltafuncprior=False):
+def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", 
+                     gausssmooth_prior = False, tol=1E-5, sampletype = "mean_bayes", mcmc=False, deltafuncprior=False, testpsiproj=False):
     """
     Sample psi_MB and p_MB from whole GALFA-HI sky
     """
     
-    print("Fully sampling sky with options: region = {}, limitregion = {}, useprior = {}, velrangestring = {}, gausssmooth_prior = {}, deltafuncprior = {}".format(region, limitregion, useprior, velrangestring, gausssmooth_prior, deltafuncprior))
+    print("Fully sampling sky with options: region = {}, limitregion = {}, useprior = {}, velrangestring = {}, gausssmooth_prior = {}, deltafuncprior = {}, testpsiproj = {}".format(region, limitregion, useprior, velrangestring, gausssmooth_prior, deltafuncprior, testpsiproj))
 
     # Get ids of all pixels that contain RHT data
     rht_cursor, tablename = get_rht_cursor(region = region, velrangestring = velrangestring)
@@ -1480,7 +1484,7 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
     print("beginning creation of all posteriors")
     
     # Create and sample posteriors for all pixels
-    all_pMB, all_psiMB = sample_all_rht_points(all_ids, adaptivep0 = adaptivep0, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior, tol=tol, sampletype = sampletype, mcmc = mcmc, deltafuncprior=deltafuncprior)
+    all_pMB, all_psiMB = sample_all_rht_points(all_ids, adaptivep0 = adaptivep0, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior, tol=tol, sampletype = sampletype, mcmc = mcmc, deltafuncprior=deltafuncprior, testpsiproj=testpsiproj)
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
@@ -1505,6 +1509,10 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
                 psiMB_out_fn = "psiMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
                 pMB_out_fn = "pMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
         
+        if testpsiproj is True:
+            psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+".fits"
+            pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+".fits"
+            
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "G", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "G", nest = True) 
     
@@ -1792,6 +1800,7 @@ if __name__ == "__main__":
         print("p is ", allskypmb_nest[hpnum])
     """
     #map_all_sig_p(limitregion=True)
-    fully_sample_planck_sky(region = "trueallsky", limitregion=False, local=False)
+    #fully_sample_planck_sky(region = "trueallsky", limitregion=False, local=False)
     
-    
+    # test with posterior=prior
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=True)
