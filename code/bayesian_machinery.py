@@ -1379,10 +1379,14 @@ def get_rht_QU_cursors(local = False):
 
     return QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor
 
-def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_241", useprior="RHTPrior", gausssmooth_prior=False, tol=1E-5, sampletype="mean_bayes", verbose=False, mcmc=False, deltafuncprior=False, testpsiproj=False):
+def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_241", useprior="RHTPrior", gausssmooth_prior=False, tol=1E-5, sampletype="mean_bayes", verbose=False, mcmc=False, deltafuncprior=False, testpsiproj=False, testthetas=False):
     
     all_pMB = np.zeros(len(all_ids))
     all_psiMB = np.zeros(len(all_ids))
+    
+    if testthetas is True:
+        all_preroll_thetaRHTs = np.zeros(len(all_ids))
+        all_postroll_thetaRHTs = np.zeros(len(all_ids))
     
     # Get ids of all pixels that contain RHT data
     if rht_cursor is None:
@@ -1401,10 +1405,14 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
             #p0psi0[1, :] = posterior_obj.sample_psi0
             #fits.writeto("sample_p0psi0_{}.fits".format(_id[0]), p0psi0)
 
-            if sampletype is "mean_bayes":
-                all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol=tol)
-            elif sampletype is "MAP":
-                all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
+            if testthetas is True:
+                all_preroll_thetaRHTs[i] = posterior_obj.prior_obj.unrolled_thetaRHT
+                all_postroll_thetaRHTs[i] = posterior_obj.prior_obj.rolled_thetaRHT
+            else:
+                if sampletype is "mean_bayes":
+                    all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol=tol)
+                elif sampletype is "MAP":
+                    all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
         else:
             MCMC_posterior(_id[0], rht_cursor = rht_cursor)
 
@@ -1412,8 +1420,11 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
         #print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
 
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
-
-    return all_pMB, all_psiMB
+    
+    if testthetas is True:
+        return all_preroll_thetaRHTs, all_postroll_thetaRHTs
+    else:
+        return all_pMB, all_psiMB
     
 def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241", verbose = False, tol=1E-5, sampletype = "mean_bayes"):
     """
@@ -1478,12 +1489,14 @@ def sample_all_rht_points_ThetaRHTPrior(all_ids, adaptivep0 = True, region = "SC
     return all_pMB, all_psiMB
     
 def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", 
-                     gausssmooth_prior = False, tol=1E-5, sampletype = "mean_bayes", mcmc=False, deltafuncprior=False, testpsiproj=False):
+                     gausssmooth_prior = False, tol=1E-5, sampletype = "mean_bayes", mcmc=False, deltafuncprior=False, testpsiproj=False, testthetas=False):
     """
     Sample psi_MB and p_MB from whole GALFA-HI sky
     """
     
-    print("Fully sampling sky with options: region = {}, limitregion = {}, useprior = {}, velrangestring = {}, gausssmooth_prior = {}, deltafuncprior = {}, testpsiproj = {}".format(region, limitregion, useprior, velrangestring, gausssmooth_prior, deltafuncprior, testpsiproj))
+    print("Fully sampling sky with options: region = {}, limitregion = {}, useprior = {}, velrangestring = {}, gausssmooth_prior = {}, deltafuncprior = {}, testpsiproj = {}, testthetas = {}".format(region, limitregion, useprior, velrangestring, gausssmooth_prior, deltafuncprior, testpsiproj, testthetas))
+
+    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
 
     # Get ids of all pixels that contain RHT data
     rht_cursor, tablename = get_rht_cursor(region = region, velrangestring = velrangestring)
@@ -1498,38 +1511,45 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
     
     print("beginning creation of all posteriors")
     
-    # Create and sample posteriors for all pixels
-    all_pMB, all_psiMB = sample_all_rht_points(all_ids, adaptivep0 = adaptivep0, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior, tol=tol, sampletype = sampletype, mcmc = mcmc, deltafuncprior=deltafuncprior, testpsiproj=testpsiproj)
+    if testthetas is False:
+        # Create and sample posteriors for all pixels
+        all_pMB, all_psiMB = sample_all_rht_points(all_ids, adaptivep0 = adaptivep0, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior, tol=tol, sampletype = sampletype, mcmc = mcmc, deltafuncprior=deltafuncprior, testpsiproj=testpsiproj)
     
-    # Place into healpix map
-    hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
-    hp_pMB = make_hp_map(all_pMB, all_ids, Nside = 2048, nest = True)
+        # Place into healpix map
+        hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
+        hp_pMB = make_hp_map(all_pMB, all_ids, Nside = 2048, nest = True)
     
-    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/"
-    if limitregion is False:
-        psiMB_out_fn = "psiMB_allsky_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
-        pMB_out_fn = "pMB_allsky_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
-    elif limitregion is True:
-        if mcmc is True:
-            psiMB_out_fn = "psiMB_DR2_SC_241_mcmc_50_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
-            pMB_out_fn = "pMB_DR2_SC_241_mcmc_50_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
-        else:
-            if sampletype is "mean_bayes":
-                #psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
-                #pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
-                psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_2.fits"
-                pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_2.fits"
+        if limitregion is False:
+            psiMB_out_fn = "psiMB_allsky_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
+            pMB_out_fn = "pMB_allsky_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
+        elif limitregion is True:
+            if mcmc is True:
+                psiMB_out_fn = "psiMB_DR2_SC_241_mcmc_50_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
+                pMB_out_fn = "pMB_DR2_SC_241_mcmc_50_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
+            else:
+                if sampletype is "mean_bayes":
+                    #psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
+                    #pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
+                    psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_2.fits"
+                    pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_2.fits"
             
-            elif sampletype is "MAP":
-                psiMB_out_fn = "psiMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
-                pMB_out_fn = "pMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
+                elif sampletype is "MAP":
+                    psiMB_out_fn = "psiMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
+                    pMB_out_fn = "pMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
         
-        if testpsiproj is True:
-            psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+"_smalloffset.fits"
-            pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+"_smalloffset.fits"
+            if testpsiproj is True:
+                psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+"_smalloffset.fits"
+                pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+"_smalloffset.fits"
             
-    hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "G", nest = True) 
-    hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "G", nest = True) 
+        hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "G", nest = True) 
+        hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "G", nest = True) 
+    else:
+        all_preroll_thetaRHTs, all_postroll_thetaRHTs = sample_all_rht_points(all_ids, adaptivep0 = adaptivep0, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior, tol=tol, sampletype = sampletype, mcmc = mcmc, deltafuncprior=deltafuncprior, testpsiproj=testpsiproj, testthetas=testthetas)
+        preroll_thetaRHTs = make_hp_map(all_preroll_thetaRHTs, all_ids, Nside = 2048, nest = True)
+        postroll_thetaRHTs = make_hp_map(all_postroll_thetaRHTs, all_ids, Nside = 2048, nest = True)
+        hp.fitsfunc.write_map(out_root + "preroll_thetaRHTs.fits", preroll_thetaRHTs, coord = "G", nest = True)
+        hp.fitsfunc.write_map(out_root + "postroll_thetaRHTs.fits", postroll_thetaRHTs, coord = "G", nest = True) 
+        
     
 def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = False, local = False, verbose = False, tol=1E-5, sampletype = "mean_bayes"):
     """
@@ -1818,4 +1838,7 @@ if __name__ == "__main__":
     #fully_sample_planck_sky(region = "trueallsky", limitregion=False, local=False)
     
     # test with posterior=prior
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=True)
+    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=True)
+    
+    # test thetaRHT pre and post roll
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=True)
