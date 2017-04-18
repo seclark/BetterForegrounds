@@ -172,7 +172,8 @@ class Prior(BayesianComponent):
                 self.rht_data = self.rht_data[::-1]
                 self.sample_psi0 = self.sample_psi0[::-1]
             
-            self.prior = (np.array([self.rht_data]*npsample).T + 0.7)*75
+            #self.prior = (np.array([self.rht_data]*npsample).T + 0.7)*75
+            self.prior = np.array([self.rht_data]*npsample).T + 1.0E-8 # hack: only adding a tiny amount to keep it nonzero
             #self.prior = np.array([self.rht_data]).T # hack: setting raw RHT as prior instead.
             
             self.psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
@@ -1510,8 +1511,8 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
                 pMB_out_fn = "pMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
         
         if testpsiproj is True:
-            psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+".fits"
-            pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+".fits"
+            psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+"_smalloffset.fits"
+            pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+"_smalloffset.fits"
             
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "G", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "G", nest = True) 
