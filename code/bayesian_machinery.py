@@ -146,6 +146,7 @@ class Prior(BayesianComponent):
         
         # Planck-projected RHT database
         #rht_cursor, tablename = get_rht_cursor(region = region)
+        print(self.hp_index)
         
         if region is "allsky":
             self.rht_data = rht_cursor.execute("SELECT * FROM RHT_weights_allsky WHERE id = ?", (self.hp_index,)).fetchone()
