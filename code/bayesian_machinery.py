@@ -169,12 +169,12 @@ class Prior(BayesianComponent):
             # Get sample psi data
             self.sample_psi0 = self.get_psi0_sampling_grid(hp_index, verbose = verbose)
         
-            self.unrolled_thetaRHT = get_thetaRHT_hat(self.sample_psi0, self.rht_data)
+            self.unrolled_thetaRHT = self.get_thetaRHT_hat(self.sample_psi0, self.rht_data)
         
             # Roll RHT data to [0, pi)
             self.rht_data, self.sample_psi0 = self.roll_RHT_zero_to_pi(self.rht_data, self.sample_psi0)
             
-            self.rolled_thetaRHT = get_thetaRHT_hat(self.sample_psi0, self.rht_data)
+            self.rolled_thetaRHT = self.get_thetaRHT_hat(self.sample_psi0, self.rht_data)
         
             # Add 0.7 because that was the RHT threshold 
             npsample = len(self.sample_p0)
