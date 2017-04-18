@@ -123,16 +123,7 @@ class BayesianComponent():
         #    print("CAUTION: pgridstop = {} for index {}".format(pgridstop, hp_index))
         
         return pgrid
-    
-    def get_thetaRHT_hat(sample_psi0, rht_data):
-        """
-        get theta^_RHT from psis and rht spectrum
-        """
-        QRHT = np.sum(np.cos(2*sample_psi0)*rht_data)
-        URHT = np.sum(np.sin(2*sample_psi0)*rht_data)
-        theta_rht = np.mod(0.5*np.arctan2(URHT, QRHT), np.pi)
-
-        return theta_rht
+        
 
 class Prior(BayesianComponent):
     """
@@ -169,12 +160,8 @@ class Prior(BayesianComponent):
             # Get sample psi data
             self.sample_psi0 = self.get_psi0_sampling_grid(hp_index, verbose = verbose)
         
-            self.unrolled_thetaRHT = self.get_thetaRHT_hat(self.sample_psi0, self.rht_data)
-        
             # Roll RHT data to [0, pi)
             self.rht_data, self.sample_psi0 = self.roll_RHT_zero_to_pi(self.rht_data, self.sample_psi0)
-            
-            self.unrolled_thetaRHT = self.get_thetaRHT_hat(self.sample_psi0, self.rht_data)
         
             # Add 0.7 because that was the RHT threshold 
             npsample = len(self.sample_p0)
@@ -185,8 +172,7 @@ class Prior(BayesianComponent):
                 self.rht_data = self.rht_data[::-1]
                 self.sample_psi0 = self.sample_psi0[::-1]
             
-            #self.prior = (np.array([self.rht_data]*npsample).T + 0.7)*75
-            self.prior = np.array([self.rht_data]*npsample).T + 1.0E-8 # hack: only adding a tiny amount to keep it nonzero
+            self.prior = (np.array([self.rht_data]*npsample).T + 0.7)*75
             #self.prior = np.array([self.rht_data]).T # hack: setting raw RHT as prior instead.
             
             self.psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
@@ -1524,8 +1510,8 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
                 pMB_out_fn = "pMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
         
         if testpsiproj is True:
-            psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+"_smalloffset.fits"
-            pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+"_smalloffset.fits"
+            psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+".fits"
+            pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+".fits"
             
     hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "G", nest = True) 
     hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "G", nest = True) 
