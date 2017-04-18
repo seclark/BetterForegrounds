@@ -124,6 +124,16 @@ class BayesianComponent():
         
         return pgrid
         
+    def get_thetaRHT_hat(sample_psi0, rht_data):
+        """
+        get theta^_RHT from psis and rht spectrum
+        """
+        QRHT = np.sum(np.cos(2*sample_psi0)*rht_data)
+        URHT = np.sum(np.sin(2*sample_psi0)*rht_data)
+        theta_rht = np.mod(0.5*np.arctan2(URHT, QRHT), np.pi)
+
+        return theta_rht
+        
 
 class Prior(BayesianComponent):
     """
@@ -160,8 +170,12 @@ class Prior(BayesianComponent):
             # Get sample psi data
             self.sample_psi0 = self.get_psi0_sampling_grid(hp_index, verbose = verbose)
         
+            self.unrolled_thetaRHT = self.get_thetaRHT_hat(self.sample_psi0, self.rht_data)
+        
             # Roll RHT data to [0, pi)
             self.rht_data, self.sample_psi0 = self.roll_RHT_zero_to_pi(self.rht_data, self.sample_psi0)
+        
+            self.rolled_thetaRHT = self.get_thetaRHT_hat(self.sample_psi0, self.rht_data)
         
             # Add 0.7 because that was the RHT threshold 
             npsample = len(self.sample_p0)
