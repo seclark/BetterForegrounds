@@ -1713,5 +1713,5 @@ if __name__ == "__main__":
 
     #coadd_QU_maps()
     
-    for _i in np.arange(100, 130):
+    for _i in np.arange(130, 166):
         make_single_theta_int_vel_map(thetabin=_i)
