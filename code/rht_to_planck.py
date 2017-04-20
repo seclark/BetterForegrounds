@@ -217,19 +217,27 @@ def interpolate_data_to_hp_galactic(data, data_hdr, local=True, Equ=False, noned
 
     # Reproject into galactic coordinates
     if Equ is False:
-        cg = c.galactic
-        hppos = hp.pixelfunc.ang2pix(hp.pixelfunc.npix2nside(50331648),  np.pi/2-np.asarray(cg.b.rad), np.asarray(cg.l.rad), nest=True)
+        if local:
+            hppos = np.load("/Volumes/DataDavy/Foregrounds/coords/hppos_2048_Gal.npy")
+        else:
+            cg = c.galactic
+            hppos = hp.pixelfunc.ang2pix(hp.pixelfunc.npix2nside(50331648),  np.pi/2-np.asarray(cg.b.rad), np.asarray(cg.l.rad), nest=True)
+            np.save("/Volumes/DataDavy/Foregrounds/coords/hppos_2048_Gal.npy", hppos)
     else:
         hppos = hp.pixelfunc.ang2pix(hp.pixelfunc.npix2nside(50331648),  np.pi/2-np.asarray(c.dec.rad), np.asarray(c.ra.rad), nest=True)
     
     # All and final positions
     flat_hppos = hppos.flatten()
     final_data = np.zeros(hpq.size).flatten() #- 999
-    final_data[:, :] = nonedata
+    final_data[:] = nonedata
 
     # Q data to place
     data = ((data).T)[:, :].flatten() # this should be upside down? Yes it is! So this is what we want.
 
+    # let's do the following steps only for the non-None data...
+    flat_hppos = flat_hppos[np.where(data != nonedata)]
+    data = data[np.where(data != nonedata)]
+    
     # zip position information and input data. 
     alldata = zip(flat_hppos, data)
 
