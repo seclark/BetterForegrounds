@@ -191,7 +191,7 @@ def lensing_maps(local=False):
     fits.writeto(root + "DR2_allsky_TQU_hp_w75_s15_t70.fits", TQU, hp_hdr)
     
 
-def interpolate_data_to_hp_galactic(data, data_hdr, local=True):    
+def interpolate_data_to_hp_galactic(data, data_hdr, local=True, Equ=False, nonedata=-999):    
 
     # Planck file in galactic coordinates -- NOTE these are Nested
     #planck_root = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/"
@@ -216,13 +216,16 @@ def interpolate_data_to_hp_galactic(data, data_hdr, local=True):
     c = SkyCoord(ra=RA*u.degree, dec=Dec*u.degree, frame="icrs")
 
     # Reproject into galactic coordinates
-    cg = c.galactic
-
-    hppos = hp.pixelfunc.ang2pix(hp.pixelfunc.npix2nside(50331648),  np.pi/2-np.asarray(cg.b.rad), np.asarray(cg.l.rad), nest=True)
+    if Equ is False:
+        cg = c.galactic
+        hppos = hp.pixelfunc.ang2pix(hp.pixelfunc.npix2nside(50331648),  np.pi/2-np.asarray(cg.b.rad), np.asarray(cg.l.rad), nest=True)
+    else:
+        hppos = hp.pixelfunc.ang2pix(hp.pixelfunc.npix2nside(50331648),  np.pi/2-np.asarray(c.dec.rad), np.asarray(c.ra.rad), nest=True)
     
     # All and final positions
     flat_hppos = hppos.flatten()
-    final_data = np.zeros(hpq.size).flatten() - 999
+    final_data = np.zeros(hpq.size).flatten() #- 999
+    final_data[:, :] = nonedata
 
     # Q data to place
     data = ((data).T)[:, :].flatten() # this should be upside down? Yes it is! So this is what we want.
@@ -239,8 +242,8 @@ def interpolate_data_to_hp_galactic(data, data_hdr, local=True):
     for z in grouped_data.keys():
         final_data[z] = np.nansum(grouped_data[z])/np.count_nonzero(~np.isnan(grouped_data[z]))
 
-    final_data[np.isnan(final_data)] = -999
-    final_data[np.isinf(final_data)] = -999
+    final_data[np.isnan(final_data)] = nonedata#-999
+    final_data[np.isinf(final_data)] = nonedata#-999
     
     # Same header as Planck data
     out_hdr = hdulist[0].header
