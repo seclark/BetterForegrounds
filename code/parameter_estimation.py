@@ -908,10 +908,14 @@ def coadd_QU_maps():
     fits.writeto("/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/URHT_coadd_"+str(cbegin)+"_"+str(cend)+".fits", Udata, outhdr)
         
     
-def reproject_allsky_data():
+def reproject_allsky_data(local=True):
     
     # Pull in each unprojected theta bin
-    unprojected_root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/single_theta_backprojections/"
+    if local:
+        unprojected_root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/single_theta_backprojections/"
+    else:
+        unprojected_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/single_theta_0974_1078_sum/"
+        
     nthets = 165
     
     galfa_fn = "/Volumes/DataDavy/GALFA/DR2/FullSkyWide/GALFA_HI_W_S1024_V0000.4kms.fits"
@@ -925,7 +929,7 @@ def reproject_allsky_data():
         unprojdata = fits.getdata(unprojected_fn)
 
         # Project data to hp galactic
-        projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr)
+        projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr, nonedata=None, local=local)
         print("Data successfully projected")
         
         projected_fn = unprojected_root + "GALFA_HI_allsky_-10_10_w75_s15_t70_thetabin_"+str(_thetabin_i)+"_healpixproj_nanmask.fits"
