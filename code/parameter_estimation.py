@@ -917,7 +917,7 @@ def reproject_allsky_data():
     galfa_fn = "/Volumes/DataDavy/GALFA/DR2/FullSkyWide/GALFA_HI_W_S1024_V0000.4kms.fits"
     galfa_hdr = fits.getheader(galfa_fn)
     
-    for _thetabin_i in xrange(nthets):
+    for _thetabin_i in xrange(1):#xrange(nthets):
         time0 = time.time()
     
         # Load in single-theta backprojection
@@ -928,7 +928,7 @@ def reproject_allsky_data():
         projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr)
         print("Data successfully projected")
         
-        projected_fn = unprojected_root + "GALFA_HI_allsky_-10_10_w75_s15_t70_thetabin_"+str(_thetabin_i)+"_healpixproj.fits"
+        projected_fn = unprojected_root + "GALFA_HI_allsky_-10_10_w75_s15_t70_thetabin_"+str(_thetabin_i)+"_healpixproj_nanmask.fits"
         
         out_hdr["THETAI"] = _thetabin_i
         out_hdr["VSTART"] = -10
@@ -1713,5 +1713,6 @@ if __name__ == "__main__":
 
     #coadd_QU_maps()
     
-    for _i in np.arange(30, 50):
-        make_single_theta_int_vel_map(thetabin=_i)
+    #for _i in np.arange(30, 50):
+    #    make_single_theta_int_vel_map(thetabin=_i)
+    reproject_allsky_data()
