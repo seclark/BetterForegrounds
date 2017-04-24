@@ -1400,29 +1400,29 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
     for i, _id in enumerate(all_ids):
         if _id[0] in [18691216]:#[3400757, 793551, 2447655]:
         
-        if mcmc is False:
-            posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior, deltafuncprior = deltafuncprior, testpsiproj=testpsiproj)
+            if mcmc is False:
+                posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior, deltafuncprior = deltafuncprior, testpsiproj=testpsiproj)
         
-            #p0psi0 = np.zeros((2, len(posterior_obj.sample_p0)), np.float_)
-            #p0psi0[0, :] = posterior_obj.sample_p0
-            #p0psi0[1, :] = posterior_obj.sample_psi0
-            #fits.writeto("sample_p0psi0_{}.fits".format(_id[0]), p0psi0)
+                #p0psi0 = np.zeros((2, len(posterior_obj.sample_p0)), np.float_)
+                #p0psi0[0, :] = posterior_obj.sample_p0
+                #p0psi0[1, :] = posterior_obj.sample_psi0
+                #fits.writeto("sample_p0psi0_{}.fits".format(_id[0]), p0psi0)
             
-            print("unrolled_sample_psi0[0, 1, 2] = {}".format(posterior_obj.prior_obj.unrolled_sample_psi0[:3]))
-            print("sample_psi0[0, 1, 2] = {}".format(posterior_obj.sample_psi0[:3]))
-            print("unrolled_theta_RHT = {}".format(posterior_obj.prior_obj.unrolled_thetaRHT))
-            print("rolled_theta_RHT = {}".format(posterior_obj.prior_obj.rolled_thetaRHT))
+                print("unrolled_sample_psi0[0, 1, 2] = {}".format(posterior_obj.prior_obj.unrolled_sample_psi0[:3]))
+                print("sample_psi0[0, 1, 2] = {}".format(posterior_obj.sample_psi0[:3]))
+                print("unrolled_theta_RHT = {}".format(posterior_obj.prior_obj.unrolled_thetaRHT))
+                print("rolled_theta_RHT = {}".format(posterior_obj.prior_obj.rolled_thetaRHT))
 
-            if testthetas is True:
-                all_preroll_thetaRHTs[i] = posterior_obj.prior_obj.unrolled_thetaRHT
-                all_postroll_thetaRHTs[i] = posterior_obj.prior_obj.rolled_thetaRHT
+                if testthetas is True:
+                    all_preroll_thetaRHTs[i] = posterior_obj.prior_obj.unrolled_thetaRHT
+                    all_postroll_thetaRHTs[i] = posterior_obj.prior_obj.rolled_thetaRHT
+                else:
+                    if sampletype is "mean_bayes":
+                        all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol=tol)
+                    elif sampletype is "MAP":
+                        all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
             else:
-                if sampletype is "mean_bayes":
-                    all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol=tol)
-                elif sampletype is "MAP":
-                    all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
-        else:
-            MCMC_posterior(_id[0], rht_cursor = rht_cursor)
+                MCMC_posterior(_id[0], rht_cursor = rht_cursor)
 
         
         #print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
