@@ -1407,11 +1407,13 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
                 #p0psi0[0, :] = posterior_obj.sample_p0
                 #p0psi0[1, :] = posterior_obj.sample_psi0
                 #fits.writeto("sample_p0psi0_{}.fits".format(_id[0]), p0psi0)
-            
+                print("id is {}".format(_id[0]))
                 print("unrolled_sample_psi0[0, 1, 2] = {}".format(posterior_obj.prior_obj.unrolled_sample_psi0[:3]))
                 print("sample_psi0[0, 1, 2] = {}".format(posterior_obj.sample_psi0[:3]))
                 print("unrolled_theta_RHT = {}".format(posterior_obj.prior_obj.unrolled_thetaRHT))
                 print("rolled_theta_RHT = {}".format(posterior_obj.prior_obj.rolled_thetaRHT))
+                print("unrolled_rht_data[:3] = {}".format(posterior_obj.prior_obj.unrolled_rht_data[:3]))
+                print("rht_data[:3] = {}".format(posterior_obj.prior_obj.rht_data[:3]))
 
                 if testthetas is True:
                     all_preroll_thetaRHTs[i] = posterior_obj.prior_obj.unrolled_thetaRHT
