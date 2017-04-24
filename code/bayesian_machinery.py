@@ -1398,7 +1398,7 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
         
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        if _id[0] in [18691216]:#[3400757, 793551, 2447655]:
+        if _id[0] in [18691216, 306125]:#[3400757, 793551, 2447655]:
         
             if mcmc is False:
                 posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior, deltafuncprior = deltafuncprior, testpsiproj=testpsiproj)
