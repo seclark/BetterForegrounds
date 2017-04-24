@@ -1497,7 +1497,7 @@ def sample_all_rht_points_ThetaRHTPrior(all_ids, adaptivep0 = True, region = "SC
     return all_pMB, all_psiMB
     
 def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", 
-                     gausssmooth_prior = False, tol=1E-5, sampletype = "mean_bayes", mcmc=False, deltafuncprior=False, testpsiproj=False, testthetas=False):
+                     gausssmooth_prior = False, tol=1E-5, sampletype = "mean_bayes", mcmc=False, deltafuncprior=False, testpsiproj=False, testthetas=False, save=True):
     """
     Sample psi_MB and p_MB from whole GALFA-HI sky
     """
@@ -1548,9 +1548,10 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
             if testpsiproj is True:
                 psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+"_smalloffset.fits"
                 pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+"_smalloffset.fits"
-            
-        hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "G", nest = True) 
-        hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "G", nest = True) 
+        
+        if save:
+            hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "G", nest = True) 
+            hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "G", nest = True) 
     else:
         all_preroll_thetaRHTs, all_postroll_thetaRHTs = sample_all_rht_points(all_ids, adaptivep0 = adaptivep0, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior, tol=tol, sampletype = sampletype, mcmc = mcmc, deltafuncprior=deltafuncprior, testpsiproj=testpsiproj, testthetas=testthetas)
         preroll_thetaRHTs = make_hp_map(all_preroll_thetaRHTs, all_ids, Nside = 2048, nest = True)
@@ -1849,6 +1850,8 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=True)
     
     # test thetaRHT pre and post roll
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=True)
+    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=True)
+    
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=False)
     
     
