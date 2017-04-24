@@ -65,8 +65,7 @@ class BayesianComponent():
 
         # Create array of projected thetas from theta = 0
         thets = RHT_tools.get_thets(wlen, save = False, verbose = verbose)
-        #self.sample_psi0 = np.mod(zero_theta - thets, np.pi)
-        self.sample_psi0 = np.mod(thets - zero_theta, np.pi)
+        self.sample_psi0 = np.mod(zero_theta - thets, np.pi)
         
         return self.sample_psi0
     
@@ -1399,7 +1398,7 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
         
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        #if _id[0] in [3400757, 793551, 2447655]:
+        if _id[0] in [18691216]:#[3400757, 793551, 2447655]:
         
         if mcmc is False:
             posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior, deltafuncprior = deltafuncprior, testpsiproj=testpsiproj)
@@ -1408,6 +1407,11 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
             #p0psi0[0, :] = posterior_obj.sample_p0
             #p0psi0[1, :] = posterior_obj.sample_psi0
             #fits.writeto("sample_p0psi0_{}.fits".format(_id[0]), p0psi0)
+            
+            print("unrolled_sample_psi0[0, 1, 2] = {}".format(posterior_obj.prior_obj.unrolled_sample_psi0[:3]))
+            print("sample_psi0[0, 1, 2] = {}".format(posterior_obj.sample_psi0[:3]))
+            print("unrolled_theta_RHT = {}".format(posterior_obj.prior_obj.unrolled_thetaRHT))
+            print("rolled_theta_RHT = {}".format(posterior_obj.prior_obj.rolled_thetaRHT))
 
             if testthetas is True:
                 all_preroll_thetaRHTs[i] = posterior_obj.prior_obj.unrolled_thetaRHT
