@@ -1413,7 +1413,7 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
                 print("unrolled_theta_RHT = {}".format(posterior_obj.prior_obj.unrolled_thetaRHT))
                 print("rolled_theta_RHT = {}".format(posterior_obj.prior_obj.rolled_thetaRHT))
                 print("unrolled_rht_data[:3] = {}".format(posterior_obj.prior_obj.unrolled_rht_data[:3]))
-                print("rht_data[:3] = {}".format(posterior_obj.prior_obj.rht_data[:3]))
+                print("rht_data = {}".format(posterior_obj.prior_obj.rht_data))
 
                 if testthetas is True:
                     all_preroll_thetaRHTs[i] = posterior_obj.prior_obj.unrolled_thetaRHT
