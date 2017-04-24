@@ -65,7 +65,8 @@ class BayesianComponent():
 
         # Create array of projected thetas from theta = 0
         thets = RHT_tools.get_thets(wlen, save = False, verbose = verbose)
-        self.sample_psi0 = np.mod(zero_theta - thets, np.pi)
+        #self.sample_psi0 = np.mod(zero_theta - thets, np.pi)
+        self.sample_psi0 = np.mod(thets - zero_theta, np.pi)
         
         return self.sample_psi0
     
@@ -171,6 +172,9 @@ class Prior(BayesianComponent):
             self.sample_psi0 = self.get_psi0_sampling_grid(hp_index, verbose = verbose)
         
             self.unrolled_thetaRHT = self.get_thetaRHT_hat(self.sample_psi0, self.rht_data)
+            
+            self.unrolled_rht_data = copy.copy(self.rht_data)
+            self.unrolled_sample_psi0 = copy.copy(self.sample_psi0)
         
             # Roll RHT data to [0, pi)
             self.rht_data, self.sample_psi0 = self.roll_RHT_zero_to_pi(self.rht_data, self.sample_psi0)
@@ -360,7 +364,7 @@ class Posterior(BayesianComponent):
         
         # Instantiate posterior components
         if useprior is "RHTPrior":
-            prior = Prior(hp_index, self.sample_p0, reverse_RHT = True, region = region, rht_cursor = rht_cursor, gausssmooth = gausssmooth_prior, deltafuncprior = deltafuncprior)
+            prior = Prior(hp_index, self.sample_p0, reverse_RHT = False, region = region, rht_cursor = rht_cursor, gausssmooth = gausssmooth_prior, deltafuncprior = deltafuncprior)
         elif useprior is "ThetaRHT":
             prior = PriorThetaRHT(hp_index, self.sample_p0, reverse_RHT = True, region = region, QRHT_cursor = QRHT_cursor, URHT_cursor = URHT_cursor, sig_QRHT_cursor = sig_QRHT_cursor, sig_URHT_cursor = sig_URHT_cursor)
             
@@ -391,7 +395,7 @@ class Posterior(BayesianComponent):
             #self.posterior = np.einsum('ij,jk->ik', self.planck_likelihood, self.normed_prior)
             self.posterior = self.planck_likelihood*self.normed_prior
         
-            psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
+            psi_dx = polarization_tools.angle_residual(self.sample_psi0[1], self.sample_psi0[0], degrees=False)
             p_dx = self.sample_p0[1] - self.sample_p0[0]
             self.psi_dx = psi_dx
             self.p_dx = p_dx
@@ -1547,8 +1551,8 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
         all_preroll_thetaRHTs, all_postroll_thetaRHTs = sample_all_rht_points(all_ids, adaptivep0 = adaptivep0, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior, tol=tol, sampletype = sampletype, mcmc = mcmc, deltafuncprior=deltafuncprior, testpsiproj=testpsiproj, testthetas=testthetas)
         preroll_thetaRHTs = make_hp_map(all_preroll_thetaRHTs, all_ids, Nside = 2048, nest = True)
         postroll_thetaRHTs = make_hp_map(all_postroll_thetaRHTs, all_ids, Nside = 2048, nest = True)
-        hp.fitsfunc.write_map(out_root + "preroll_thetaRHTs.fits", preroll_thetaRHTs, coord = "G", nest = True)
-        hp.fitsfunc.write_map(out_root + "postroll_thetaRHTs.fits", postroll_thetaRHTs, coord = "G", nest = True) 
+        hp.fitsfunc.write_map(out_root + "preroll_thetaRHTs_flip0psi.fits", preroll_thetaRHTs, coord = "G", nest = True)
+        hp.fitsfunc.write_map(out_root + "postroll_thetaRHTs_flip0psi.fits", postroll_thetaRHTs, coord = "G", nest = True) 
         
     
 def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = False, local = False, verbose = False, tol=1E-5, sampletype = "mean_bayes"):
@@ -1842,3 +1846,5 @@ if __name__ == "__main__":
     
     # test thetaRHT pre and post roll
     fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=True)
+    
+    
