@@ -331,11 +331,13 @@ def project_angles(firstnpoints = 1000):
     
     return thets_EquinGal
     
-def project_angle0_db(wlen = 75):
+def project_angle0_db(wlen = 75, nest=True):
     """
     Project angles from Equatorial, B-field, IAU Definition -> Galactic, Polarization Angle, Planck Definition
     Store only 0-angle in SQL Database by healpix id. Will create other angles on the fly.
     Note: projected angles are still equally spaced -- no need to re-interpolate
+    
+    if nest : index by hp id in NEST ordering. Otherwise, RING.
     """
     
     # Note that fits.getdata reads this map in incorrectly. 
@@ -345,8 +347,9 @@ def project_angle0_db(wlen = 75):
     Nside = 2048
     Npix = 12*Nside**2
     
-    # Convert to NESTED ordering
-    zero_thetas_nested = hp.pixelfunc.reorder(zero_thetas, r2n = True)
+    if nest:
+        # Convert to NESTED ordering
+        zero_thetas_nested = hp.pixelfunc.reorder(zero_thetas, r2n = True)
 
     # Name table
     tablename = "theta_bin_0_wlen"+str(wlen)
@@ -356,7 +359,10 @@ def project_angle0_db(wlen = 75):
 
     # Instantiate database
     #conn = sqlite3.connect(":memory:")
-    conn = sqlite3.connect("theta_bin_0_wlen75_db.sqlite")
+    if nest:
+        conn = sqlite3.connect("theta_bin_0_wlen75_db.sqlite")
+    else:
+        conn = sqlite3.connect("theta_bin_0_wlen75_db_RING.sqlite")
     c = conn.cursor()
     c.execute(createstatement)
     conn.commit()
@@ -566,6 +572,8 @@ def project_allsky_thetaweights_to_database(update = False):
     # Remove protected words from value names
     if "as" in value_names: value_names.remove("as")
     if "is" in value_names: value_names.remove("is")
+    if "in" in value_names: value_names.remove("in")
+    if "if" in value_names: value_names.remove("if")
 
     # Comma separated list of nthets column names
     column_names = " FLOAT DEFAULT 0.0,".join(value_names[:nthets])
