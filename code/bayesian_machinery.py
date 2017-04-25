@@ -62,7 +62,8 @@ class BayesianComponent():
         psi0_sample_db = sqlite3.connect("theta_bin_0_wlen"+str(wlen)+"_db.sqlite")
         psi0_sample_cursor = psi0_sample_db.cursor()    
         zero_theta = psi0_sample_cursor.execute("SELECT zerotheta FROM theta_bin_0_wlen75 WHERE id = ?", (hp_index,)).fetchone()
-
+        self.zero_theta = zero_theta
+        
         # Create array of projected thetas from theta = 0
         thets = RHT_tools.get_thets(wlen, save = False, verbose = verbose)
         self.sample_psi0 = np.mod(zero_theta - thets, np.pi)
@@ -1390,6 +1391,8 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
     if testthetas is True:
         all_preroll_thetaRHTs = np.zeros(len(all_ids))
         all_postroll_thetaRHTs = np.zeros(len(all_ids))
+        all_psi0s = np.zeros(len(all_ids))
+        all_zero_thetas = np.zeros(len(all_ids))
     
     # Get ids of all pixels that contain RHT data
     if rht_cursor is None:
@@ -1398,33 +1401,35 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
         
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        if _id[0] in [18691216, 306125]:#[3400757, 793551, 2447655]:
-        
-            if mcmc is False:
-                posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior, deltafuncprior = deltafuncprior, testpsiproj=testpsiproj)
-        
-                #p0psi0 = np.zeros((2, len(posterior_obj.sample_p0)), np.float_)
-                #p0psi0[0, :] = posterior_obj.sample_p0
-                #p0psi0[1, :] = posterior_obj.sample_psi0
-                #fits.writeto("sample_p0psi0_{}.fits".format(_id[0]), p0psi0)
-                print("id is {}".format(_id[0]))
-                print("unrolled_sample_psi0[0, 1, 2] = {}".format(posterior_obj.prior_obj.unrolled_sample_psi0[:3]))
-                print("sample_psi0[0, 1, 2] = {}".format(posterior_obj.sample_psi0[:3]))
-                print("unrolled_theta_RHT = {}".format(posterior_obj.prior_obj.unrolled_thetaRHT))
-                print("rolled_theta_RHT = {}".format(posterior_obj.prior_obj.rolled_thetaRHT))
-                print("unrolled_rht_data[:3] = {}".format(posterior_obj.prior_obj.unrolled_rht_data[:3]))
-                print("rht_data = {}".format(posterior_obj.prior_obj.rht_data))
+        #if _id[0] in [18691216, 306125]:#[3400757, 793551, 2447655]:
+    
+        if mcmc is False:
+            posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, rht_cursor = rht_cursor, gausssmooth_prior = gausssmooth_prior, deltafuncprior = deltafuncprior, testpsiproj=testpsiproj)
+    
+            #p0psi0 = np.zeros((2, len(posterior_obj.sample_p0)), np.float_)
+            #p0psi0[0, :] = posterior_obj.sample_p0
+            #p0psi0[1, :] = posterior_obj.sample_psi0
+            #fits.writeto("sample_p0psi0_{}.fits".format(_id[0]), p0psi0)
+            #print("id is {}".format(_id[0]))
+            #print("unrolled_sample_psi0[0, 1, 2] = {}".format(posterior_obj.prior_obj.unrolled_sample_psi0[:3]))
+            #print("sample_psi0[0, 1, 2] = {}".format(posterior_obj.sample_psi0[:3]))
+            #print("unrolled_theta_RHT = {}".format(posterior_obj.prior_obj.unrolled_thetaRHT))
+            #print("rolled_theta_RHT = {}".format(posterior_obj.prior_obj.rolled_thetaRHT))
+            #print("unrolled_rht_data[:3] = {}".format(posterior_obj.prior_obj.unrolled_rht_data[:3]))
+            #print("rht_data = {}".format(posterior_obj.prior_obj.rht_data))
 
-                if testthetas is True:
-                    all_preroll_thetaRHTs[i] = posterior_obj.prior_obj.unrolled_thetaRHT
-                    all_postroll_thetaRHTs[i] = posterior_obj.prior_obj.rolled_thetaRHT
-                else:
-                    if sampletype is "mean_bayes":
-                        all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol=tol)
-                    elif sampletype is "MAP":
-                        all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
+            if testthetas is True:
+                #all_preroll_thetaRHTs[i] = posterior_obj.prior_obj.unrolled_thetaRHT
+                #all_postroll_thetaRHTs[i] = posterior_obj.prior_obj.rolled_thetaRHT
+                all_psi0s[i] = posterior_obj.prior_obj.sample_psi0[0]
+                all_zero_thetas[i] = posterior_obj.prior_obj.zero_theta
             else:
-                MCMC_posterior(_id[0], rht_cursor = rht_cursor)
+                if sampletype is "mean_bayes":
+                    all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = True, tol=tol)
+                elif sampletype is "MAP":
+                    all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
+        else:
+            MCMC_posterior(_id[0], rht_cursor = rht_cursor)
 
         
         #print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
@@ -1432,7 +1437,8 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
     
     if testthetas is True:
-        return all_preroll_thetaRHTs, all_postroll_thetaRHTs
+        #return all_preroll_thetaRHTs, all_postroll_thetaRHTs
+        return all_psi0s, all_zero_thetas
     else:
         return all_pMB, all_psiMB
     
@@ -1555,11 +1561,16 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
             hp.fitsfunc.write_map(out_root + psiMB_out_fn, hp_psiMB, coord = "G", nest = True) 
             hp.fitsfunc.write_map(out_root + pMB_out_fn, hp_pMB, coord = "G", nest = True) 
     else:
-        all_preroll_thetaRHTs, all_postroll_thetaRHTs = sample_all_rht_points(all_ids, adaptivep0 = adaptivep0, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior, tol=tol, sampletype = sampletype, mcmc = mcmc, deltafuncprior=deltafuncprior, testpsiproj=testpsiproj, testthetas=testthetas)
-        preroll_thetaRHTs = make_hp_map(all_preroll_thetaRHTs, all_ids, Nside = 2048, nest = True)
-        postroll_thetaRHTs = make_hp_map(all_postroll_thetaRHTs, all_ids, Nside = 2048, nest = True)
-        hp.fitsfunc.write_map(out_root + "preroll_thetaRHTs_flip0psi.fits", preroll_thetaRHTs, coord = "G", nest = True)
-        hp.fitsfunc.write_map(out_root + "postroll_thetaRHTs_flip0psi.fits", postroll_thetaRHTs, coord = "G", nest = True) 
+        #all_preroll_thetaRHTs, all_postroll_thetaRHTs = sample_all_rht_points(all_ids, adaptivep0 = adaptivep0, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior, tol=tol, sampletype = sampletype, mcmc = mcmc, deltafuncprior=deltafuncprior, testpsiproj=testpsiproj, testthetas=testthetas)
+        #preroll_thetaRHTs = make_hp_map(all_preroll_thetaRHTs, all_ids, Nside = 2048, nest = True)
+        #postroll_thetaRHTs = make_hp_map(all_postroll_thetaRHTs, all_ids, Nside = 2048, nest = True)
+        #hp.fitsfunc.write_map(out_root + "preroll_thetaRHTs_flip0psi.fits", preroll_thetaRHTs, coord = "G", nest = True)
+        #hp.fitsfunc.write_map(out_root + "postroll_thetaRHTs_flip0psi.fits", postroll_thetaRHTs, coord = "G", nest = True) 
+        all_psi0s, all_zero_thetas = sample_all_rht_points(all_ids, adaptivep0 = adaptivep0, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior, tol=tol, sampletype = sampletype, mcmc = mcmc, deltafuncprior=deltafuncprior, testpsiproj=testpsiproj, testthetas=testthetas)
+        psi0s = make_hp_map(all_psi0s, all_ids, Nside = 2048, nest = True)
+        zero_thetas = make_hp_map(all_zero_thetas, all_ids, Nside = 2048, nest = True)
+        hp.fitsfunc.write_map(out_root + "all_psi0s.fits", psi0s, coord = "G", nest = True)
+        hp.fitsfunc.write_map(out_root + "all_zero_thetas.fits", zero_thetas, coord = "G", nest = True) 
         
     
 def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = False, local = False, verbose = False, tol=1E-5, sampletype = "mean_bayes"):
@@ -1854,6 +1865,10 @@ if __name__ == "__main__":
     # test thetaRHT pre and post roll
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=True)
     
-    fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=False)
+    #fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=False)
+    
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=True, save=False)
+    
+    
     
     
