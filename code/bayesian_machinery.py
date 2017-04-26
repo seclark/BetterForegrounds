@@ -201,7 +201,8 @@ class Prior(BayesianComponent):
             self.p_dx = self.sample_p0[1] - self.sample_p0[0]
             
             if self.psi_dx < 0:
-                print("Multiplying psi_dx by -1")
+                if verbose:
+                    print("Multiplying psi_dx by -1")
                 self.psi_dx *= -1
             
             if verbose is True:
