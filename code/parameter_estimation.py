@@ -341,7 +341,7 @@ def project_angle0_db(wlen = 75, nest=True):
     """
     
     # Note that fits.getdata reads this map in incorrectly. 
-    zero_thetas = hp.fitsfunc.read_map("/Volumes/DataDavy/Planck/projected_angles/theta_0.0_Equ_inGal.fits")
+    zero_thetas = hp.fitsfunc.read_map("/Volumes/DataDavy/Planck/projected_angles/theta_0.0_Equ_inGal.fits", nest=False)
     
     # resolution
     Nside = 2048
@@ -349,7 +349,7 @@ def project_angle0_db(wlen = 75, nest=True):
     
     if nest:
         # Convert to NESTED ordering
-        zero_thetas_nested = hp.pixelfunc.reorder(zero_thetas, r2n = True)
+        zero_thetas = hp.pixelfunc.reorder(zero_thetas, r2n = True)
 
     # Name table
     tablename = "theta_bin_0_wlen"+str(wlen)
@@ -1727,4 +1727,7 @@ if __name__ == "__main__":
     
     #for _i in np.arange(30, 50):
     #    make_single_theta_int_vel_map(thetabin=_i)
-    reproject_allsky_data()
+    #reproject_allsky_data()
+    
+    c = project_angle0_db(wlen = 75, nest=True)
+    
