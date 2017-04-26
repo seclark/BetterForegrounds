@@ -173,6 +173,7 @@ class Prior(BayesianComponent):
             # Get sample psi data
             #self.sample_psi0 = self.get_psi0_sampling_grid(hp_index, verbose = verbose)
             self.sample_psi0, self.zero_theta = self.get_psi0_sampling_grid(hp_index, verbose = verbose, returnzerotheta=True)
+            print(self.zero_theta)
         
             self.unrolled_thetaRHT = self.get_thetaRHT_hat(self.sample_psi0, self.rht_data)
             
