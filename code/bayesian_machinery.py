@@ -61,6 +61,7 @@ class BayesianComponent():
         wlen = 75
         psi0_sample_db = sqlite3.connect("theta_bin_0_wlen"+str(wlen)+"_db.sqlite")
         psi0_sample_cursor = psi0_sample_db.cursor()    
+        
         zero_theta = psi0_sample_cursor.execute("SELECT zerotheta FROM theta_bin_0_wlen75 WHERE id = ?", (hp_index,)).fetchone()
         
         # Create array of projected thetas from theta = 0
