@@ -65,10 +65,10 @@ class BayesianComponent():
         
         # Create array of projected thetas from theta = 0
         thets = RHT_tools.get_thets(wlen, save = False, verbose = verbose)
-        self.sample_psi0 = np.mod(zero_theta - thets, np.pi)
+        self.sample_psi0 = np.mod(zero_theta[0] - thets, np.pi)
         
         if returnzerotheta:
-            return self.sample_psi0, zero_theta
+            return self.sample_psi0, zero_theta[0]
         else:
             return self.sample_psi0
     
@@ -173,7 +173,6 @@ class Prior(BayesianComponent):
             # Get sample psi data
             #self.sample_psi0 = self.get_psi0_sampling_grid(hp_index, verbose = verbose)
             self.sample_psi0, self.zero_theta = self.get_psi0_sampling_grid(hp_index, verbose = verbose, returnzerotheta=True)
-            print(self.zero_theta)
         
             self.unrolled_thetaRHT = self.get_thetaRHT_hat(self.sample_psi0, self.rht_data)
             
