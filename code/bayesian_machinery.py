@@ -56,18 +56,20 @@ class BayesianComponent():
         
         return integrated_field
     
-    def get_psi0_sampling_grid(self, hp_index, verbose = True):
+    def get_psi0_sampling_grid(self, hp_index, verbose = True, returnzerotheta=False):
         # Create psi0 sampling grid
         wlen = 75
         psi0_sample_db = sqlite3.connect("theta_bin_0_wlen"+str(wlen)+"_db.sqlite")
         psi0_sample_cursor = psi0_sample_db.cursor()    
         zero_theta = psi0_sample_cursor.execute("SELECT zerotheta FROM theta_bin_0_wlen75 WHERE id = ?", (hp_index,)).fetchone()
-        self.zero_theta = zero_theta
-        
+        self.zero_theta = zero_theta[0]
         # Create array of projected thetas from theta = 0
         thets = RHT_tools.get_thets(wlen, save = False, verbose = verbose)
         self.sample_psi0 = np.mod(zero_theta - thets, np.pi)
         
+        #if returnzerotheta:
+        #    return self.sample_psi0, zero_theta
+        #else:
         return self.sample_psi0
     
     def roll_RHT_zero_to_pi(self, rht_data, sample_psi):
@@ -169,7 +171,8 @@ class Prior(BayesianComponent):
                 self.rht_data = scipy.ndimage.gaussian_filter1d(self.rht_data, 3, mode = "wrap")
         
             # Get sample psi data
-            self.sample_psi0 = self.get_psi0_sampling_grid(hp_index, verbose = verbose)
+            #self.sample_psi0 = self.get_psi0_sampling_grid(hp_index, verbose = verbose)
+            #self.sample_psi0, self. = self.get_psi0_sampling_grid(hp_index, verbose = verbose)
         
             self.unrolled_thetaRHT = self.get_thetaRHT_hat(self.sample_psi0, self.rht_data)
             
