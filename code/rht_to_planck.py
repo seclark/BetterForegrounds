@@ -191,7 +191,7 @@ def lensing_maps(local=False):
     fits.writeto(root + "DR2_allsky_TQU_hp_w75_s15_t70.fits", TQU, hp_hdr)
     
 
-def interpolate_data_to_hp_galactic(data, data_hdr, local=True, Equ=False, nonedata=-999):    
+def interpolate_data_to_hp_galactic(data, data_hdr, local=True, Equ=False, nonedata=-999, countpix=False):    
 
     # Planck file in galactic coordinates -- NOTE these are Nested
     #planck_root = "/Users/susanclark/Dropbox/GALFA-Planck/Big_Files/"
@@ -232,6 +232,9 @@ def interpolate_data_to_hp_galactic(data, data_hdr, local=True, Equ=False, noned
     final_data = np.zeros(hpq.size).flatten() #- 999
     final_data[:] = nonedata
 
+    if countpix:
+        data_count = np.zeros(hpq.size).flatten()
+
     # Q data to place
     data = ((data).T)[:, :].flatten() # this should be upside down? Yes it is! So this is what we want.
 
@@ -247,15 +250,21 @@ def interpolate_data_to_hp_galactic(data, data_hdr, local=True, Equ=False, noned
     for k, v in alldata:
         grouped_data.setdefault(k, []).append(v)
 
-    # Average nonzero RHT data. Do not count NaN values in histogram
+    # Average RHT data. Do not count NaN values in histogram. Note that count_nonzero(~np.isnan(data)) counts 0's but not nan's
     for z in grouped_data.keys():
         final_data[z] = np.nansum(grouped_data[z])/np.count_nonzero(~np.isnan(grouped_data[z]))
+        if countpix:
+            data_count[z] = np.count_nonzero(~np.isnan(grouped_data[z]))
 
     final_data[np.isnan(final_data)] = nonedata#-999
     final_data[np.isinf(final_data)] = nonedata#-999
     
     # Same header as Planck data
     out_hdr = hdulist[0].header
+    
+    if countpix:
+        # save data count
+        hp.fitsfunc.write_map("/Volumes/DataDavy/Foregrounds/coords/data_count_hp_projection_numpix_2.fits", data_count, nest=True)
 
     return final_data, out_hdr
 
@@ -727,7 +736,16 @@ def plot_by_thetabin():
 if __name__ == "__main__":
 #    plot_by_thetabin()
      #lensing_maps()
-     single_thetabin_single_vel_allsky(velnum=9) #running: -10 ran: -8 (still need 0 to 100 of 3, 4)
+     #single_thetabin_single_vel_allsky(velnum=9) #running: -10 ran: -8 (still need 0 to 100 of 3, 4)
      
      #redo_local_intrhts(velnum=-9)
+     
+     # count contributions from each projected pixel
+    galfa_root = '/Volumes/DataDavy/GALFA/DR2/FullSkyWide/'
+    galfa_fn = galfa_root + 'GALFA_HI_W_S0955_V-050.4kms.fits'
+    gg = fits.getdata(galfa_fn)
+    dataones = np.ones(gg.shape)
+    del gg
+    data_hdr = fits.getheader(galfa_fn)
+    interpolate_data_to_hp_galactic(dataones, data_hdr, local=True, Equ=False, nonedata=None, countpix=False)
     
