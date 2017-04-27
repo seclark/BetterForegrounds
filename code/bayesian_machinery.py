@@ -1442,8 +1442,8 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
     
     if testthetas is True:
-        #return all_preroll_thetaRHTs, all_postroll_thetaRHTs
-        return all_psi0s, all_zero_thetas
+        return all_preroll_thetaRHTs, all_postroll_thetaRHTs
+        #return all_psi0s, all_zero_thetas
     else:
         return all_pMB, all_psiMB
     
