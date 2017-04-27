@@ -747,5 +747,5 @@ if __name__ == "__main__":
     dataones = np.ones(gg.shape)
     del gg
     data_hdr = fits.getheader(galfa_fn)
-    interpolate_data_to_hp_galactic(dataones, data_hdr, local=True, Equ=False, nonedata=None, countpix=False)
+    interpolate_data_to_hp_galactic(dataones, data_hdr, local=True, Equ=False, nonedata=None, countpix=True)
     
