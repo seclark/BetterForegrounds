@@ -1570,7 +1570,7 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
         preroll_thetaRHTs = make_hp_map(all_preroll_thetaRHTs, all_ids, Nside = 2048, nest = True)
         postroll_thetaRHTs = make_hp_map(all_postroll_thetaRHTs, all_ids, Nside = 2048, nest = True)
         hp.fitsfunc.write_map(out_root + "vel_" + velrangestring +"_preroll_thetaRHTs_newpsi0.fits", preroll_thetaRHTs, coord = "G", nest = True)
-        hp.fitsfunc.write_map(out_root + "vel_" + velrangestring +"+postroll_thetaRHTs_newpsi0.fits", postroll_thetaRHTs, coord = "G", nest = True) 
+        hp.fitsfunc.write_map(out_root + "vel_" + velrangestring +"_postroll_thetaRHTs_newpsi0.fits", postroll_thetaRHTs, coord = "G", nest = True) 
         #all_psi0s, all_zero_thetas = sample_all_rht_points(all_ids, adaptivep0 = adaptivep0, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior, tol=tol, sampletype = sampletype, mcmc = mcmc, deltafuncprior=deltafuncprior, testpsiproj=testpsiproj, testthetas=testthetas)
         #psi0s = make_hp_map(all_psi0s, all_ids, Nside = 2048, nest = True)
         #zero_thetas = make_hp_map(all_zero_thetas, all_ids, Nside = 2048, nest = True)
@@ -1873,10 +1873,10 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=False)
     
     # make pre and post roll thetapsi maps
-    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=True, save=False)
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=True, save=False)
     
     # try rht prior for real
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True)
     
-    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="mean_bayes")
+    #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="mean_bayes")
     
