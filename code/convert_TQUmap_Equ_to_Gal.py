@@ -44,26 +44,18 @@ if projectGal:
     Qdata_Gal, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(-Qdata, hdu.header, local=True) 
     Udata_Gal, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(Udata, hdu.header, local=True) 
 else: 
-    Qdata_Gal = fits.getdata(Qdata_fn)
-    Udata_Gal = fits.getdata(Udata_fn)
+    Qdata_Equ = fits.getdata(Qdata_fn)
+    Udata_Equ = fits.getdata(Udata_fn)
 
 # TQU map of Equatorial coordinate data
 TQUmap = np.zeros((3,Npix))
-TQUmap[0][np.where(Qdata_Gal != -999)] = 1
-TQUmap[1] = -Qdata_Gal  # convert from "IAU B-field angle" to "Planck/Healpix dust polarization angle": U_RHT -> U_RHT, Q_RHT -> -Q_RHT
-TQUmap[2] = Udata_Gal 
-
-# let's do a test: thets[1] = 0.019039955476301777. In RHT angle space, aka Equ, IAU B-field angle.
-thets1 = 0.019039955476301777
-thets1U = np.sin(2*thets1)
-thets1Q = np.cos(2*thets1)
-#TQUmap[0][:] = 1
-TQUmap[1][:] = -thets1Q # convert to Planck dust pol angle
-TQUmap[2][:] = thets1U
+TQUmap[0][np.where(Qdata_Equ != -999)] = 1
+TQUmap[1] = -Qdata_Equ  # convert from "IAU B-field angle" to "Planck/Healpix dust polarization angle": U_RHT -> U_RHT, Q_RHT -> -Q_RHT
+TQUmap[2] = Udata_Equ 
 
 # mask instead of -999
-TQUmap[1, np.where(Qdata_Gal == -999)] = None
-TQUmap[2, np.where(Udata_Gal == -999)] = None
+TQUmap[1, np.where(Qdata_Equ == -999)] = None
+TQUmap[2, np.where(Udata_Equ == -999)] = None
 
 
 
