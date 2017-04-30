@@ -7,6 +7,7 @@ from subprocess import call, PIPE
 from astropy.io import fits
 
 import rht_to_planck
+import rotate_map_alm
 
 Nside=2048
 Npix=12*Nside**2
@@ -46,18 +47,39 @@ else:
     Qdata_Gal = fits.getdata(Qdata_fn)
     Udata_Gal = fits.getdata(Udata_fn)
 
-# TQU map of Galactic coordinate data
+# TQU map of Equatorial coordinate data
 TQUmap = np.zeros((3,Npix))
-TQUmap[1] = Qdata_Gal 
+TQUmap[0][np.where(Qdata_Gal != -999)] = 1
+TQUmap[1] = -Qdata_Gal  # convert from "IAU B-field angle" to "Planck/Healpix dust polarization angle": U_RHT -> U_RHT, Q_RHT -> -Q_RHT
 TQUmap[2] = Udata_Gal 
+
+# let's do a test: thets[1] = 0.019039955476301777. In RHT angle space, aka Equ, IAU B-field angle.
+thets1 = 0.019039955476301777
+thets1U = np.sin(2*thets1)
+thets1Q = np.cos(2*thets1)
+#TQUmap[0][:] = 1
+TQUmap[1][:] = -thets1Q # convert to Planck dust pol angle
+TQUmap[2][:] = thets1U
+
+# mask instead of -999
+TQUmap[1, np.where(Qdata_Gal == -999)] = None
+TQUmap[2, np.where(Udata_Gal == -999)] = None
+
+
 
 # change to RING ordered
 for _tqu in range(3):
     TQUmap[_tqu, :] = hp.reorder(TQUmap[_tqu, :], n2r=True)
     
 print('NEST converted to RING')
+
+#testmap = rotate_map_alm.rotate_map(TQUmap, 2000.0,2000.0,'C','G',Nside)
+#hp.fitsfunc.write_map(out_root+'/testmap.fits', testmap, coord='G') #save to compare
+
     
 # make placeholder TQU map - this is RING ordered, Equatorial angle, Galactic coordinates
+#hp.fitsfunc.write_map('/Volumes/DataDavy/Foregrounds/RHTmaps/TQU_RHT_Planck_pol_ang_SC_241_Equ.fits', TQUmap, coord='C')
+hp.fitsfunc.write_map('/Volumes/DataDavy/Foregrounds/RHTmaps/TQU_RHT_Planck_pol_ang_SC_241_Equ_thets1.fits', TQUmap, coord='C')
 hp.fitsfunc.write_map(out_root+'/temp.fits', TQUmap, coord='C') #have to save map to use with f90 healpix utilities
 
 
@@ -73,7 +95,8 @@ call("/Users/susanclark/Healpix_3.30/bin_gfortran/synfast synfast_paramfile_S.tx
 # - save the resulting map, so we'll have them for later use in making interpolating function
 TQUmapGal = np.zeros((3,Npix))
 TQUmapGal[0], TQUmapGal[1], TQUmapGal[2] = hp.fitsfunc.read_map(out_root+'/temp_Gal.fits', field=(0,1,2))
-hp.fitsfunc.write_map(out_root+'/TQU_RHT_SC_241_best_ch16_to_24_w75_s15_t70_bwrm_galfapixcorr_UPSIDEDOWN_hp_projected_Equ_inGal.fits', TQUmapGal, coord='G')
+#hp.fitsfunc.write_map(out_root+'/TQU_RHT_SC_241_best_ch16_to_24_w75_s15_t70_bwrm_galfapixcorr_UPSIDEDOWN_hp_projected_Planck_pol_ang_Gal_mask.fits', TQUmapGal, coord='G')
+hp.fitsfunc.write_map(out_root+'/TQU_RHT_SC_241_best_ch16_to_24_w75_s15_t70_bwrm_galfapixcorr_UPSIDEDOWN_hp_projected_Planck_pol_ang_Gal_mask_thets1.fits', TQUmapGal, coord='G')
 
 # remove temp files
 call("ls /Users/susanclark/BetterForegrounds/data/temp*.fits", shell=True, stdout=PIPE)
