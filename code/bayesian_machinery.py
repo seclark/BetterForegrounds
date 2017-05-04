@@ -1587,7 +1587,7 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
         #hp.fitsfunc.write_map(out_root + "all_zero_thetas.fits", zero_thetas, coord = "G", nest = True) 
         
     
-def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = False, local = False, verbose = False, tol=1E-5, sampletype = "mean_bayes"):
+def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = False, local = False, verbose = False, tol=1E-5, sampletype = "mean_bayes", testproj=False):
     """
     Sample Planck 353 GHz psi_MB and p_MB from whole GALFA-HI sky
     """
@@ -1612,7 +1612,7 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
         all_ids = list(set(all_ids).intersection(all_ids_SC))
     
     print("beginning creation of all likelihoods")
-    all_pMB, all_psiMB = sample_all_planck_points(all_ids, adaptivep0 = adaptivep0, planck_tqu_cursor = planck_tqu_cursor, planck_cov_cursor = planck_cov_cursor, region = "SC_241", verbose = verbose, tol=tol, sampletype = sampletype)
+    all_pMB, all_psiMB = sample_all_planck_points(all_ids, adaptivep0 = adaptivep0, planck_tqu_cursor = planck_tqu_cursor, planck_cov_cursor = planck_cov_cursor, region = "SC_241", verbose = verbose, tol=tol, sampletype = sampletype, testproj=testproj)
     
     # Place into healpix map
     hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
@@ -1637,6 +1637,11 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
         elif sampletype is "MAP":
             psiMB_out_fn = "psiMB_MAP_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
             pMB_out_fn = "pMB_MAP_DR2_SC_241_353GHz_adaptivep0_"+str(adaptivep0)+".fits"
+            
+    if testproj:
+        print("test projection by saving naive planck p, psi")
+        psiMB_out_fn = "psiMB_SC_241_353GHz_naive.fits"
+        pMB_out_fn = "pMB_SC_241_353GHz_naive.fits"
    
     test = False
     if test is False:
@@ -1885,7 +1890,10 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=True, save=False)
     
     # try rht prior for real
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True)
+    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True)
     
     #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="mean_bayes")
+    
+    # test raw planck psi, p
+    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="mean_bayes", testproj=True)
     
