@@ -245,7 +245,7 @@ class PriorThetaRHT(BayesianComponent):
                 print(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq)
         
             # This construction is simple because we can sample everything on [0, pi)
-            self.sample_psi0 = np.linspace(0, np.pi, 165)
+            self.sample_psi0 = np.linspace(0, np.pi, 165, endpoint=False)
             self.sample_p0 = sample_p0
         
             # 1D prior will be Gaussian centered on psi_RHT
@@ -369,7 +369,7 @@ class Posterior(BayesianComponent):
         
         # Instantiate posterior components
         if useprior is "RHTPrior":
-            prior = Prior(hp_index, self.sample_p0, reverse_RHT = False, region = region, rht_cursor = rht_cursor, gausssmooth = gausssmooth_prior, deltafuncprior = deltafuncprior)
+            prior = Prior(hp_index, self.sample_p0, reverse_RHT = True, region = region, rht_cursor = rht_cursor, gausssmooth = gausssmooth_prior, deltafuncprior = deltafuncprior)
         elif useprior is "ThetaRHT":
             prior = PriorThetaRHT(hp_index, self.sample_p0, reverse_RHT = True, region = region, QRHT_cursor = QRHT_cursor, URHT_cursor = URHT_cursor, sig_QRHT_cursor = sig_QRHT_cursor, sig_URHT_cursor = sig_URHT_cursor)
             
@@ -456,7 +456,7 @@ class DummyPosterior(BayesianComponent):
         BayesianComponent.__init__(self, 0)  
         
         self.sample_p0 = np.linspace(0, 1, 180)
-        self.sample_psi0 = np.linspace(0, np.pi, 165)#, endpoint=False)
+        self.sample_psi0 = np.linspace(0, np.pi, 165, endpoint=False)
     
         self.psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
         self.p_dx = self.sample_p0[1] - self.sample_p0[0]
@@ -913,7 +913,7 @@ def center_posterior_psi_given(sample_psi0, posterior, given_psi, verbose = Fals
     
     #print("centering on {}".format(given_psi))
     
-    psi0new = np.linspace(given_psi - np.pi/2, given_psi + np.pi/2, len(sample_psi0), endpoint=True)
+    psi0new = np.linspace(given_psi - np.pi/2, given_psi + np.pi/2, len(sample_psi0), endpoint=False)
     
     centered_posterior = np.zeros(posterior.shape)
     for i, col in enumerate(posterior.T):
@@ -1558,10 +1558,11 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
                 pMB_out_fn = "pMB_DR2_SC_241_mcmc_50_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
             else:
                 if sampletype is "mean_bayes":
+                    print("saving mean bayes sampled planck+rht data")
                     #psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
                     #pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_tol_{}.fits".format(tol)
-                    psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_fixedpsi0.fits"
-                    pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_fixedpsi0.fits"
+                    psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_fixedpsi0_reverseRHT.fits"
+                    pMB_out_fn = "pMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_fixedpsi0_reverseRHT.fits"
             
                 elif sampletype is "MAP":
                     psiMB_out_fn = "psiMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
@@ -1895,5 +1896,9 @@ if __name__ == "__main__":
     #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="mean_bayes")
     
     # test raw planck psi, p
-    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="mean_bayes", testproj=True)
+    #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="mean_bayes", testproj=True)
+    
+    # trying with reverserht = True in Prior
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True)
+    
     
