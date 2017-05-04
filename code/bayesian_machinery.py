@@ -1447,13 +1447,16 @@ def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_
     else:
         return all_pMB, all_psiMB
     
-def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241", verbose = False, tol=1E-5, sampletype = "mean_bayes"):
+def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = None, planck_cov_cursor = None, region = "SC_241", verbose = False, tol=1E-5, sampletype = "mean_bayes", testproj=False):
     """
     Sample the Planck likelihood rather than a posterior constructed from a likelihood and prior
     """
-
-    all_pMB = np.zeros(len(all_ids))
-    all_psiMB = np.zeros(len(all_ids))
+    if testproj:
+        all_naive_p = np.zeros(len(all_ids))
+        all_naive_psi = np.zeros(len(all_ids))
+    else:
+        all_pMB = np.zeros(len(all_ids))
+        all_psiMB = np.zeros(len(all_ids))
 
     if planck_tqu_cursor is None:
         print("Loading default planck_tqu_cursor because it was not provided")
@@ -1481,17 +1484,23 @@ def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = Non
         #print("for id {}, lnlikelihood[0, 1] = {}".format(_id, lnlikeout[0]))
         #print(np.exp(lnlikeout[0]))
     
-        #testing
-        if sampletype is "mean_bayes":
-            all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = verbose, tol=tol)
-        elif sampletype is "MAP":
-            all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
-        if verbose is True:
-            print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
+        if testproj:
+            all_naive_p[i] = posterior_obj.pmeas
+            all_naive_psi[i] = posterior_obj.psimeas 
+        else:
+            if sampletype is "mean_bayes":
+                all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = verbose, tol=tol)
+            elif sampletype is "MAP":
+                all_pMB[i], all_psiMB[i] = maximum_a_posteriori(posterior_obj, verbose = verbose)
+            if verbose is True:
+                print("for id {}, num {}, I get pMB {} and psiMB {}".format(_id, i, all_pMB[i], all_psiMB[i]))
 
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
     
-    return all_pMB, all_psiMB
+    if testproj:
+        return all_naive_p, all_naive_psi
+    else:
+        return all_pMB, all_psiMB
     
 def sample_all_rht_points_ThetaRHTPrior(all_ids, adaptivep0 = True, region = "SC_241", useprior = "RHTPrior", local = False, tol=1E-5):
     
