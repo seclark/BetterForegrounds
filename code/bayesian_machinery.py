@@ -438,7 +438,7 @@ class PlanckPosterior(BayesianComponent):
         self.planck_likelihood = likelihood.likelihood
         self.normed_prior = np.zeros(self.planck_likelihood.shape)
     
-        psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
+        psi_dx = np.abs(self.sample_psi0[1] - self.sample_psi0[0]) # hack: abs psidx
         p_dx = self.sample_p0[1] - self.sample_p0[0]
         self.psi_dx = psi_dx
         self.p_dx = p_dx
@@ -1644,8 +1644,8 @@ def fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = 
             
     if testproj:
         print("test projection by saving naive planck p, psi")
-        psiMB_out_fn = "psiMB_SC_241_353GHz_naive.fits"
-        pMB_out_fn = "pMB_SC_241_353GHz_naive.fits"
+        psiMB_out_fn = "psiMB_SC_241_353GHz_naive_abspsidx.fits"
+        pMB_out_fn = "pMB_SC_241_353GHz_naive_abspsidx.fits"
    
     test = False
     if test is False:
@@ -1907,6 +1907,6 @@ if __name__ == "__main__":
     # testing different baseprioramps!
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=1)
     
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
+    fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="mean_bayes", testproj=True)
     
     
