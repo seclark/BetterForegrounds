@@ -227,7 +227,7 @@ class PriorThetaRHT(BayesianComponent):
     Class for building RHT priors which are defined by theta_RHT and corresponding error
     """
     
-    def __init__(self, hp_index, sample_p0, reverse_RHT = False, verbose = False, region = "SC_241", QRHT_cursor = None, URHT_cursor = None, sig_QRHT_cursor = None, sig_URHT_cursor = None):
+    def __init__(self, hp_index, sample_p0, reverse_RHT = False, verbose = False, region = "SC_241", QU_QUsq_RHT_cursor = None):
     
         BayesianComponent.__init__(self, hp_index, verbose = verbose)
         
@@ -235,10 +235,10 @@ class PriorThetaRHT(BayesianComponent):
         #QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor = get_rht_QU_cursors()
         
         try:
-            (self.hp_index, self.QRHT) = QRHT_cursor.execute("SELECT * FROM QRHT WHERE id = ?", (self.hp_index,)).fetchone()
-            (self.hp_index, self.URHT) = URHT_cursor.execute("SELECT * FROM URHT WHERE id = ?", (self.hp_index,)).fetchone()
-            (self.hp_index, self.QRHTsq) = sig_QRHT_cursor.execute("SELECT * FROM QRHTsq WHERE id = ?", (self.hp_index,)).fetchone()
-            (self.hp_index, self.URHTsq) = sig_URHT_cursor.execute("SELECT * FROM URHTsq WHERE id = ?", (self.hp_index,)).fetchone()
+            (self.hp_index, self.QRHT, self.URHT, self.QRHTsq, self.URHTsq) = QU_QUsq_RHT_cursor.execute("SELECT * FROM QRHT WHERE id = ?", (self.hp_index,)).fetchone()
+            #(self.hp_index, self.URHT) = URHT_cursor.execute("SELECT * FROM URHT WHERE id = ?", (self.hp_index,)).fetchone()
+            #(self.hp_index, self.QRHTsq) = sig_QRHT_cursor.execute("SELECT * FROM QRHTsq WHERE id = ?", (self.hp_index,)).fetchone()
+            #(self.hp_index, self.URHTsq) = sig_URHT_cursor.execute("SELECT * FROM URHTsq WHERE id = ?", (self.hp_index,)).fetchone()
 
             try:
                 self.sig_psi, self.sig_P = polarization_tools.sigma_psi_P(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq, degrees = False)
@@ -357,7 +357,7 @@ class Posterior(BayesianComponent):
     Class for building a posterior composed of a Planck-based likelihood and an RHT prior
     """
     
-    def __init__(self, hp_index, sample_p0 = None, adaptivep0 = False, region = "SC_241", useprior = "RHTPrior", rht_cursor = None, QRHT_cursor = None, URHT_cursor = None, sig_QRHT_cursor = None, sig_URHT_cursor = None, gausssmooth_prior = False, deltafuncprior = False, testpsiproj=False, baseprioramp=1E-8):
+    def __init__(self, hp_index, sample_p0 = None, adaptivep0 = False, region = "SC_241", useprior = "RHTPrior", rht_cursor = None, QU_QUsq_RHT_cursor = None, gausssmooth_prior = False, deltafuncprior = False, testpsiproj=False, baseprioramp=1E-8):
         BayesianComponent.__init__(self, hp_index)  
         
         if sample_p0 is None:
@@ -372,7 +372,7 @@ class Posterior(BayesianComponent):
         if useprior is "RHTPrior":
             prior = Prior(hp_index, self.sample_p0, reverse_RHT = True, region = region, rht_cursor = rht_cursor, gausssmooth = gausssmooth_prior, deltafuncprior = deltafuncprior, baseprioramp=baseprioramp)
         elif useprior is "ThetaRHT":
-            prior = PriorThetaRHT(hp_index, self.sample_p0, reverse_RHT = True, region = region, QRHT_cursor = QRHT_cursor, URHT_cursor = URHT_cursor, sig_QRHT_cursor = sig_QRHT_cursor, sig_URHT_cursor = sig_URHT_cursor)
+            prior = PriorThetaRHT(hp_index, self.sample_p0, reverse_RHT = True, region = region, QU_QUsq_RHT_cursor = QU_QUsq_RHT_cursor)
             
         self.sample_psi0 = prior.sample_psi0
         
@@ -1503,12 +1503,12 @@ def sample_all_rht_points_ThetaRHTPrior(all_ids, adaptivep0 = True, region = "SC
     all_pMB = np.zeros(len(all_ids))
     all_psiMB = np.zeros(len(all_ids))
     
-    # Get ids of all pixels that contain RHT data
-    QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor = get_rht_QU_cursors(local = local)
+    # Get cursor containint Q, U, QRHT, URHT
+    QU_QUsq_RHT_cursor = get_rht_QU_cursors(local = local)
     
     update_progress(0.0)
     for i, _id in enumerate(all_ids):
-        posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, QRHT_cursor = QRHT_cursor, URHT_cursor = URHT_cursor, sig_QRHT_cursor = sig_QRHT_cursor, sig_URHT_cursor = sig_URHT_cursor)
+        posterior_obj = Posterior(_id[0], adaptivep0 = adaptivep0, region = region, useprior = useprior, QU_QUsq_RHT_cursor = QU_QUsq_RHT_cursor)
         all_pMB[i], all_psiMB[i] = mean_bayesian_posterior(posterior_obj, center = "naive", verbose = False, tol=tol)
         update_progress((i+1.0)/len(all_ids), message='Sampling: ', final_message='Finished Sampling: ')
         
