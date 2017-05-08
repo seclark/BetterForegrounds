@@ -244,7 +244,7 @@ class PriorThetaRHT(BayesianComponent):
                 self.sig_psi, self.sig_P = polarization_tools.sigma_psi_P(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq, degrees = False)
             except ZeroDivisionError:
                 print(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq)
-            print(self.hp_index, self.QRHT, self.URHT, self.QRHTsq, self.URHTsq)
+            
             # This construction is simple because we can sample everything on [0, pi)
             self.sample_psi0 = np.linspace(0, np.pi, 165, endpoint=False)
             self.sample_p0 = sample_p0
@@ -1916,7 +1916,7 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
     
     # test thetarht prior
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "ThetaRHT", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "ThetaRHT", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
     
     
     
