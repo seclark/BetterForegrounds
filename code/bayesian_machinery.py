@@ -1910,6 +1910,6 @@ if __name__ == "__main__":
     
     #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="mean_bayes", testproj=False)
     
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
     
     
