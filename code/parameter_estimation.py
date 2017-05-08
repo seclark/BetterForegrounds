@@ -481,7 +481,58 @@ def plasz_P_to_database(Nside = 2048):
         c.execute(insertstatement, [i for i in itertools.chain([_hp_index], usedata[:, _hp_index])])    
     
     conn.commit()
+
+def QU_RHT_Gal_to_database():
+    """
+    Project QRHT, URHT data that's been rotated to Galactic coordinates.
+    indexed by NEST healpix indices. Covers GALFA allsky.
+    """
+    tqu_Gal_fn = "../data/TQU_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal.fits"
+    TRHTGal_ring, QRHTGal_ring, URHTGal_ring = hp.fitsfunc.read_map(tqu_Gal_fn, field=(0,1,2))
+    tqu_sq_Gal_fn = "../data/TQUsq_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal.fits"
+    TRHTsqGal_ring, QRHTsqGal_ring, URHTsqGal_ring = hp.fitsfunc.read_map(tqu_sq_Gal_fn, field=(0,1,2))
     
+    # Place data into array
+    usedata = np.zeros((4, Npix), np.float_)
+    
+    TRHTGal = hp.pixelfunc.reorder(TRHTGal_ring, r2n = True)
+    usedata[0, :] = hp.pixelfunc.reorder(QRHTGal_ring, r2n = True)
+    usedata[1, :] = hp.pixelfunc.reorder(URHTGal_ring, r2n = True)
+    usedata[2, :] = hp.pixelfunc.reorder(QRHTsqGal_ring, r2n = True)
+    usedata[3, :] = hp.pixelfunc.reorder(URHTsqGal_ring, r2n = True)
+    
+    Tmask = copy.copy(TRHTGal)
+    Tmask[np.where(TRHTGal >= 0.5)] = 1
+    Tmask[np.where(TRHTGal < 0.5)] = 0
+    
+    # The healpix indices we keep will be the ones where there is nonzero data
+    nonzero_index = np.nonzero(Tmask)[0]
+    print("there are {} nonzero elements".format(len(nonzero_index)))
+
+    tablename = "QURHT_QURHTsq_Gal_pol_ang_chS1004_1043"
+    
+    value_names = ["QRHT", "URHT", "QRHTsq", "URHTsq"]
+    
+    column_names = " FLOAT DEFAULT 0.0,".join(value_names)
+    
+    # Statement for creation of SQL database
+    createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+" FLOAT DEFAULT 0.0);"
+    
+    # there are 4 values + hp_index to store in this db
+    numvalues = 4
+    insertstatement = "INSERT INTO "+tablename+" VALUES ("+",".join('?'*numvalues)+")"
+
+    conn = sqlite3.connect("QURHT_QURHTsq_Gal_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Nside_2048_Galactic_db.sqlite")
+    c = conn.cursor()
+    c.execute(createstatement)
+    conn.commit()
+
+    print("Beginning database creation")
+    for _hp_index in nonzero_index:
+        #try:
+        c.execute(insertstatement, [i for i in itertools.chain([_hp_index], usedata[:, _hp_index])])    
+     
+    conn.commit()
     
 def planck_data_to_database(Nside = 2048, covdata = True):
 
@@ -1729,5 +1780,7 @@ if __name__ == "__main__":
     #    make_single_theta_int_vel_map(thetabin=_i)
     #reproject_allsky_data()
     
-    c = project_angle0_db(wlen = 75, nest=True)
+    #c = project_angle0_db(wlen = 75, nest=True)
+    
+    QU_RHT_Gal_to_database()
     
