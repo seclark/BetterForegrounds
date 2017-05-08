@@ -244,7 +244,7 @@ class PriorThetaRHT(BayesianComponent):
                 self.sig_psi, self.sig_P = polarization_tools.sigma_psi_P(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq, degrees = False)
             except ZeroDivisionError:
                 print(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq)
-        
+            print(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq)
             # This construction is simple because we can sample everything on [0, pi)
             self.sample_psi0 = np.linspace(0, np.pi, 165, endpoint=False)
             self.sample_p0 = sample_p0
@@ -1503,7 +1503,7 @@ def sample_all_planck_points(all_ids, adaptivep0 = True, planck_tqu_cursor = Non
     else:
         return all_pMB, all_psiMB
     
-def sample_all_rht_points_ThetaRHTPrior(all_ids, adaptivep0 = True, region = "SC_241", useprior = "RHTPrior", local = False, tol=1E-5):
+def sample_all_rht_points_ThetaRHTPrior(all_ids, adaptivep0 = True, region = "SC_241", useprior = "ThetaRHT", local = False, tol=1E-5):
     
     all_pMB = np.zeros(len(all_ids))
     all_psiMB = np.zeros(len(all_ids))
