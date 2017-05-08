@@ -12,6 +12,7 @@ import sqlite3
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib as mpl
 import matplotlib.ticker as ticker
+import copy
 
 # Local repo imports
 import debias
@@ -522,7 +523,7 @@ def QU_RHT_Gal_to_database():
     createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+" FLOAT DEFAULT 0.0);"
     
     # there are 4 values + hp_index to store in this db
-    numvalues = 4
+    numvalues = 5
     insertstatement = "INSERT INTO "+tablename+" VALUES ("+",".join('?'*numvalues)+")"
 
     conn = sqlite3.connect("QURHT_QURHTsq_Gal_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Nside_2048_Galactic_db.sqlite")
