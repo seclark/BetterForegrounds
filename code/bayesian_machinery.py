@@ -1547,7 +1547,7 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
         if useprior is "RHTPrior":
             all_pMB, all_psiMB = sample_all_rht_points(all_ids, adaptivep0 = adaptivep0, rht_cursor = rht_cursor, region = region, useprior = useprior, gausssmooth_prior = gausssmooth_prior, tol=tol, sampletype = sampletype, mcmc = mcmc, deltafuncprior=deltafuncprior, testpsiproj=testpsiproj, baseprioramp=baseprioramp)
         elif useprior is "ThetaRHT":
-            all_pMB, all_psiMB = sample_all_rht_points_ThetaRHTPrior(all_ids, adaptivep0 = adaptivep0, region = region, useprior = useprior, local = local, tol=tol)
+            all_pMB, all_psiMB = sample_all_rht_points_ThetaRHTPrior(all_ids, adaptivep0 = adaptivep0, region = region, useprior = useprior, local = False, tol=tol)
     
         # Place into healpix map
         hp_psiMB = make_hp_map(all_psiMB, all_ids, Nside = 2048, nest = True)
