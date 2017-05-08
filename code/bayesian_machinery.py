@@ -235,7 +235,7 @@ class PriorThetaRHT(BayesianComponent):
         #QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor = get_rht_QU_cursors()
         
         try:
-            (self.hp_index, self.QRHT, self.URHT, self.QRHTsq, self.URHTsq) = QU_QUsq_RHT_cursor.execute("SELECT * FROM QRHT WHERE id = ?", (self.hp_index,)).fetchone()
+            (self.hp_index, self.QRHT, self.URHT, self.QRHTsq, self.URHTsq) = QU_QUsq_RHT_cursor.execute("SELECT * FROM QURHT_QURHTsq_Gal_pol_ang_chS1004_1043 WHERE id = ?", (self.hp_index,)).fetchone()
             #(self.hp_index, self.URHT) = URHT_cursor.execute("SELECT * FROM URHT WHERE id = ?", (self.hp_index,)).fetchone()
             #(self.hp_index, self.QRHTsq) = sig_QRHT_cursor.execute("SELECT * FROM QRHTsq WHERE id = ?", (self.hp_index,)).fetchone()
             #(self.hp_index, self.URHTsq) = sig_URHT_cursor.execute("SELECT * FROM URHTsq WHERE id = ?", (self.hp_index,)).fetchone()
