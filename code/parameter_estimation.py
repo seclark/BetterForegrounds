@@ -487,6 +487,9 @@ def QU_RHT_Gal_to_database():
     Project QRHT, URHT data that's been rotated to Galactic coordinates.
     indexed by NEST healpix indices. Covers GALFA allsky.
     """
+    Nside=2048
+    Npix = 12*Nside**2
+     
     tqu_Gal_fn = "../data/TQU_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal.fits"
     TRHTGal_ring, QRHTGal_ring, URHTGal_ring = hp.fitsfunc.read_map(tqu_Gal_fn, field=(0,1,2))
     tqu_sq_Gal_fn = "../data/TQUsq_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal.fits"
