@@ -1374,20 +1374,15 @@ def get_rht_QU_cursors(local = False):
         root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/QUmaps/"
         print(root)
     else:
-        root = "/disks/jansky/a/users/goldston/susan/Planck/code/"
+        root = "/disks/jansky/a/users/goldston/susan/BetterForegrounds/code/"
     
-    print("fn is ", root + "QRHT_ch1004_1043_db.sqlite")
-    QRHT_db = sqlite3.connect(root + "QRHT_ch1004_1043_db.sqlite")
-    URHT_db = sqlite3.connect(root + "URHT_ch1004_1043_db.sqlite")
-    sig_QRHT_db = sqlite3.connect(root + "QRHTsq_ch1004_1043_db.sqlite")
-    sig_URHT_db = sqlite3.connect(root + "URHTsq_ch1004_1043_db.sqlite")
+    db_fn = root + "QURHT_QURHTsq_Gal_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Nside_2048_Galactic_db.sqlite"
+    print("fn is ", db_fn)
+    QU_QUsq_RHT_db = sqlite3.connect(db_fn)
     
-    QRHT_cursor = QRHT_db.cursor()
-    URHT_cursor = URHT_db.cursor()
-    sig_QRHT_cursor = sig_QRHT_db.cursor()
-    sig_URHT_cursor = sig_URHT_db.cursor()
+    QU_QUsq_RHT_cursor = QU_QUsq_RHT_db.cursor()
 
-    return QRHT_cursor, URHT_cursor, sig_QRHT_cursor, sig_URHT_cursor
+    return QU_QUsq_RHT_cursor
 
 def sample_all_rht_points(all_ids, adaptivep0=True, rht_cursor=None, region="SC_241", useprior="RHTPrior", gausssmooth_prior=False, tol=1E-5, sampletype="mean_bayes", verbose=False, mcmc=False, deltafuncprior=False, testpsiproj=False, testthetas=False, baseprioramp=1E-8):
     
@@ -1913,10 +1908,10 @@ if __name__ == "__main__":
     
     #fully_sample_planck_sky(region = "allsky", adaptivep0 = True, limitregion = True, local = False, verbose = False, tol=0, sampletype="mean_bayes", testproj=False)
     
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
+    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = True, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
     
     # test thetarht prior
-    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "ThetaRHT", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "ThetaRHT", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
     
     
     
