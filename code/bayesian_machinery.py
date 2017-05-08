@@ -244,13 +244,13 @@ class PriorThetaRHT(BayesianComponent):
                 self.sig_psi, self.sig_P = polarization_tools.sigma_psi_P(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq, degrees = False)
             except ZeroDivisionError:
                 print(self.QRHT, self.URHT, self.QRHTsq, self.URHTsq)
-            
+            print(self.hp_index, self.QRHT, self.URHT, self.QRHTsq, self.URHTsq)
             # This construction is simple because we can sample everything on [0, pi)
             self.sample_psi0 = np.linspace(0, np.pi, 165, endpoint=False)
             self.sample_p0 = sample_p0
         
             # 1D prior will be Gaussian centered on psi_RHT
-            self.psimeas = polarization_tools.polarization_angle(self.QRHT, self.URHT, negU = True)
+            self.psimeas = polarization_tools.polarization_angle(self.QRHT, self.URHT, negU = False)
             #gaussian = (1.0/(self.sig_psi*np.sqrt(2*np.pi)))*np.exp(-(self.sample_psi0 - self.psimeas)**2/(2*self.sig_psi**2))
         
             # Instead of gaussian, construct axial von mises distribution
