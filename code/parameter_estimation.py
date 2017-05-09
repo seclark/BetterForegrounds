@@ -483,7 +483,7 @@ def plasz_P_to_database(Nside = 2048):
     
     conn.commit()
 
-def QU_RHT_Gal_to_database():
+def QU_RHT_Gal_to_database(sigma=30, smooth=True):
     """
     Project QRHT, URHT data that's been rotated to Galactic coordinates.
     indexed by NEST healpix indices. Covers GALFA allsky.
@@ -491,9 +491,13 @@ def QU_RHT_Gal_to_database():
     Nside=2048
     Npix = 12*Nside**2
      
-    tqu_Gal_fn = "../data/TQU_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal.fits"
+    if smooth is True:
+        tqu_Gal_fn = "../data/TQU_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal_sig"+str(sigma)+".fits"
+        tqu_sq_Gal_fn = "../data/TQUsq_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal_sig"+str(sigma)+".fits"
+    else:
+        tqu_Gal_fn = "../data/TQU_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal.fits"
+        tqu_sq_Gal_fn = "../data/TQUsq_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal.fits"
     TRHTGal_ring, QRHTGal_ring, URHTGal_ring = hp.fitsfunc.read_map(tqu_Gal_fn, field=(0,1,2))
-    tqu_sq_Gal_fn = "../data/TQUsq_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal.fits"
     TRHTsqGal_ring, QRHTsqGal_ring, URHTsqGal_ring = hp.fitsfunc.read_map(tqu_sq_Gal_fn, field=(0,1,2))
     
     # Place data into array
@@ -513,7 +517,10 @@ def QU_RHT_Gal_to_database():
     nonzero_index = np.nonzero(Tmask)[0]
     print("there are {} nonzero elements".format(len(nonzero_index)))
 
-    tablename = "QURHT_QURHTsq_Gal_pol_ang_chS1004_1043"
+    if smooth is True:
+        tablename = "QURHT_QURHTsq_Gal_pol_ang_chS1004_1043_sig"+str(sigma)
+    else:    
+        tablename = "QURHT_QURHTsq_Gal_pol_ang_chS1004_1043"
     
     value_names = ["QRHT", "URHT", "QRHTsq", "URHTsq"]
     
@@ -526,7 +533,10 @@ def QU_RHT_Gal_to_database():
     numvalues = 5
     insertstatement = "INSERT INTO "+tablename+" VALUES ("+",".join('?'*numvalues)+")"
 
-    conn = sqlite3.connect("QURHT_QURHTsq_Gal_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Nside_2048_Galactic_db.sqlite")
+    if smooth is True:
+        conn = sqlite3.connect("QURHT_QURHTsq_sig"+str(sigma)+"_Gal_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Nside_2048_Galactic_db.sqlite")
+    else:
+        conn = sqlite3.connect("QURHT_QURHTsq_Gal_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Nside_2048_Galactic_db.sqlite")
     c = conn.cursor()
     c.execute(createstatement)
     conn.commit()
@@ -1786,5 +1796,5 @@ if __name__ == "__main__":
     
     #c = project_angle0_db(wlen = 75, nest=True)
     
-    QU_RHT_Gal_to_database()
+    QU_RHT_Gal_to_database(smooth=True, sigma=30)
     
