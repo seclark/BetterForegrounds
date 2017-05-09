@@ -200,7 +200,7 @@ class Prior(BayesianComponent):
             if baseprioramp is None:
                 self.prior = (np.array([self.rht_data]*npsample).T + 0.7)*75
             elif baseprioramp is "variable":
-                self.prior = (np.array([self.rht_data]*npsample).T + (1 - maxrht))
+                self.prior = (np.array([self.rht_data]*npsample).T + (1 - self.maxrht))
             else:
                 self.prior = (np.array([self.rht_data]*npsample).T + baseprioramp) # only adding a (small) fixed amount to keep it nonzero. baseprioramp must be > 0
             
