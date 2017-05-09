@@ -199,6 +199,8 @@ class Prior(BayesianComponent):
             
             if baseprioramp is None:
                 self.prior = (np.array([self.rht_data]*npsample).T + 0.7)*75
+            elif baseprioramp is "variable":
+                self.prior = (np.array([self.rht_data]*npsample).T + (1 - maxrht))
             else:
                 self.prior = (np.array([self.rht_data]*npsample).T + baseprioramp) # only adding a (small) fixed amount to keep it nonzero. baseprioramp must be > 0
             
@@ -1907,7 +1909,10 @@ if __name__ == "__main__":
     # test thetarht prior
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "ThetaRHT", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "ThetaRHT", velrangestring = "-10_10", smoothprior=True, sig=30, gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=True, save=False)
     
+    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=True, save=False)
+    
+    # test variable baseprioramp
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp="variable")
     
     
