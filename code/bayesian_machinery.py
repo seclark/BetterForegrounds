@@ -205,6 +205,9 @@ class Prior(BayesianComponent):
                 self.prior = (np.array([self.rht_data]*npsample).T + max(0.25 - self.maxrht, 0))
                 if max(0.25 - self.maxrht, 0) < 0:
                     print('help: {}'.format(max(0.25 - self.maxrht, 0)))
+            elif baseprioramp is "max_var":
+                 globalmaxval = 4.2041096687316895
+                 self.prior = (np.array([self.rht_data]*npsample).T + max(globalmaxval - self.maxrht, 0))
             else:
                 self.prior = (np.array([self.rht_data]*npsample).T + baseprioramp) # only adding a (small) fixed amount to keep it nonzero. baseprioramp must be > 0
             
@@ -1917,6 +1920,6 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=True, save=False)
     
     # test variable baseprioramp
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp="median_var")
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "RHTPrior", velrangestring = "-4_3", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp="max_var")
     
     
