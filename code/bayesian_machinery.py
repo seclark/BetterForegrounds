@@ -413,9 +413,9 @@ class Posterior(BayesianComponent):
             #self.posterior = np.einsum('ij,jk->ik', self.planck_likelihood, self.normed_prior)
             self.posterior = self.planck_likelihood*self.normed_prior
         
-            psi_dx = polarization_tools.angle_residual(self.sample_psi0[1], self.sample_psi0[0], degrees=False)
+            #psi_dx = polarization_tools.angle_residual(self.sample_psi0[1], self.sample_psi0[0], degrees=False)
             p_dx = self.sample_p0[1] - self.sample_p0[0]
-            self.psi_dx = psi_dx
+            self.psi_dx = prior.psi_dx
             self.p_dx = p_dx
         
             self.posterior_integrated_over_psi = self.integrate_highest_dimension(self.posterior, dx = psi_dx)
