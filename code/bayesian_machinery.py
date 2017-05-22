@@ -419,7 +419,7 @@ class Posterior(BayesianComponent):
             self.psi_dx = prior.psi_dx
             self.p_dx = p_dx
         
-            self.posterior_integrated_over_psi = self.integrate_highest_dimension(self.posterior, dx = psi_dx)
+            self.posterior_integrated_over_psi = self.integrate_highest_dimension(self.posterior, dx = self.psi_dx)
             self.posterior_integrated_over_p_and_psi = self.integrate_highest_dimension(self.posterior_integrated_over_psi, dx = p_dx)
         
             self.normed_posterior = self.posterior/self.posterior_integrated_over_p_and_psi
