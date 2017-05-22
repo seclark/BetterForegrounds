@@ -275,7 +275,8 @@ class PriorThetaRHT(BayesianComponent):
             #self.prior = np.array([gaussian]*npsample).T
             self.prior = np.array([axialvonmises]*npsample).T
         
-            self.psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
+            #self.psi_dx = self.sample_psi0[1] - self.sample_psi0[0]
+            self.psi_dx = polarization_tools.angle_residual(self.sample_psi0[1], self.sample_psi0[0], degrees=False)
             self.p_dx = self.sample_p0[1] - self.sample_p0[0]
         
             if self.psi_dx < 0:
