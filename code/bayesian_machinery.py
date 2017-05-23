@@ -766,7 +766,7 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     
     #pMB, psiMB, psi0_ludo_new = mean_bayesian_posterior(posterior_obj, center = "naive")
     pMB, psiMB = mean_bayesian_posterior(posterior_obj, center = "naive")
-    ax3.plot(pMB, np.mod(psiMB, np.pi), '+', ms = 10, mew = 2, color = "gray")
+    ax3.plot(pMB, np.mod(psiMB, np.pi), '+', ms = 10, mew = 2, color = "red")
     
     #ax3.plot(pMB, np.mod(psi0_ludo_new, np.pi), '+', ms = 10, mew = 2, color = "pink")
     
@@ -777,7 +777,7 @@ def plot_all_bayesian_components_from_posterior(posterior_obj, cmap = "cubehelix
     #ax3.plot(pMB, np.mod(psiMB, np.pi), '+', ms = 10, mew = 2, color = "teal")
     
     p_map, psi_map = maximum_a_posteriori(posterior_obj)
-    ax3.plot(p_map, np.mod(psi_map, np.pi), '+', ms = 10, mew = 2, color = "red")
+    ax3.plot(p_map, np.mod(psi_map, np.pi), '+', ms = 10, mew = 2, color = "cornflowerblue")
     
     #pnaive, psinaive = naive_planck_measurements(posterior_obj.hp_index)
     pnaive = posterior_obj.pmeas
@@ -1582,8 +1582,8 @@ def fully_sample_sky(region = "allsky", limitregion = False, adaptivep0 = True, 
             
                                 
                 elif sampletype is "MAP":
-                    psiMB_out_fn = "psiMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
-                    pMB_out_fn = "pMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+".fits"
+                    psiMB_out_fn = "psiMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_baseprioramp_"+str(baseprioramp)+".fits"
+                    pMB_out_fn = "pMB_MAP_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_baseprioramp_"+str(baseprioramp)+".fits"
         
             if testpsiproj is True:
                 psiMB_out_fn = "psiMB_DR2_SC_241_"+velrangestring+"_smoothprior_"+str(gausssmooth_prior)+"_adaptivep0_"+str(adaptivep0)+"_deltafuncprior_"+str(deltafuncprior)+"_testpsiproj_"+str(testpsiproj)+"_smalloffset.fits"
@@ -1934,5 +1934,9 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp="median_var")
     
     #thetaRHT prior with fixwidth
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "ThetaRHT", velrangestring = "-10_10", smoothprior=True, sig=30, gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0, fixwidth=True)
+    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "ThetaRHT", velrangestring = "-10_10", smoothprior=True, sig=30, gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0, fixwidth=True)
+    
+    # attempt MAP estimate
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="MAP", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp="max_var")
+    
     
