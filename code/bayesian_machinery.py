@@ -1937,6 +1937,6 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "ThetaRHT", velrangestring = "-10_10", smoothprior=True, sig=30, gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0, fixwidth=True)
     
     # attempt MAP estimate
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="MAP", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp="max_var")
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="MAP", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
     
     
