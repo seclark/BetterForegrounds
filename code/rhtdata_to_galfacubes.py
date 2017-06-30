@@ -33,9 +33,6 @@ nthets = 165
 rht_data_cube = np.zeros((nthets, galfa_cube_hdr['NAXIS2'], galfa_cube_hdr['NAXIS1']), np.float_)
 
 # construct a 2D header from galfa cube to project each theta slice to
-#hdulist_todata = fits.open(galfa_cube_fn)
-#hdu_todata = hdulist_todata[0]
-
 new_header = fits.getheader(galfa_cube_fn)
 new_header.remove('CRPIX3') # remove all 3rd axis keywords from fits header
 new_header.remove('CTYPE3')
@@ -44,9 +41,6 @@ new_header.remove('CDELT3')
 new_header.remove('NAXIS3')
 new_header.remove('CROTA3')
 new_header['NAXIS'] = 2
-#hdu_todata.data = galfa_cube_data[0, :, :]
-
-#new_header = fits.getheader(hdu_todata)#copy.copy(hdu_todata.header)
 
 
 for thet_i in xrange(nthets):
