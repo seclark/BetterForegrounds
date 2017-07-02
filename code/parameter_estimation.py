@@ -831,10 +831,10 @@ def write_allsky_singlevel_thetaweights_to_database_RADEC_indx(update = False, v
         print("there are {} nonzero elements in thetabin {}".format(len(nonzero_index), _thetabin_i))
         
         # Either inserts new ID with given value or ignores if id already exists 
-        c.executemany("INSERT OR IGNORE INTO "+tablename+" (id, "+value_names[_thetabin_i]+") VALUES (?, ?)", [(allpix.flat(i), unprojdata.flat[i]) for i in nonzero_index])
+        c.executemany("INSERT OR IGNORE INTO "+tablename+" (id, "+value_names[_thetabin_i]+") VALUES (?, ?)", [(allpix.flat[i], unprojdata.flat[i]) for i in nonzero_index])
     
         # Inserts data to new ids
-        c.executemany("UPDATE "+tablename+" SET "+value_names[_thetabin_i]+"=? WHERE id=?", [(unprojdata.flat[i], allpix.flat(i)) for i in nonzero_index])
+        c.executemany("UPDATE "+tablename+" SET "+value_names[_thetabin_i]+"=? WHERE id=?", [(unprojdata.flat[i], allpix.flat[i]) for i in nonzero_index])
     
         conn.commit()
     
