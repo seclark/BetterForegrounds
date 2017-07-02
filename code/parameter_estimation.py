@@ -492,8 +492,8 @@ def QU_RHT_Gal_to_database(sigma=30, smooth=True):
     Npix = 12*Nside**2
      
     if smooth is True:
-        tqu_Gal_fn = "../data/TQU_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal_sig"+str(sigma)+".fits"
-        tqu_sq_Gal_fn = "../data/TQUsq_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal_sig"+str(sigma)+".fits"
+        tqu_Gal_fn = "../data/TQU_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_sig"+str(sigma)+"_Gal.fits"
+        tqu_sq_Gal_fn = "../data/TQUsq_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_sig"+str(sigma)+"_Gal.fits"
     else:
         tqu_Gal_fn = "../data/TQU_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal.fits"
         tqu_sq_Gal_fn = "../data/TQUsq_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal.fits"
@@ -771,7 +771,78 @@ def write_allsky_singlevel_thetaweights_to_database_RADEC(update = False, velstr
 
     conn.close()
     
+def write_allsky_singlevel_thetaweights_to_database_RADEC_indx(update = False, velstr="S0974_0978"):
+    """
+    Writes all projected weights from region to an SQL database.
+    primary key is flattened index of array with shape of total galfa area
+    id created from allpix = np.arange(2432*21600).reshape(2432, 21600)
+    This version is for a *single* velocity slice
+    """          
     
+    # Pull in each unprojected theta bin
+    unprojected_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/"+velstr+"/"
+
+    nthets = 165 
+
+    # Arbitrary 2-letter SQL storage value names
+    value_names = [''.join(i) for i in itertools.permutations(string.lowercase,2)]
+
+    # Remove protected words from value names
+    if "as" in value_names: value_names.remove("as")
+    if "do" in value_names: value_names.remove("do")
+    if "id" in value_names: value_names.remove("id")
+    if "is" in value_names: value_names.remove("is")
+    if "in" in value_names: value_names.remove("in")
+    if "if" in value_names: value_names.remove("if")
+
+    # Comma separated list of nthets column names
+    column_names = " FLOAT DEFAULT 0.0,".join(value_names[:nthets])
+
+    # Name table
+    tablename = "RHT_weights_allsky_"+velstr
+
+    # Statement for creation of SQL database
+    createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+" FLOAT DEFAULT 0.0);"
+
+    # Instantiate database
+    conn = sqlite3.connect(unprojected_root + "GALFA_HI_allsky_"+velstr+"_RADEC_indx_w75_s15_t70_RHTweights_db.sqlite")
+    c = conn.cursor()
+    
+    if update is True:
+        print("table already created -- this is simply an update")
+    else:
+        c.execute(createstatement)
+        conn.commit()
+        
+    # Shape of the all-sky data
+    #nyfull = 2432
+    #nxfull = 21600
+    allpix = fits.getdata("/disks/jansky/a/users/goldston/susan/Wide_maps/allpix_allsky.fits")
+        
+    for _thetabin_i in xrange(nthets):
+        time0 = time.time()
+        
+        # Load in single-theta backprojection
+        unprojected_fn = unprojected_root + "GALFA_HI_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+".fits"
+        unprojdata = fits.getdata(unprojected_fn)
+        
+        # must flatten data array before finding nonzero elements
+        nonzero_index = np.nonzero(unprojdata.flatten())[0]
+        print("there are {} nonzero elements in thetabin {}".format(len(nonzero_index), _thetabin_i))
+        
+        # Either inserts new ID with given value or ignores if id already exists 
+        c.executemany("INSERT OR IGNORE INTO "+tablename+" (id, "+value_names[_thetabin_i]+") VALUES (?, ?)", [(allpix.flat(i), unprojdata.flat[i]) for i in nonzero_index])
+    
+        # Inserts data to new ids
+        c.executemany("UPDATE "+tablename+" SET "+value_names[_thetabin_i]+"=? WHERE id=?", [(unprojdata.flat[i], allpix.flat(i)) for i in nonzero_index])
+    
+        conn.commit()
+    
+        time1 = time.time()
+        print("theta bin {} took {} minutes".format(_thetabin_i, (time1 - time0)/60.))
+
+    conn.close()
+
 def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0974_0978"):
     """
     Projects allsky weights to healpix Galactic.
