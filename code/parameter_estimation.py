@@ -1867,5 +1867,7 @@ if __name__ == "__main__":
     
     #c = project_angle0_db(wlen = 75, nest=True)
     
-    QU_RHT_Gal_to_database(smooth=True, sigma=30)
+    #QU_RHT_Gal_to_database(smooth=True, sigma=30)
+    
+    write_allsky_singlevel_thetaweights_to_database_RADEC_indx(update = False, velstr="S0974_0978")
     
