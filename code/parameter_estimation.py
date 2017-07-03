@@ -1869,5 +1869,5 @@ if __name__ == "__main__":
     
     #QU_RHT_Gal_to_database(smooth=True, sigma=30)
     
-    write_allsky_singlevel_thetaweights_to_database_RADEC_indx(update = False, velstr="S0994_0998")
+    write_allsky_singlevel_thetaweights_to_database_RADEC_indx(update = False, velstr="S0990_1003")
     
