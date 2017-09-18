@@ -1004,8 +1004,8 @@ def make_single_theta_int_vel_map(thetabin=0):
     
 def get_RHT_Sstr(starting_vel):
 
-    start_velstr = get_velstr(starting_vel)
-    end_velstr = get_velstr(starting_vel + 4)
+    start_velstr = galfa_name_lookup.get_velstr(starting_vel)
+    end_velstr = galfa_name_lookup.get_velstr(starting_vel + 4)
     
     Sstr = "S"+start_velstr+"_"+end_velstr
     
