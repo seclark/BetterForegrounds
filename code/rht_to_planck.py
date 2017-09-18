@@ -744,7 +744,7 @@ if __name__ == "__main__":
     galfa_fn = "/Volumes/DataDavy/Foregrounds/coords/allsky_GALFA_mask_nonzero_nchannels_edge200.fits"
     dataones = fits.getdata(galfa_fn) 
     data_hdr = fits.getheader(galfa_fn)
-    interpolate_data_to_hp_galactic(dataones, data_hdr, local=True, Equ=False, nonedata=0, countpix=False))
+    interpolate_data_to_hp_galactic(dataones, data_hdr, local=True, Equ=False, nonedata=0, countpix=False)
     
     hp.writeto("/Volumes/DataDavy/Foregrounds/coords/allsky_GALFA_mask_nonzero_nchannels_edge200_hp_proj.fits", dataones, data_hdr)
     
