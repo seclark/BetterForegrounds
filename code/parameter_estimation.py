@@ -23,6 +23,8 @@ import sys
 sys.path.insert(0, '../../RHT')
 import RHT_tools
 
+import galfa_name_lookup
+
 """
  Simple psi, p estimation routines.
 """
@@ -999,6 +1001,85 @@ def make_single_theta_int_vel_map(thetabin=0):
 
     hdr = fits.getheader(single_theta_fn)
     fits.writeto(out_root+"total_rht_power_0974_1078_thetabin_"+str(thetabin)+".fits", single_vel_map)
+    
+def get_RHT_Sstr(starting_vel):
+
+    start_velstr = get_velstr(starting_vel)
+    end_velstr = get_velstr(starting_vel + 4)
+    
+    Sstr = "S"+start_velstr+"_"+end_velstr
+    
+    return Sstr
+
+def make_vel_int_galfa_channel_maps():
+    """
+    for each of our favorite 5-wide-channel velocity slices, make integrated map
+    (channel1 + channel2 + ...)*dv
+    """
+    
+    begin_vel = 974
+    end_vel = 1073
+    
+    nyfull = 2432
+    nxfull = 21600
+    sumchans = np.zeros((nyfull, nxfull), np.float_)   
+    
+    #cdelt3 in original Wide cube
+    cdelt3 = 0.736122839600
+    
+    galfa_root = "/disks/jansky/a/users/goldston/zheng/151019_NHImaps_SRcorr/data/Allsky_ChanMaps/Wide/"
+    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/channel_maps_for_RHT/"
+    
+    rht_starting_vels = [begin_vel + 5*i for i in xrange((end_vel - begin_vel)//5 + 1)]
+    
+    for i, _vel in enumerate(rht_starting_vels):
+    
+        Sstr = get_RHT_Sstr(_vel)
+    
+        for v in np.arange(rht_starting_vels[i], rht_starting_vels[i]+5):
+            print(v)
+        
+            galfa_fn = galfa_root + galfa_name_lookup.get_galfa_W_name(v)
+            sumchans += fits.getdata(galfa_fn)
+            hdr = fits.getheader(galfa_fn)
+        
+        fits.writeto(out_root+"channel_map_"+Sstr+".fits", sumchans*cdelt3, hdr)
+        
+    
+
+def make_weighted_single_theta_int_vel_map(thetabin=0):
+    """
+    Make a single theta map that has the total weight at that thetabin for all velocities. 
+    Weight each velocity by the local HI intensity at that velocity channel.
+    
+    i.e. map(theta_i) = sum_v (I(v)*R(theta_i))
+    """
+    
+    velstrs=["S0974_0978", "S0979_0983", "S0984_0988", "S0989_0993", "S0994_0998", "S0999_1003",
+             "S1004_1008", "S1009_1013", "S1014_1018", "S1019_1023", "S1024_1028", "S1029_1033",
+             "S1034_1038", "S1039_1043", "S1044_1048", "S1049_1053", "S1054_1058", "S1059_1063",
+             "S1064_1068", "S1069_1073"]#, "S1074_1078"]
+    
+    in_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/weighted_single_theta_maps/"
+    out_root = in_root + "single_theta_0974_1073_sum/" 
+    # Shape of the all-sky data
+    nyfull = 2432
+    nxfull = 21600
+    single_vel_map = np.zeros((nyfull, nxfull), np.float_)   
+    
+    begin_vel = 974
+    end_vel = 1073
+
+    rht_starting_vels = [begin_vel + 5*i for i in xrange((end_vel - begin_vel)//5 + 1)]
+    
+    for _velstr in velstrs:
+        single_theta_fn = in_root+_velstr+"/GALFA_HI_W_"+_velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(thetabin)+".fits"
+        single_vel_map += fits.getdata(single_theta_fn)    
+        print(_velstr, np.nansum(single_vel_map))
+
+    hdr = fits.getheader(single_theta_fn)
+    fits.writeto(out_root+"weighted_rht_power_0974_1073_thetabin_"+str(thetabin)+".fits", single_vel_map)
+
 
 def get_extra0_sstring(cstart, cstop):
     """
@@ -1869,5 +1950,7 @@ if __name__ == "__main__":
     
     #QU_RHT_Gal_to_database(smooth=True, sigma=30)
     
-    write_allsky_singlevel_thetaweights_to_database_RADEC_indx(update = False, velstr="S1039_1043")
+    #write_allsky_singlevel_thetaweights_to_database_RADEC_indx(update = False, velstr="S1039_1043")
     
+    
+    make_vel_int_galfa_channel_maps()
