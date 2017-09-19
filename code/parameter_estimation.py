@@ -933,6 +933,91 @@ def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0
 
     conn.close()
     
+def project_allsky_vel_weighted_int_thetaweights_to_database(update = False):
+    """
+    Projects allsky weighted integrated thetaweights to healpix Galactic.
+    Writes all projected weights from region to an SQL database.
+    NOTE :: id = primary key, pixel index in NESTED order
+    This version is for single_theta_S0974_1073_sum
+    """
+    
+    # Pull in each unprojected theta bin
+    unprojected_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/weighted_single_theta_maps/single_theta_S0974_1073_sum/"
+
+    # Full GALFA file header for projection
+    galfa_hdr = fits.getheader("/disks/jansky/a/users/goldston/zheng/151019_NHImaps_SRcorr/data/GNHImaps_SRcorr/GALFA-HI_NHI_VLSR-90+90kms/data/GALFA-HI_NHI_VLSR-90+90kms.fits")
+
+    nthets = 165 
+
+    # Arbitrary 2-letter SQL storage value names
+    value_names = [''.join(i) for i in itertools.permutations(string.lowercase,2)]
+
+    # Remove protected words from value names
+    if "as" in value_names: value_names.remove("as")
+    if "is" in value_names: value_names.remove("is")
+    if "in" in value_names: value_names.remove("in")
+    if "if" in value_names: value_names.remove("if")
+    if "do" in value_names: value_names.remove("do")
+    if "id" in value_names: value_names.remove("id")
+
+    # Comma separated list of nthets column names
+    column_names = " FLOAT DEFAULT 0.0,".join(value_names[:nthets])
+
+    # Name table
+    tablename = "RHT_weights_allsky"
+
+    # Statement for creation of SQL database
+    createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+" FLOAT DEFAULT 0.0);"
+
+    # Instantiate database
+    #conn = sqlite3.connect(":memory:")
+    conn = sqlite3.connect(unprojected_root + "GALFA_HI_allsky_weighted_int_S0974_1073_w75_s15_t70_RHTweights_db.sqlite")
+    c = conn.cursor()
+    
+    if update is True:
+        print("table already created -- this is simply an update")
+    else:
+        c.execute(createstatement)
+        conn.commit()
+
+    #for _thetabin_i in range(23, nthets, 1):
+    for _thetabin_i in xrange(nthets):
+        time0 = time.time()
+    
+        # Load in single-theta backprojection
+        unprojected_fn = unprojected_root + "weighted_rht_power_0974_1073_thetabin_"+str(_thetabin_i)+".fits"
+        unprojdata = fits.getdata(unprojected_fn)
+
+        # Project data to hp galactic
+        projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr, local=False)
+        print("Data successfully projected")
+        
+        #projected_fn = unprojected_root + "GALFA_HI_allsky_-10_10_w75_s15_t70_thetabin_"+str(_thetabin_i)+"_healpixproj.fits"
+        #projdata = fits.getdata(projected_fn)
+    
+        # Some data stored as -999 for 'none'
+        projdata[projdata == -999] = 0
+
+        # The healpix indices we keep will be the ones where there is nonzero data
+        nonzero_index = np.nonzero(projdata)[0]
+        print("there are {} nonzero elements in thetabin {}".format(len(nonzero_index), _thetabin_i))
+        
+        # Try wrapping this in a transaction
+        #c.execute("begin")
+        # Either inserts new ID with given value or ignores if id already exists 
+        c.executemany("INSERT OR IGNORE INTO "+tablename+" (id, "+value_names[_thetabin_i]+") VALUES (?, ?)", [(i, projdata[i]) for i in nonzero_index])
+    
+        # Inserts data to new ids
+        c.executemany("UPDATE "+tablename+" SET "+value_names[_thetabin_i]+"=? WHERE id=?", [(projdata[i], i) for i in nonzero_index])
+        #c.execute("commit")
+        
+        conn.commit()
+    
+        time1 = time.time()
+        print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
+
+    conn.close()
+    
 def intRHT_QU_maps_per_vel(velstr="S0974_0978"):
     
     # Pull in each unprojected theta bin
@@ -1965,5 +2050,7 @@ if __name__ == "__main__":
     
     #make_vel_int_galfa_channel_maps()
 
-    for _i in np.arange(158, 166):
-        make_weighted_single_theta_int_vel_map(thetabin=_i)
+    #for _i in np.arange(158, 166):
+    #    make_weighted_single_theta_int_vel_map(thetabin=_i)
+    
+    project_allsky_vel_weighted_int_thetaweights_to_database(update = False)
