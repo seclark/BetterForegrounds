@@ -1965,4 +1965,5 @@ if __name__ == "__main__":
     
     #make_vel_int_galfa_channel_maps()
 
-    make_weighted_single_theta_int_vel_map(thetabin=0)
+    for _i in np.arange(1, 165):
+        make_weighted_single_theta_int_vel_map(thetabin=_i)
