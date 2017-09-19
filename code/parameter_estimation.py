@@ -971,7 +971,7 @@ def project_allsky_vel_weighted_int_thetaweights_to_database(update = False):
 
     # Instantiate database
     #conn = sqlite3.connect(":memory:")
-    conn = sqlite3.connect(unprojected_root + "GALFA_HI_allsky_weighted_int_S0974_1073_w75_s15_t70_RHTweights_db.sqlite")
+    conn = sqlite3.connect(unprojected_root + "GALFA_HI_allsky_weighted_int_S0974_1073_w75_s15_t70_RHTweights_db_fast.sqlite")
     c = conn.cursor()
     
     if update is True:
@@ -985,19 +985,22 @@ def project_allsky_vel_weighted_int_thetaweights_to_database(update = False):
         time0 = time.time()
     
         # Load in single-theta backprojection
-        unprojected_fn = unprojected_root + "weighted_rht_power_0974_1073_thetabin_"+str(_thetabin_i)+".fits"
-        unprojdata = fits.getdata(unprojected_fn)
+        #unprojected_fn = unprojected_root + "weighted_rht_power_0974_1073_thetabin_"+str(_thetabin_i)+".fits"
+        #unprojdata = fits.getdata(unprojected_fn)
 
         # Project data to hp galactic
-        projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr, local=False)
-        print("Data successfully projected")
+        #projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr, local=False)
+        #print("Data successfully projected")
         
-        #projected_fn = unprojected_root + "GALFA_HI_allsky_-10_10_w75_s15_t70_thetabin_"+str(_thetabin_i)+"_healpixproj.fits"
-        #projdata = fits.getdata(projected_fn)
+        # load in already projected data
+        projected_fn = unprojected_root + "weighted_rht_power_0974_1073_thetabin_"+str(_thetabin_i)+"_healpixproj_nanmask.fits"
+        projdata = fits.getdata(projected_fn)
     
         # Some data stored as -999 for 'none'
         projdata[projdata == -999] = 0
         projdata[projdata < 0] = 0
+        projdata[np.isnan(projdata)] = 0
+        projdata[projdata == None] = 0
 
         # The healpix indices we keep will be the ones where there is nonzero data
         nonzero_index = np.nonzero(projdata)[0]
@@ -2097,4 +2100,7 @@ if __name__ == "__main__":
     
     #project_allsky_vel_weighted_int_thetaweights_to_database(update = False)
     
-    reproject_allsky_weighted_data(local=False)
+    #reproject_allsky_weighted_data(local=False)
+    
+    # try loading in already projected data
+    project_allsky_vel_weighted_int_thetaweights_to_database(update=False)
