@@ -1282,7 +1282,7 @@ def reproject_allsky_weighted_data(local=True):
         
     galfa_hdr = fits.getheader(galfa_fn)
     
-    for _thetabin_i in np.arange(70, 90):
+    for _thetabin_i in np.arange(90, 110):
         time0 = time.time()
     
         # Load in single-theta backprojection
