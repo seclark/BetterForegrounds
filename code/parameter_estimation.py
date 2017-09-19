@@ -1263,6 +1263,47 @@ def reproject_allsky_data(local=True):
         
         time1 = time.time()
         print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
+        
+def reproject_allsky_weighted_data(local=True):
+    
+    # Pull in each unprojected theta bin
+    if local:
+        unprojected_root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/single_theta_backprojections/"
+    else:
+        unprojected_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/weighted_single_theta_maps/single_theta_0974_1073_sum/"
+        
+    nthets = 165
+    
+    if local:
+        galfa_fn = "/Volumes/DataDavy/GALFA/DR2/FullSkyWide/GALFA_HI_W_S1024_V0000.4kms.fits"
+    else:
+        galfa_fn = "/disks/jansky/a/users/goldston/zheng/151019_NHImaps_SRcorr/data/GNHImaps_SRCORR_final/NHImaps/GALFA-HI_NHI_VLSR-90+90kms.fits"
+
+        
+    galfa_hdr = fits.getheader(galfa_fn)
+    
+    for _thetabin_i in np.arange(0, 10):
+        time0 = time.time()
+    
+        # Load in single-theta backprojection
+        unprojected_fn = unprojected_root + "weighted_rht_power_0974_1073_thetabin_"+str(_thetabin_i)+".fits"
+        unprojdata = fits.getdata(unprojected_fn)
+
+        # Project data to hp galactic
+        projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr, local=local, nonedata=None)
+        print("Data successfully projected")
+        
+        
+        projected_fn = unprojected_root + "weighted_rht_power_0974_1073_thetabin_"+str(_thetabin_i)+"_healpixproj_nanmask.fits"
+        
+        out_hdr["THETAI"] = _thetabin_i
+        out_hdr["VSTART"] = 0974
+        out_hdr["VSTOP"] = 1073
+    
+        fits.writeto(projected_fn, projdata, out_hdr)
+        
+        time1 = time.time()
+        print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
     
 def test_faster_db_creation():
     # Pull in each projected theta bin
@@ -2054,4 +2095,6 @@ if __name__ == "__main__":
     #for _i in np.arange(158, 166):
     #    make_weighted_single_theta_int_vel_map(thetabin=_i)
     
-    project_allsky_vel_weighted_int_thetaweights_to_database(update = False)
+    #project_allsky_vel_weighted_int_thetaweights_to_database(update = False)
+    
+    reproject_allsky_weighted_data(local=False)
