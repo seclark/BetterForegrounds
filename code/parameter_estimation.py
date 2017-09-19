@@ -1060,9 +1060,9 @@ def make_weighted_single_theta_int_vel_map(thetabin=0):
              "S1034_1038", "S1039_1043", "S1044_1048", "S1049_1053", "S1054_1058", "S1059_1063",
              "S1064_1068", "S1069_1073"]#, "S1074_1078"]
     
-    in_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/weighted_single_theta_maps/"
+    in_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/"
     in_channel_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/channel_maps_for_RHT/"
-    out_root = in_root + "single_theta_0974_1073_sum/" 
+    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/weighted_single_theta_0974_1073_sum/" 
     # Shape of the all-sky data
     nyfull = 2432
     nxfull = 21600
