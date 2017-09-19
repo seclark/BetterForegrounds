@@ -945,7 +945,7 @@ def project_allsky_vel_weighted_int_thetaweights_to_database(update = False):
     unprojected_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/weighted_single_theta_maps/single_theta_S0974_1073_sum/"
 
     # Full GALFA file header for projection
-    galfa_hdr = fits.getheader("/disks/jansky/a/users/goldston/zheng/151019_NHImaps_SRcorr/data/GNHImaps_SRcorr/GALFA-HI_NHI_VLSR-90+90kms/data/GALFA-HI_NHI_VLSR-90+90kms.fits")
+    galfa_hdr = fits.getheader("/disks/jansky/a/users/goldston/zheng/151019_NHImaps_SRcorr/data/GNHImaps_SRcorr/GALFA-HI_NHI_VLSR-90+90kms.fits")
 
     nthets = 165 
 
