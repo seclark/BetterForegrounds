@@ -997,6 +997,7 @@ def project_allsky_vel_weighted_int_thetaweights_to_database(update = False):
     
         # Some data stored as -999 for 'none'
         projdata[projdata == -999] = 0
+        projdata[projdata < 0] = 0
 
         # The healpix indices we keep will be the ones where there is nonzero data
         nonzero_index = np.nonzero(projdata)[0]
