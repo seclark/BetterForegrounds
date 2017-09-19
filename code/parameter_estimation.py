@@ -1297,7 +1297,7 @@ def reproject_allsky_weighted_data(local=True):
         projected_fn = unprojected_root + "weighted_rht_power_0974_1073_thetabin_"+str(_thetabin_i)+"_healpixproj_nanmask.fits"
         
         out_hdr["THETAI"] = _thetabin_i
-        out_hdr["VSTART"] = 0974
+        out_hdr["VSTART"] = 974
         out_hdr["VSTOP"] = 1073
     
         fits.writeto(projected_fn, projdata, out_hdr)
