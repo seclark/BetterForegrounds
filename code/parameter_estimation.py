@@ -1270,7 +1270,7 @@ def reproject_allsky_weighted_data(local=True):
     if local:
         unprojected_root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/single_theta_backprojections/"
     else:
-        unprojected_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/weighted_single_theta_maps/single_theta_0974_1073_sum/"
+        unprojected_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/weighted_single_theta_maps/single_theta_S0974_1073_sum/"
         
     nthets = 165
     
