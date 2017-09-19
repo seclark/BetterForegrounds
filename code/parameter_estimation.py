@@ -1061,6 +1061,7 @@ def make_weighted_single_theta_int_vel_map(thetabin=0):
              "S1064_1068", "S1069_1073"]#, "S1074_1078"]
     
     in_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/weighted_single_theta_maps/"
+    in_channel_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/channel_maps_for_RHT/"
     out_root = in_root + "single_theta_0974_1073_sum/" 
     # Shape of the all-sky data
     nyfull = 2432
@@ -1073,11 +1074,20 @@ def make_weighted_single_theta_int_vel_map(thetabin=0):
     rht_starting_vels = [begin_vel + 5*i for i in xrange((end_vel - begin_vel)//5 + 1)]
     
     for _velstr in velstrs:
+        # get RHT power at single theta for this channel
         single_theta_fn = in_root+_velstr+"/GALFA_HI_W_"+_velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(thetabin)+".fits"
-        single_vel_map += fits.getdata(single_theta_fn)    
-        print(_velstr, np.nansum(single_vel_map))
+        single_theta_map = fits.getdata(single_theta_fn)
+        
+        # get channel map
+        velocity_channel_fn = in_channel_root+"channel_map_"+_velstr+".fits"
+        velocity_channel_map = fits.getdata(velocity_channel_fn)
+        
+        # multiply by channel intensity
+        single_vel_map += single_theta_map*velocity_channel_map
+        
+        print(_velstr, "num pix:", np.nansum(single_vel_map))
 
-    hdr = fits.getheader(single_theta_fn)
+    hdr = fits.getheader(velocity_channel_fn)
     fits.writeto(out_root+"weighted_rht_power_0974_1073_thetabin_"+str(thetabin)+".fits", single_vel_map)
 
 
@@ -1953,4 +1963,6 @@ if __name__ == "__main__":
     #write_allsky_singlevel_thetaweights_to_database_RADEC_indx(update = False, velstr="S1039_1043")
     
     
-    make_vel_int_galfa_channel_maps()
+    #make_vel_int_galfa_channel_maps()
+
+    make_weighted_single_theta_int_vel_map(thetabin=0)
