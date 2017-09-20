@@ -141,7 +141,7 @@ class BayesianComponent():
 
 class Prior(BayesianComponent):
     """
-    Class for building RHT priors
+    Class for building RHT Priors
     """
     
     def __init__(self, hp_index, sample_p0, reverse_RHT = False, verbose = False, region = "SC_241", 
@@ -1381,6 +1381,9 @@ def get_rht_cursor(region = "SC_241", velrangestring = "-10_10", local=False):
         elif velrangestring == "-4_3":
             print("Loading database with velrangestring -4_3")
             rht_db = sqlite3.connect(root + "allsky_RHTweights_-4_3_db.sqlite")
+        elif velrangestring == "weighted":
+            print("Loading database with weighted velocity contributions")
+            rht_db = sqlite3.connect(root + "weighted_single_theta_maps/single_theta_S0974_1073_sum/GALFA_HI_allsky_weighted_int_S0974_1073_w75_s15_t70_RHTweights_db_fast.sqlite")
     
     rht_cursor = rht_db.cursor()
     
@@ -1937,6 +1940,10 @@ if __name__ == "__main__":
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = False, useprior = "ThetaRHT", velrangestring = "-10_10", smoothprior=True, sig=30, gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0, fixwidth=True)
     
     # attempt MAP estimate
-    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="MAP", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
+    #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="MAP", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
+    
+    # first attempt using I_v-weighted RHT output
+    fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "weighted", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0")
+    
     
     
