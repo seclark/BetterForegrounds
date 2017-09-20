@@ -1942,6 +1942,8 @@ if __name__ == "__main__":
     # attempt MAP estimate
     #fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "-10_10", gausssmooth_prior = False, tol=0, sampletype="MAP", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
     
+    print(astropy.__version__, healpy.__version__)
+    
     # first attempt using I_v-weighted RHT output
     fully_sample_sky(region = "allsky", limitregion = True, adaptivep0 = True, useprior = "RHTPrior", velrangestring = "weighted", gausssmooth_prior = False, tol=0, sampletype="mean_bayes", mcmc=False, testpsiproj=False, testthetas=False, save=True, baseprioramp=0)
     
