@@ -1774,6 +1774,9 @@ def make_hp_map(data, hp_indices, Nside = 2048, nest = True):
     Places data into array of healpix pixels by healpix index.
     """
     
+    print("shape of hp_indices: {}".format(hp_indices.shape))
+    hp_indices = np.squeeze(hp_indices)
+    
     Npix = 12*Nside**2
     map_data = np.zeros(Npix, np.float_)
     map_data[hp_indices] = data
