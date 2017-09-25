@@ -23,6 +23,8 @@ import sys
 sys.path.insert(0, '../../RHT')
 import RHT_tools
 
+import galfa_name_lookup
+
 """
  Simple psi, p estimation routines.
 """
@@ -931,6 +933,95 @@ def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0
 
     conn.close()
     
+def project_allsky_vel_weighted_int_thetaweights_to_database(update = False):
+    """
+    Projects allsky weighted integrated thetaweights to healpix Galactic.
+    Writes all projected weights from region to an SQL database.
+    NOTE :: id = primary key, pixel index in NESTED order
+    This version is for single_theta_S0974_1073_sum
+    """
+    
+    # Pull in each unprojected theta bin
+    unprojected_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/weighted_single_theta_maps/single_theta_S0974_1073_sum/"
+
+    # Full GALFA file header for projection
+    galfa_hdr = fits.getheader("/disks/jansky/a/users/goldston/zheng/151019_NHImaps_SRcorr/data/GNHImaps_SRCORR_final/NHImaps/GALFA-HI_NHI_VLSR-90+90kms.fits")
+
+    nthets = 165 
+
+    # Arbitrary 2-letter SQL storage value names
+    value_names = [''.join(i) for i in itertools.permutations(string.lowercase,2)]
+
+    # Remove protected words from value names
+    if "as" in value_names: value_names.remove("as")
+    if "is" in value_names: value_names.remove("is")
+    if "in" in value_names: value_names.remove("in")
+    if "if" in value_names: value_names.remove("if")
+    if "do" in value_names: value_names.remove("do")
+    if "id" in value_names: value_names.remove("id")
+
+    # Comma separated list of nthets column names
+    column_names = " FLOAT DEFAULT 0.0,".join(value_names[:nthets])
+
+    # Name table
+    tablename = "RHT_weights_allsky"
+
+    # Statement for creation of SQL database
+    createstatement = "CREATE TABLE "+tablename+" (id INTEGER PRIMARY KEY,"+column_names+" FLOAT DEFAULT 0.0);"
+
+    # Instantiate database
+    #conn = sqlite3.connect(":memory:")
+    conn = sqlite3.connect(unprojected_root + "GALFA_HI_allsky_weighted_int_S0974_1073_w75_s15_t70_RHTweights_db_fast.sqlite")
+    c = conn.cursor()
+    
+    if update is True:
+        print("table already created -- this is simply an update")
+    else:
+        c.execute(createstatement)
+        conn.commit()
+
+    #for _thetabin_i in range(23, nthets, 1):
+    for _thetabin_i in xrange(nthets):
+        time0 = time.time()
+    
+        # Load in single-theta backprojection
+        #unprojected_fn = unprojected_root + "weighted_rht_power_0974_1073_thetabin_"+str(_thetabin_i)+".fits"
+        #unprojdata = fits.getdata(unprojected_fn)
+
+        # Project data to hp galactic
+        #projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr, local=False)
+        #print("Data successfully projected")
+        
+        # load in already projected data
+        projected_fn = unprojected_root + "weighted_rht_power_0974_1073_thetabin_"+str(_thetabin_i)+"_healpixproj_nanmask.fits"
+        projdata = fits.getdata(projected_fn)
+    
+        # Some data stored as -999 for 'none'
+        projdata[projdata == -999] = 0
+        projdata[projdata < 0] = 0
+        projdata[np.isnan(projdata)] = 0
+        projdata[np.where(projdata == None)] = 0
+
+        # The healpix indices we keep will be the ones where there is nonzero data
+        nonzero_index = np.nonzero(projdata)[0]
+        print("there are {} nonzero elements in thetabin {}".format(len(nonzero_index), _thetabin_i))
+        
+        # Try wrapping this in a transaction
+        #c.execute("begin")
+        # Either inserts new ID with given value or ignores if id already exists 
+        c.executemany("INSERT OR IGNORE INTO "+tablename+" (id, "+value_names[_thetabin_i]+") VALUES (?, ?)", [(i, projdata[i]) for i in nonzero_index])
+    
+        # Inserts data to new ids
+        c.executemany("UPDATE "+tablename+" SET "+value_names[_thetabin_i]+"=? WHERE id=?", [(projdata[i], i) for i in nonzero_index])
+        #c.execute("commit")
+        
+        conn.commit()
+    
+        time1 = time.time()
+        print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
+
+    conn.close()
+    
 def intRHT_QU_maps_per_vel(velstr="S0974_0978"):
     
     # Pull in each unprojected theta bin
@@ -999,6 +1090,95 @@ def make_single_theta_int_vel_map(thetabin=0):
 
     hdr = fits.getheader(single_theta_fn)
     fits.writeto(out_root+"total_rht_power_0974_1078_thetabin_"+str(thetabin)+".fits", single_vel_map)
+    
+def get_RHT_Sstr(starting_vel):
+
+    start_velstr = galfa_name_lookup.get_velstr(starting_vel)
+    end_velstr = galfa_name_lookup.get_velstr(starting_vel + 4)
+    
+    Sstr = "S"+start_velstr+"_"+end_velstr
+    
+    return Sstr
+
+def make_vel_int_galfa_channel_maps():
+    """
+    for each of our favorite 5-wide-channel velocity slices, make integrated map
+    (channel1 + channel2 + ...)*dv
+    """
+    
+    begin_vel = 974
+    end_vel = 1073
+    
+    nyfull = 2432
+    nxfull = 21600
+    sumchans = np.zeros((nyfull, nxfull), np.float_)   
+    
+    #cdelt3 in original Wide cube
+    cdelt3 = 0.736122839600
+    
+    galfa_root = "/disks/jansky/a/users/goldston/zheng/151019_NHImaps_SRcorr/data/Allsky_ChanMaps/Wide/"
+    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/channel_maps_for_RHT/"
+    
+    rht_starting_vels = [begin_vel + 5*i for i in xrange((end_vel - begin_vel)//5 + 1)]
+    
+    for i, _vel in enumerate(rht_starting_vels):
+    
+        Sstr = get_RHT_Sstr(_vel)
+    
+        for v in np.arange(rht_starting_vels[i], rht_starting_vels[i]+5):
+            print(v)
+        
+            galfa_fn = galfa_root + galfa_name_lookup.get_galfa_W_name(v)
+            sumchans += fits.getdata(galfa_fn)
+            hdr = fits.getheader(galfa_fn)
+        
+        fits.writeto(out_root+"channel_map_"+Sstr+".fits", sumchans*cdelt3, hdr)
+        
+    
+
+def make_weighted_single_theta_int_vel_map(thetabin=0):
+    """
+    Make a single theta map that has the total weight at that thetabin for all velocities. 
+    Weight each velocity by the local HI intensity at that velocity channel.
+    
+    i.e. map(theta_i) = sum_v (I(v)*R(theta_i))
+    """
+    
+    velstrs=["S0974_0978", "S0979_0983", "S0984_0988", "S0989_0993", "S0994_0998", "S0999_1003",
+             "S1004_1008", "S1009_1013", "S1014_1018", "S1019_1023", "S1024_1028", "S1029_1033",
+             "S1034_1038", "S1039_1043", "S1044_1048", "S1049_1053", "S1054_1058", "S1059_1063",
+             "S1064_1068", "S1069_1073"]#, "S1074_1078"]
+    
+    in_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/"
+    in_channel_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/channel_maps_for_RHT/"
+    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/weighted_single_theta_maps/single_theta_S0974_1073_sum/" 
+    # Shape of the all-sky data
+    nyfull = 2432
+    nxfull = 21600
+    single_vel_map = np.zeros((nyfull, nxfull), np.float_)   
+    
+    begin_vel = 974
+    end_vel = 1073
+
+    rht_starting_vels = [begin_vel + 5*i for i in xrange((end_vel - begin_vel)//5 + 1)]
+    
+    for _velstr in velstrs:
+        # get RHT power at single theta for this channel
+        single_theta_fn = in_root+_velstr+"/GALFA_HI_W_"+_velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(thetabin)+".fits"
+        single_theta_map = fits.getdata(single_theta_fn)
+        
+        # get channel map
+        velocity_channel_fn = in_channel_root+"channel_map_"+_velstr+".fits"
+        velocity_channel_map = fits.getdata(velocity_channel_fn)
+        
+        # multiply by channel intensity
+        single_vel_map += single_theta_map*velocity_channel_map
+        
+        print(_velstr, "num pix:", np.nansum(single_vel_map))
+
+    hdr = fits.getheader(velocity_channel_fn)
+    fits.writeto(out_root+"weighted_rht_power_0974_1073_thetabin_"+str(thetabin)+".fits", single_vel_map)
+
 
 def get_extra0_sstring(cstart, cstop):
     """
@@ -1081,6 +1261,47 @@ def reproject_allsky_data(local=True):
         out_hdr["THETAI"] = _thetabin_i
         out_hdr["VSTART"] = -10
         out_hdr["VSTOP"] = 10
+    
+        fits.writeto(projected_fn, projdata, out_hdr)
+        
+        time1 = time.time()
+        print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
+        
+def reproject_allsky_weighted_data(local=True):
+    
+    # Pull in each unprojected theta bin
+    if local:
+        unprojected_root = "/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/single_theta_backprojections/"
+    else:
+        unprojected_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/weighted_single_theta_maps/single_theta_S0974_1073_sum/"
+        
+    nthets = 165
+    
+    if local:
+        galfa_fn = "/Volumes/DataDavy/GALFA/DR2/FullSkyWide/GALFA_HI_W_S1024_V0000.4kms.fits"
+    else:
+        galfa_fn = "/disks/jansky/a/users/goldston/zheng/151019_NHImaps_SRcorr/data/GNHImaps_SRCORR_final/NHImaps/GALFA-HI_NHI_VLSR-90+90kms.fits"
+
+        
+    galfa_hdr = fits.getheader(galfa_fn)
+    
+    for _thetabin_i in np.arange(150, 166):
+        time0 = time.time()
+    
+        # Load in single-theta backprojection
+        unprojected_fn = unprojected_root + "weighted_rht_power_0974_1073_thetabin_"+str(_thetabin_i)+".fits"
+        unprojdata = fits.getdata(unprojected_fn)
+
+        # Project data to hp galactic
+        projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr, local=local, nonedata=None)
+        print("Data successfully projected")
+        
+        
+        projected_fn = unprojected_root + "weighted_rht_power_0974_1073_thetabin_"+str(_thetabin_i)+"_healpixproj_nanmask.fits"
+        
+        out_hdr["THETAI"] = _thetabin_i
+        out_hdr["VSTART"] = 974
+        out_hdr["VSTOP"] = 1073
     
         fits.writeto(projected_fn, projdata, out_hdr)
         
@@ -1869,5 +2090,17 @@ if __name__ == "__main__":
     
     #QU_RHT_Gal_to_database(smooth=True, sigma=30)
     
-    write_allsky_singlevel_thetaweights_to_database_RADEC_indx(update = False, velstr="S1039_1043")
+    #write_allsky_singlevel_thetaweights_to_database_RADEC_indx(update = False, velstr="S1039_1043")
     
+    
+    #make_vel_int_galfa_channel_maps()
+
+    #for _i in np.arange(158, 166):
+    #    make_weighted_single_theta_int_vel_map(thetabin=_i)
+    
+    #project_allsky_vel_weighted_int_thetaweights_to_database(update = False)
+    
+    #reproject_allsky_weighted_data(local=False)
+    
+    # try loading in already projected data
+    project_allsky_vel_weighted_int_thetaweights_to_database(update=False)
