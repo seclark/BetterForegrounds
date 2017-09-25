@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import pyfits
 import healpy as hp
 
+# where to save output files
+out_root = '../spice/'
+
 # read in files
 fileAB = np.loadtxt(sys.argv[1]) #cross
 fileAA = np.loadtxt(sys.argv[2]) #auto
@@ -38,6 +41,9 @@ def bin_cl(cl,bb):
     ell = np.arange(len(cl))
     # multiply by ell*(ell+1)/2pi before binning
     cl *= (ell*(ell+1.0))/(2.0*np.pi)
+    print(ell)
+    print(bb)
+    bb=[np.int(b) for b in bb]
     ellsubarrs = np.split(ell, bb)
     clsubarrs = np.split(cl, bb)
     ellbinned = np.zeros(len(bb)+1)
@@ -53,6 +59,8 @@ clAB_binned = np.zeros((6,Nellbins))
 clAA_binned = np.zeros((6,Nellbins))
 clBB_binned = np.zeros((6,Nellbins))
 for i in xrange(6):
+    print(clAB[i])
+    print(binbounds)
     [ell_binned, clAB_binned[i]] = bin_cl(clAB[i], binbounds)
     [ell_binned, clAA_binned[i]] = bin_cl(clAA[i], binbounds)
     [ell_binned, clBB_binned[i]] = bin_cl(clBB[i], binbounds)
@@ -75,7 +83,7 @@ for i in xrange(6):
 # save binned results + error bars
 # we only want the EE and BB power spectra
 # columns are ell , EE , EE_err , BB , BB_err
-np.savetxt(outfile+'.txt', np.transpose([ell_binned, clAB_binned[1], Delta_cl_AB[1], clAB_binned[2], Delta_cl_AB[2]]))
+np.savetxt(out_root+outfile+'.txt', np.transpose([ell_binned, clAB_binned[1], Delta_cl_AB[1], clAB_binned[2], Delta_cl_AB[2]]))
 
 # plot
 plt.clf()
@@ -88,7 +96,7 @@ plt.errorbar(ell_binned, clAB_binned[2], yerr=[Delta_cl_AB[2],Delta_cl_AB[2]], f
 plt.xlabel(r"$\ell$",fontsize=18)
 plt.ylabel(r"$\ell(\ell+1) C_{\ell}^{EE,BB (353 \times 217)}/2\pi \, [{\rm K}^2]$",fontsize=18)
 plt.xlim(left=ellmin,right=ellmax)
-plt.ylim( -1.0e-11, 5.0e-11 )
+#plt.ylim( -1.0e-11, 5.0e-11 )
 plt.figlegend( (EE,BB), ('EE','BB'), loc='upper right')
 plt.grid()
-plt.savefig(outfile+'.png')
+plt.savefig(out_root+outfile+'.png')

@@ -2,6 +2,8 @@ import numpy as np
 import glob, pickle
 import matplotlib.pyplot as plt
 import pyfits
+import copy
+from scipy import ndimage
 import healpy as hp
 from subprocess import call, PIPE
 from astropy.io import fits
@@ -9,6 +11,40 @@ from astropy.io import fits
 import rht_to_planck
 import rotate_map_alm
 
+def smooth_overnans(map, sig = 15):
+
+    """
+    Takes map with nans, etc set to 0
+    """
+    
+    mask = np.ones(map.shape, np.float_)
+    mask[np.isnan(map)] = 0
+    
+    map_zeroed = copy.copy(map)
+    map_zeroed[mask == 0] = 0
+    
+    blurred_map = ndimage.gaussian_filter(map_zeroed, sigma=sig)
+    blurred_mask = ndimage.gaussian_filter(mask, sigma=sig)
+    
+    map = blurred_map / blurred_mask
+  
+    return map
+
+"""  
+QURHT_root ="/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/QUmaps/"
+#Qdata_fn = QURHT_root+"QRHT_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70.fits"
+#Udata_fn = QURHT_root+"URHT_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70.fits"
+print("transforming Q, U sq")
+Qdata_fn = QURHT_root+"QRHTsq_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70.fits"
+Udata_fn = QURHT_root+"URHTsq_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70.fits"
+Qdata = fits.getdata(Qdata_fn)
+Udata = fits.getdata(Udata_fn)
+hdr = fits.getheader(Qdata_fn)
+Qdata_smooth30 = smooth_overnans(Qdata, sig=30)
+Udata_smooth30 = smooth_overnans(Udata, sig=30)
+fits.writeto(QURHT_root+"QRHTsq_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_sig30.fits", Qdata_smooth30, header=hdr)
+fits.writeto(QURHT_root+"URHTsq_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_sig30.fits", Udata_smooth30, header=hdr)
+"""
 Nside=2048
 Npix=12*Nside**2
 
@@ -27,8 +63,11 @@ if projectGal:
     #Qdata_fn = QURHT_root+"Q_RHT_SC_241_best_ch16_to_24_w75_s15_t70_bwrm_galfapixcorr.fits"
     #Udata_fn = QURHT_root+"U_RHT_SC_241_best_ch16_to_24_w75_s15_t70_bwrm_galfapixcorr.fits"
     QURHT_root ="/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/QUmaps/"
-    Qdata_fn = QURHT_root+"QRHT_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70.fits"
-    Udata_fn = QURHT_root+"URHT_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70.fits"
+    #Qdata_fn = QURHT_root+"QRHT_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70.fits"
+    #Udata_fn = QURHT_root+"URHT_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70.fits"
+    print("transforming Q, U sq")
+    Qdata_fn = QURHT_root+"QRHTsq_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_sig30.fits"
+    Udata_fn = QURHT_root+"URHTsq_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_sig30.fits"
 
     Qdata = fits.getdata(Qdata_fn)
     Udata = fits.getdata(Udata_fn)
@@ -75,7 +114,10 @@ print('NEST converted to RING')
 # make placeholder TQU map - this is RING ordered, Equatorial angle, Galactic coordinates
 #hp.fitsfunc.write_map('/Volumes/DataDavy/Foregrounds/RHTmaps/TQU_RHT_Planck_pol_ang_SC_241_Equ.fits', TQUmap, coord='C')
 #hp.fitsfunc.write_map('/Volumes/DataDavy/Foregrounds/RHTmaps/TQU_RHT_Planck_pol_ang_SC_241_Equ_thets1.fits', TQUmap, coord='C')
-hp.fitsfunc.write_map('/Volumes/DataDavy/Foregrounds/RHTmaps/TQU_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Equ.fits', TQUmap, coord='C')
+
+#hp.fitsfunc.write_map('/Volumes/DataDavy/Foregrounds/RHTmaps/TQU_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Equ.fits', TQUmap, coord='C')
+#hp.fitsfunc.write_map('/Volumes/DataDavy/Foregrounds/RHTmaps/TQUsq_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Equ.fits', TQUmap, coord='C')
+hp.fitsfunc.write_map('/Volumes/DataDavy/Foregrounds/RHTmaps/TQUsq_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_sig30_Equ.fits', TQUmap, coord='C')
 hp.fitsfunc.write_map(out_root+'/temp.fits', TQUmap, coord='C') #have to save map to use with f90 healpix utilities
 
 
@@ -93,7 +135,10 @@ TQUmapGal = np.zeros((3,Npix))
 TQUmapGal[0], TQUmapGal[1], TQUmapGal[2] = hp.fitsfunc.read_map(out_root+'/temp_Gal.fits', field=(0,1,2))
 #hp.fitsfunc.write_map(out_root+'/TQU_RHT_SC_241_best_ch16_to_24_w75_s15_t70_bwrm_galfapixcorr_UPSIDEDOWN_hp_projected_Planck_pol_ang_Gal_mask.fits', TQUmapGal, coord='G')
 #hp.fitsfunc.write_map(out_root+'/TQU_RHT_SC_241_best_ch16_to_24_w75_s15_t70_bwrm_galfapixcorr_UPSIDEDOWN_hp_projected_Planck_pol_ang_Gal_mask_thets1.fits', TQUmapGal, coord='G')
-hp.fitsfunc.write_map(out_root+'/TQU_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal.fits', TQUmapGal, coord='G')
+#hp.fitsfunc.write_map(out_root+'/TQU_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal.fits', TQUmapGal, coord='G')
+#hp.fitsfunc.write_map(out_root+'/TQUsq_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_Gal.fits', TQUmapGal, coord='G')
+hp.fitsfunc.write_map(out_root+'/TQUsq_RHT_Planck_pol_ang_GALFA_HI_allsky_coadd_chS1004_1043_w75_s15_t70_sig30_Gal.fits', TQUmapGal, coord='G')
+
 # remove temp files
 call("ls /Users/susanclark/BetterForegrounds/data/temp*.fits", shell=True, stdout=PIPE)
 call("rm /Users/susanclark/BetterForegrounds/data/temp*.fits", shell=True, stdout=PIPE)
