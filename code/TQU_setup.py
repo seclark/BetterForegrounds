@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-import pyfits
 import healpy as hp
 """
 code to set up correctly arranged TQU maps for use in polspice scripts
@@ -31,8 +30,11 @@ psiML = hp.pixelfunc.reorder(hp.fitsfunc.read_map(psiMLfile, field=0, nest=True)
 #plt.show()
 
 print('patching with flat-prior planck data where rht prior data is 0')
-planckpsimap=hp.pixelfunc.reorder(hp.fitsfunc.read_map("/Volumes/DataDavy/Foregrounds/BayesianMaps/psiMB_DR2_SC_241_353GHz_adaptivep0_True_new.fits", field=0, nest=True), n2r=True)
-planckpmap=hp.pixelfunc.reorder(hp.fitsfunc.read_map("/Volumes/DataDavy/Foregrounds/BayesianMaps/pMB_DR2_SC_241_353GHz_adaptivep0_True_new.fits", field=0, nest=True), n2r=True)
+#planckpsimap=hp.pixelfunc.reorder(hp.fitsfunc.read_map("/Volumes/DataDavy/Foregrounds/BayesianMaps/psiMB_DR2_SC_241_353GHz_adaptivep0_True_new.fits", field=0, nest=True), n2r=True)
+#planckpmap=hp.pixelfunc.reorder(hp.fitsfunc.read_map("/Volumes/DataDavy/Foregrounds/BayesianMaps/pMB_DR2_SC_241_353GHz_adaptivep0_True_new.fits", field=0, nest=True), n2r=True)
+planckpsimap=hp.pixelfunc.reorder(hp.fitsfunc.read_map("/Users/susanclark/Dropbox/Foregrounds/BayesianMaps/psiMB_DR2_SC_241_353GHz_adaptivep0_True_new.fits", field=0, nest=True), n2r=True)
+planckpmap=hp.pixelfunc.reorder(hp.fitsfunc.read_map("/Users/susanclark/Dropbox/Foregrounds/BayesianMaps/pMB_DR2_SC_241_353GHz_adaptivep0_True_new.fits", field=0, nest=True), n2r=True)
+
 
 wherezero = np.where(psiML == 0)
 pML[wherezero] = planckpmap[wherezero]
