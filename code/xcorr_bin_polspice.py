@@ -1,7 +1,6 @@
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
-import pyfits
 import healpy as hp
 
 # where to save output files
@@ -78,7 +77,7 @@ Delta_cl_AB[5] = 0.5 * np.sqrt( 1.0 / ((2.0*ell_binned+1.0) * Deltaell * fskymas
 chi2 = np.zeros(6)
 for i in xrange(6):
     chi2[i] = np.sum( clAB_binned[i]**2.0 / Delta_cl_AB[i]**2.0 )
-    print np.sqrt(chi2[i])
+    print(np.sqrt(chi2[i]))
 
 # save binned results + error bars
 # we only want the EE and BB power spectra
