@@ -1,8 +1,11 @@
 #! /bin/bash
 # for polspice
-HEALPIXDATA=/Users/susanclark/Healpix_3.30/data
-HEALPIX=/Users/susanclark/Healpix_3.30
-SPICE=/Users/susanclark/PolSpice_v03-00-03/src/spice
+#HEALPIXDATA=/Users/susanclark/Healpix_3.30/data
+#HEALPIX=/Users/susanclark/Healpix_3.30
+#SPICE=/Users/susanclark/PolSpice_v03-00-03/src/spice
+HEALPIXDATA=/Users/susanclark/Healpix_3.31/data
+HEALPIX=/Users/susanclark/Healpix_3.31
+SPICE=/Users/susanclark/PolSpice_v03-04-01/src/spice
 
 #testname=test1
 #testname=AvM
@@ -37,10 +40,12 @@ SPICE=/Users/susanclark/PolSpice_v03-00-03/src/spice
 #testname=max10ad
 #testname=med10ad
 #testname=avmfixw
-testname=b0MAP
+#testname=b0MAP
+testname=weight0
 
 # map locations
-T353map=/Volumes/DataDavy/Planck/HFI_SkyMap_353_2048_R2.02_full_RING.fits #T is field 0, Q is field 1, U is field 2
+#T353map=/Volumes/DataDavy/Planck/HFI_SkyMap_353_2048_R2.02_full_RING.fits #T is field 0, Q is field 1, U is field 2
+T353map=/Users/susanclark/Dropbox/Planck/HFI_SkyMap_353_2048_R2.02_full_RING.fits #T is field 0, Q is field 1, U is field 2
 #pMLmap=/Users/susanclark/BetterForegrounds/data/pMB_test0.fits # original tests with R(theta)
 #psiMLmap=/Users/susanclark/BetterForegrounds/data/psiMB_test0.fits
 #pMLmap=/Volumes/DataDavy/GALFA/DR2/FullSkyRHT/pMB_SC_241_thetaRHT_test0_RING.fits
@@ -116,16 +121,23 @@ T353map=/Volumes/DataDavy/Planck/HFI_SkyMap_353_2048_R2.02_full_RING.fits #T is 
 #psiMLmap=/Volumes/DataDavy/Foregrounds/BayesianMaps/psiMB_DR2_SC_241_prior_RHTPrior_-10_10_smoothprior_False_adaptivep0_True_deltafuncprior_False_baseprioramp_median_var.fits
 #pMLmap=/Volumes/DataDavy/Foregrounds/BayesianMaps/pMB_DR2_SC_241_prior_ThetaRHT_-10_10_smoothprior_True_sig_30_adaptivep0_False_fixwidth_True.fits
 #psiMLmap=/Volumes/DataDavy/Foregrounds/BayesianMaps/psiMB_DR2_SC_241_prior_ThetaRHT_-10_10_smoothprior_True_sig_30_adaptivep0_False_fixwidth_True.fits
-pMLmap=/Volumes/DataDavy/Foregrounds/BayesianMaps/pMB_MAP_DR2_SC_241_-10_10_smoothprior_False_adaptivep0_True_baseprioramp_0.fits
-psiMLmap=/Volumes/DataDavy/Foregrounds/BayesianMaps/psiMB_MAP_DR2_SC_241_-10_10_smoothprior_False_adaptivep0_True_baseprioramp_0.fits
+#pMLmap=/Volumes/DataDavy/Foregrounds/BayesianMaps/pMB_MAP_DR2_SC_241_-10_10_smoothprior_False_adaptivep0_True_baseprioramp_0.fits
+#psiMLmap=/Volumes/DataDavy/Foregrounds/BayesianMaps/psiMB_MAP_DR2_SC_241_-10_10_smoothprior_False_adaptivep0_True_baseprioramp_0.fits
+pMLmap=/Users/susanclark/Projects/BetterForegrounds/data/pMB_DR2_SC_241_prior_RHTPrior_weighted_smoothprior_False_adaptivep0_True_deltafuncprior_False_baseprioramp_0.fits
+psiMLmap=/Users/susanclark/Projects/BetterForegrounds/data/psiMB_DR2_SC_241_prior_RHTPrior_weighted_smoothprior_False_adaptivep0_True_deltafuncprior_False_baseprioramp_0.fits
+
 
 #outputmap=/Users/susanclark/BetterForegrounds/data/HFI_SkyMap_353_2048_R2.02_full_pMB_psiMB_${testname}.fits
-outputmap=/Volumes/DataDavy/Foregrounds/BayesianMaps/HFI_SkyMap_353_2048_R2.02_full_pMB_psiMB_planckpatch_${testname}.fits
-TQU217maps=/Volumes/DataDavy/Planck/HFI_SkyMap_217_2048_R2.02_full_RING.fits
+#outputmap=/Volumes/DataDavy/Foregrounds/BayesianMaps/HFI_SkyMap_353_2048_R2.02_full_pMB_psiMB_planckpatch_${testname}.fits
+#TQU217maps=/Volumes/DataDavy/Planck/HFI_SkyMap_217_2048_R2.02_full_RING.fits
+outputmap=/Users/susanclark/Dropbox/Foregrounds/BayesianMaps/HFI_SkyMap_353_2048_R2.02_full_pMB_psiMB_planckpatch_${testname}.fits
+TQU217maps=/Users/susanclark/Dropbox/Planck/HFI_SkyMap_217_2048_R2.02_full_RING.fits
+
 #TQU143maps=/Volumes/DataDavy/Planck/HFI_SkyMap_143_2048_R2.02_full.fits
 
 # construct the ML template map
 python TQU_setup.py $T353map $pMLmap $psiMLmap $outputmap
+echo "template map constructed"
 
 # cross-correlate with a different polarized dust tracer (e.g., 217 GHz or a different split of the 353 GHz data)
 # polspice parameters -- calibrated for the mask used in CHPP15, need to be re-calibrated if mask changes
@@ -141,8 +153,8 @@ mapA=$outputmap
 mapB=$TQU217maps
 beamA=4.94 #Gaussian FWHM in arcmin (353 GHz)
 beamB=5.02 #Gaussian FWHM in arcmin (217 GHz)
-weightsA=/Volumes/DataDavy/Foregrounds/RHT_mask_Equ_ch16_to_24_w75_s15_t70_galfapixcorr_UPSIDEDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_zerod.fits
-weightsB=/Volumes/DataDavy/Foregrounds/RHT_mask_Equ_ch16_to_24_w75_s15_t70_galfapixcorr_UPSIDEDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_zerod.fits
+weightsA=/Users/susanclark/Dropbox/Foregrounds/RHT_mask_Equ_ch16_to_24_w75_s15_t70_galfapixcorr_UPSIDEDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_zerod.fits
+weightsB=/Users/susanclark/Dropbox/Foregrounds/RHT_mask_Equ_ch16_to_24_w75_s15_t70_galfapixcorr_UPSIDEDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_zerod.fits
 # output power spectra files
 CLAB=cl_353full_pMB_psiMB_${testname}_217full_polspice_RHT_mask_Equ_ch16_to_24_w75_s15_t70_galfapixcorr_UPSIDEDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_APODSIG7p65_APODTYPE0_THETAMAX14p0.dat
 CLAA=cl_353full_pMB_psiMB_${testname}_auto_polspice_RHT_mask_Equ_ch16_to_24_w75_s15_t70_galfapixcorr_UPSIDEDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_APODSIG7p65_APODTYPE0_THETAMAX14p0.dat
