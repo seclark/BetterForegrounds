@@ -3,9 +3,9 @@
 #HEALPIXDATA=/Users/susanclark/Healpix_3.30/data
 #HEALPIX=/Users/susanclark/Healpix_3.30
 #SPICE=/Users/susanclark/PolSpice_v03-00-03/src/spice
-HEALPIXDATA=/Users/susanclark/Healpix_3.31/data
-HEALPIX=/Users/susanclark/Healpix_3.31
-SPICE=/Users/susanclark/PolSpice_v03-04-01/src/spice
+HEALPIXDATA=/home/seclark/Healpix_3.31/data
+HEALPIX=/home/seclark/Healpix_3.31
+SPICE=/home/seclark/PolSpice_v03-04-01/src/spice
 
 #testname=test1
 #testname=AvM
