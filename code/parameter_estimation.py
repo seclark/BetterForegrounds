@@ -1110,8 +1110,7 @@ def make_vel_int_galfa_channel_maps():
     end_vel = 1073
     
     nyfull = 2432
-    nxfull = 21600
-    sumchans = np.zeros((nyfull, nxfull), np.float_)   
+    nxfull = 21600 
     
     #cdelt3 in original Wide cube
     cdelt3 = 0.736122839600
@@ -1124,6 +1123,9 @@ def make_vel_int_galfa_channel_maps():
     for i, _vel in enumerate(rht_starting_vels):
     
         Sstr = get_RHT_Sstr(_vel)
+        
+        # start with new sumchans for each velocity group
+        sumchans = np.zeros((nyfull, nxfull), np.float_)   
     
         for v in np.arange(rht_starting_vels[i], rht_starting_vels[i]+5):
             print(v)
@@ -2103,4 +2105,6 @@ if __name__ == "__main__":
     #reproject_allsky_weighted_data(local=False)
     
     # try loading in already projected data
-    project_allsky_vel_weighted_int_thetaweights_to_database(update=False)
+    #project_allsky_vel_weighted_int_thetaweights_to_database(update=False)
+    
+    make_vel_int_galfa_channel_maps()
