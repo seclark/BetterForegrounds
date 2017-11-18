@@ -41,33 +41,34 @@ def P_Plasz(map353,cov353): #map353=[T,Q,U],cov353=[[TT,TQ,TU],[TQ,QQ,QU],[TU,QU
     return mapPnaive353, mapP353, mapsigP353
 
 # input Planck 353 GHz maps (Galactic)
+planckroot = "/Users/susanclark/Dropbox/Planck/"
+planckmapfn = planckroot+"HFI_SkyMap_353_2048_R2.02_full.fits"
+
 # full-mission -- N.B. these maps are already in RING ordering, despite what the header says
 map353Gal = np.zeros((3,Npix)) #T,Q,U
 cov353Gal = np.zeros((3,3,Npix)) #TT,TQ,TU,QQ,QU,UU
-planckmapfn = "/Users/susanclark/Dropbox/Planck/HFI_SkyMap_353_2048_R2.02_full.fits"
 map353Gal[0], map353Gal[1], map353Gal[2], cov353Gal[0,0], cov353Gal[0,1], cov353Gal[0,2], cov353Gal[1,1], cov353Gal[1,2], cov353Gal[2,2], header353Gal = hp.fitsfunc.read_map(planckmapfn, field=(0,1,2,4,5,6,7,8,9), h=True)
-#print header353Gal
 
 # apply estimator
-mapPnaive353Gal, mapP353Gal, mapsigP353Gal = P_Plasz(map353Gal,cov353Gal)
+mapPnaive353Gal, mapP353Gal, mapsigP353Gal = P_Plasz(map353Gal, cov353Gal)
 
 # save de-biased P map
-hp.fitsfunc.write_map('/scr/depot1/jch/Planckdata/HFI_SkyMap_353_2048_R2.00_full_PdebiasPlasz_RING.fits', mapP353Gal, coord='G')
+hp.fitsfunc.write_map(planckroot+'HFI_SkyMap_353_2048_R2.02_full_PdebiasPlasz_RING.fits', mapP353Gal, coord='G')
 # save noise estimate for de-biased P map
-hp.fitsfunc.write_map('/scr/depot1/jch/Planckdata/HFI_SkyMap_353_2048_R2.00_full_sigPdebiasPlasz_RING.fits', mapsigP353Gal, coord='G')
+hp.fitsfunc.write_map(planckroot+'HFI_SkyMap_353_2048_R2.02_full_sigPdebiasPlasz_RING.fits', mapsigP353Gal, coord='G')
 # image
 plt.clf()
 hp.mollview(mapP353Gal, unit='K_CMB', title='P_353 Debiased Plaszczynski', coord='G', min=0.0, max=1.0e-3)
-plt.savefig('HFI_SkyMap_353_2048_R2.00_full_PdebiasPlasz_RING.png')
+plt.savefig('../figures/HFI_SkyMap_353_2048_R2.02_full_PdebiasPlasz_RING.png')
 # image of biased naive estimator
 plt.clf()
 hp.mollview(mapPnaive353Gal, unit='K_CMB', title='P_353 Naive', coord='G', min=0.0, max=1.0e-3)
-plt.savefig('HFI_SkyMap_353_2048_R2.00_full_Pnaive_RING.png')
+plt.savefig('../figures/HFI_SkyMap_353_2048_R2.02_full_Pnaive_RING.png')
 # difference of the estimators
 plt.clf()
 hp.mollview(mapPnaive353Gal-mapP353Gal, unit='K_CMB', title='P_353 Naive - P_353 Debiased Plaszczynski', coord='G', min=0.0, max=1.0e-3)
-plt.savefig('HFI_SkyMap_353_2048_R2.00_full_Pnaive_PdebiasPlasz_diff_RING.png')
+plt.savefig('../figures/HFI_SkyMap_353_2048_R2.02_full_Pnaive_PdebiasPlasz_diff_RING.png')
 # image of the estimated SNR for the debiased estimator
 plt.clf()
 hp.mollview(mapP353Gal/mapsigP353Gal, unit='SNR', title='P_353 Debiased Plaszczynski SNR', coord='G', min=0.0, max=5.0)
-plt.savefig('HFI_SkyMap_353_2048_R2.00_full_PdebiasPlasz_SNR_RING.png')
+plt.savefig('../figures/HFI_SkyMap_353_2048_R2.02_full_PdebiasPlasz_SNR_RING.png')
