@@ -14,10 +14,13 @@ all analysis done presently in terms of Planck/Healpix dust polarization angle (
 Nside=2048
 Npix = 12*Nside**2
 
-# implement the Plaszczynski+ estimator
 def P_Plasz(map353,cov353): #map353=[T,Q,U],cov353=[[TT,TQ,TU],[TQ,QQ,QU],[TU,QU,UU]]
-    # 1) compute unbiased estimator of polarization angle (phi_i = arctan(U_i/Q_i))
-    mapphi353 = np.mod(0.5*np.arctan2(map353[2], map353[1]), np.pi)
+    """
+    implement the Plaszczynski+ estimator
+    """
+    # 1) compute unbiased estimator of polar angle (phi_i = arctan(U_i/Q_i)) *Not to be confused with the polarization angle*
+    mapphi353 = np.arctan2(map353[2], map353[1])
+    
     # 2) compute the "variable bias" (Eq. 35 of http://arxiv.org/abs/1312.0437)
     # first, get theta from their Eq. 32
     Plasz_theta = np.mod(0.5*np.arctan2(2.0*cov353[1,2], cov353[1,1]-cov353[2,2]), np.pi)
@@ -26,11 +29,14 @@ def P_Plasz(map353,cov353): #map353=[T,Q,U],cov353=[[TT,TQ,TU],[TQ,QQ,QU],[TU,QU
     Plasz_sigUp2 = cov353[1,1]*(np.sin(Plasz_theta))**2.0 + cov353[2,2]*(np.cos(Plasz_theta))**2.0 - cov353[1,2]*np.sin(2.0*Plasz_theta)
     # third, implement their Eq. 35
     mapvarbias353 = np.sqrt(Plasz_sigUp2*(np.cos(mapphi353-Plasz_theta))**2.0 + Plasz_sigQp2*(np.sin(mapphi353-Plasz_theta))**2.0)
+    
     # 3) implement their Eq. 37
     mapPnaive353 = np.sqrt(map353[1]**2.0 + map353[2]**2.0)
     mapP353 = mapPnaive353 - mapvarbias353**2.0 * (1.0 - np.exp(-mapPnaive353**2.0 / mapvarbias353**2.0)) / (2.0*mapPnaive353)
+    
     # 4) implement their Eq. 36 to obtain a noise estimate
     mapsigP353 = np.sqrt(Plasz_sigQp2*(np.cos(mapphi353-Plasz_theta))**2.0 + Plasz_sigUp2*(np.sin(mapphi353-Plasz_theta))**2.0)
+    
     # output naive estimate, debiased estimate, and noise on debiased estimate
     return mapPnaive353, mapP353, mapsigP353
 
@@ -38,7 +44,8 @@ def P_Plasz(map353,cov353): #map353=[T,Q,U],cov353=[[TT,TQ,TU],[TQ,QQ,QU],[TU,QU
 # full-mission -- N.B. these maps are already in RING ordering, despite what the header says
 map353Gal = np.zeros((3,Npix)) #T,Q,U
 cov353Gal = np.zeros((3,3,Npix)) #TT,TQ,TU,QQ,QU,UU
-map353Gal[0], map353Gal[1], map353Gal[2], cov353Gal[0,0], cov353Gal[0,1], cov353Gal[0,2], cov353Gal[1,1], cov353Gal[1,2], cov353Gal[2,2], header353Gal = hp.fitsfunc.read_map('/scr/depot1/jch/Planckdata/HFI_SkyMap_353_2048_R2.00_full.fits', field=(0,1,2,4,5,6,7,8,9), h=True)
+planckmapfn = "/Users/susanclark/Dropbox/Planck/HFI_SkyMap_353_2048_R2.02_full.fits"
+map353Gal[0], map353Gal[1], map353Gal[2], cov353Gal[0,0], cov353Gal[0,1], cov353Gal[0,2], cov353Gal[1,1], cov353Gal[1,2], cov353Gal[2,2], header353Gal = hp.fitsfunc.read_map(planckmapfn, field=(0,1,2,4,5,6,7,8,9), h=True)
 #print header353Gal
 
 # apply estimator
