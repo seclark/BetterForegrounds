@@ -1116,7 +1116,7 @@ def make_vel_int_galfa_channel_maps():
     cdelt3 = 0.736122839600
     
     galfa_root = "/disks/jansky/a/users/goldston/zheng/151019_NHImaps_SRcorr/data/Allsky_ChanMaps/Wide/"
-    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/channel_maps_for_RHT/"
+    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/channel_maps_for_RHT/newmaps_010318/"
     
     rht_starting_vels = [begin_vel + 5*i for i in xrange((end_vel - begin_vel)//5 + 1)]
     
@@ -1153,7 +1153,8 @@ def make_weighted_single_theta_int_vel_map(thetabin=0):
     
     in_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/"
     in_channel_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/channel_maps_for_RHT/"
-    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/weighted_single_theta_maps/single_theta_S0974_1073_sum/" 
+    #out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/weighted_single_theta_maps/single_theta_S0974_1073_sum/" 
+    out_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/weighted_single_theta_maps/single_theta_S0974_1073_sum_corrected_chanmaps/" 
     # Shape of the all-sky data
     nyfull = 2432
     nxfull = 21600
@@ -2108,3 +2109,4 @@ if __name__ == "__main__":
     #project_allsky_vel_weighted_int_thetaweights_to_database(update=False)
     
     make_vel_int_galfa_channel_maps()
+    
