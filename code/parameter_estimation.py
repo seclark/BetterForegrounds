@@ -1091,6 +1091,7 @@ def make_single_theta_int_vel_map(thetabin=0):
     hdr = fits.getheader(single_theta_fn)
     fits.writeto(out_root+"total_rht_power_0974_1078_thetabin_"+str(thetabin)+".fits", single_vel_map)
     
+    
 def get_RHT_Sstr(starting_vel):
 
     start_velstr = galfa_name_lookup.get_velstr(starting_vel)

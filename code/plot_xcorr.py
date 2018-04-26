@@ -2,7 +2,6 @@ from __future__ import division, print_function
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
-import pyfits
 import healpy as hp
 import pylab
 
@@ -23,6 +22,8 @@ class XcorrData():
 fn_prefix = "cl_353full_pMB_psiMB_"
 fn_suffix = "_217full_pspice_RHT_mask_Equ_ch16_to_24_w75_s15_t70_gpixcorr_UPSIDEDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_APODSIG7p65_APODTYPE0_THETAMAX14p0_EEBB_binned.txt"
 fn_suffix2 = "_217full_pspice_RHT_mask_Equ_ch16_to_24_w75_s15_t70_gpixcorr_UDOWN_bgt30cut_starmask_HFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_APODSIG7p65_APODTYPE0_THETAMAX14p0_EEBB_binned_ppatch_rht0.25.txt"
+fn_suffix3 = "_217full_pspice_RHT_mask_Equ_gpixcorr_UDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_APODSIG7p65_APODTYPE0_THETAMAX14p0_EEBB_binned.txt"
+
 
 #testname="SC-4_3_g3"
 testname="max10"#"r1mmaxpat"#"rht1mmax"#"thetsig30"#"baseamp1"#"thetrht1"#"b0-10_10"#"smoothb0"#"bamp0"#"bamp1E-2"#"baseamp1"#"revrht"#"fixpsihack"#"fixpsi02"#"mynewMB"#"rhtMAP"#"rhttol13"#"rhttol0"#"adaptivep0"
@@ -35,7 +36,8 @@ RHT_data_fn = "../spice/"+fn_prefix+testname+fn_suffix
 Planck_data_fn = "../spice/"+fn_prefix+planckdataname+fn_suffix
 RHT_data_fn_AvM = "../spice/"+fn_prefix+AvMname+fn_suffix
 RHT_data_fn_2 = "../spice/"+fn_prefix+testname2+fn_suffix
-RHT_data_fn_3 = "../spice/"+fn_prefix+testname3+fn_suffix
+#RHT_data_fn_3 = "../spice/"+fn_prefix+testname3+fn_suffix
+RHT_data_fn_3 = "../spice/"+fn_prefix+"weight0"+fn_suffix3
 RHT_data_fn_patch = "../spice/"+fn_prefix+"b0MAP"+fn_suffix
 #RHT_data_fn_patch = "../spice/"+fn_prefix+"med10ad"+fn_suffix2
 #RHT_data_fn_AvM = "cl_353full_pMB_psiMB_AvM_217full_polspice_RHT_mask_Equ_ch16_to_24_w75_s15_t70_galfapixcorr_UPSIDEDOWN_plusbgt30cut_plusstarmask_plusHFI_Mask_PointSrc_2048_R2.00_TempPol_allfreqs_RING_apodFWHM15arcmin_APODSIG7p65_APODTYPE0_THETAMAX14p0_EEBB_binned.txt"

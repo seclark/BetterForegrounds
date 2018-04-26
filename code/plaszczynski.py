@@ -1,8 +1,8 @@
 import numpy as np
 import glob, pickle
 import matplotlib.pyplot as plt
-import pyfits
 import healpy as hp
+from astropy.io import fits
 
 """
 implementation of the estimator from http://arxiv.org/abs/1312.0437 for polarized intensity
@@ -47,7 +47,25 @@ planckmapfn = planckroot+"HFI_SkyMap_353_2048_R2.02_full.fits"
 # full-mission -- N.B. these maps are already in RING ordering, despite what the header says
 map353Gal = np.zeros((3,Npix)) #T,Q,U
 cov353Gal = np.zeros((3,3,Npix)) #TT,TQ,TU,QQ,QU,UU
-map353Gal[0], map353Gal[1], map353Gal[2], cov353Gal[0,0], cov353Gal[0,1], cov353Gal[0,2], cov353Gal[1,1], cov353Gal[1,2], cov353Gal[2,2], header353Gal = hp.fitsfunc.read_map(planckmapfn, field=(0,1,2,4,5,6,7,8,9), h=True)
+#map353Gal[0], map353Gal[1], map353Gal[2], cov353Gal[0,0], cov353Gal[0,1], cov353Gal[0,2], cov353Gal[1,1], cov353Gal[1,2], cov353Gal[2,2], header353Gal = hp.fitsfunc.read_map(planckmapfn, field=(0,1,2,4,5,6,7,8,9), h=True)
+
+# read in explicitly from HDU name
+planck353full = fits.open(planckmapfn)
+sigTTsq = planck353full[1].data['II_cov']
+sigTQsq = planck353full[1].data['IQ_cov']
+sigTUsq = planck353full[1].data['IU_cov']
+sigQQsq = planck353full[1].data['QQ_cov']
+sigUUsq = planck353full[1].data['UU_cov']
+sigQUsq = planck353full[1].data['QU_cov']
+
+cov353Gal[0, 0, :] = sigTTsq
+cov353Gal[1, 1, :] = sigQQsq
+cov353Gal[1, 2, :] = sigQUsq
+cov353Gal[2, 2, :] = sigUUsq
+
+map353Gal[0, :] = planck353full[1].data['I_STOKES']
+map353Gal[1, :] = planck353full[1].data['Q_STOKES']
+map353Gal[2, :] = planck353full[1].data['U_STOKES']
 
 # apply estimator
 mapPnaive353Gal, mapP353Gal, mapsigP353Gal = P_Plasz(map353Gal, cov353Gal)
