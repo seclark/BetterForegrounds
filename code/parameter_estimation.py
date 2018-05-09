@@ -908,6 +908,8 @@ def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0
         projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr, local=False)
         print("Data successfully projected")
         
+        proj_fn_out = unprojected_root+"/hp_projected/"+"GALFA_HI_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+"_healpixproj.fits"
+        hp.fitsfunc.write_map(proj_fn_out, projdata)
         #projected_fn = unprojected_root + "GALFA_HI_allsky_-10_10_w75_s15_t70_thetabin_"+str(_thetabin_i)+"_healpixproj.fits"
         #projdata = fits.getdata(projected_fn)
     
@@ -2113,5 +2115,5 @@ if __name__ == "__main__":
     #make_vel_int_galfa_channel_maps()
     
     # make single-vel db indexed by healpix indx, not radec
-    project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0979_0983")
+    project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0984_0988")
     
