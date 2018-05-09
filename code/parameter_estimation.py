@@ -2115,5 +2115,5 @@ if __name__ == "__main__":
     #make_vel_int_galfa_channel_maps()
     
     # make single-vel db indexed by healpix indx, not radec
-    project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S1044_1048")
+    project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S1049_1053")
     
