@@ -2109,5 +2109,8 @@ if __name__ == "__main__":
     # try loading in already projected data
     #project_allsky_vel_weighted_int_thetaweights_to_database(update=False)
     
-    make_vel_int_galfa_channel_maps()
+    #make_vel_int_galfa_channel_maps()
+    
+    # make single-vel db indexed by healpix indx, not radec
+    project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0974_0978")
     
