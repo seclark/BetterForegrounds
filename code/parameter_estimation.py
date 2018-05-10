@@ -922,6 +922,7 @@ def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0
     
         # Some data stored as -999 for 'none'
         projdata[projdata == -999] = 0
+        projdata[np.where(np.isnan(projdata) == True)] = 0
 
         # The healpix indices we keep will be the ones where there is nonzero data
         nonzero_index = np.nonzero(projdata)[0]
@@ -955,6 +956,7 @@ def project_hp_singlevel_singletheta_data(velstr="S0974_0978"):
     nthets = 165
     
     for _thetabin_i in xrange(nthets):
+        print("velstr {}, thetabin {}".format(velstr, _thetabin_i))
         time0 = time.time()
 
         # Check if projected data has already been saved
@@ -2116,7 +2118,7 @@ if __name__ == "__main__":
     #project_allsky_thetaweights_to_database(update = True)
     #reproject_allsky_data()
     
-    #project_allsky_singlevel_thetaweights_to_database(update=False, velstr="S0984_0988")
+    #(update=False, velstr="S0984_0988")
     #write_allsky_singlevel_thetaweights_to_database_RADEC(update = False, velstr="S0984_0988")
     #intRHT_QU_maps_per_vel(velstr="S0974_0978") #haven't done yet
     #intRHT_QU_maps_per_vel(velstr="S0984_0988")
@@ -2158,5 +2160,5 @@ if __name__ == "__main__":
     #project_allsky_singlevel_thetaweights_to_database(update = True, velstr="S0989_0993")
     
     # project a bunch of data to hp
-    project_hp_singlevel_singletheta_data(velstr="S1024_1028")
+    project_hp_singlevel_singletheta_data(velstr="S0989_0993")
     
