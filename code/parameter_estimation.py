@@ -909,7 +909,7 @@ def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0
         proj_fn_out = unprojected_root+"/hp_projected/"+"GALFA_HI_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+"_healpixproj.fits"
         
         if os.path.isfile(proj_fn_out):
-            projdata = hp.fitsfunc.read_map(projected_fn)
+            projdata = hp.fitsfunc.read_map(proj_fn_out)
             print("Loaded projected data with size {}".format(projdata.shape))
         else:
             # Project data to hp galactic
