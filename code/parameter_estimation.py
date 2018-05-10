@@ -948,6 +948,10 @@ def project_hp_singlevel_singletheta_data(velstr="S0974_0978"):
     Project a bunch of data
     """
     unprojected_root = "/disks/jansky/a/users/goldston/susan/Wide_maps/single_theta_maps/"+velstr+"/"
+    
+    # Full GALFA file header for projection
+    galfa_hdr = fits.getheader("/disks/jansky/a/users/goldston/zheng/151019_NHImaps_SRcorr/data/GNHImaps_SRCORR_final/NHImaps/GALFA-HI_NHI_VLSR-90+90kms.fits")
+
     nthets = 165
     
     for _thetabin_i in xrange(nthets):
