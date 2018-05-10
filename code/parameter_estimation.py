@@ -955,7 +955,7 @@ def project_hp_singlevel_singletheta_data(velstr="S0974_0978"):
 
     nthets = 165
     
-    for _thetabin_i in range(50, 100, 1):
+    for _thetabin_i in range(100, 166, 1):
         print("velstr {}, thetabin {}".format(velstr, _thetabin_i))
         time0 = time.time()
 
@@ -963,8 +963,9 @@ def project_hp_singlevel_singletheta_data(velstr="S0974_0978"):
         proj_fn_out = unprojected_root+"/hp_projected/"+"GALFA_HI_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+"_healpixproj.fits"
         
         if os.path.isfile(proj_fn_out):
-            print("Projected data already exists!")
+            print("Projected data already exists for thetabin {}!".format(_thetabin_i))
         else:
+            print("Projecting data for thetabin {}!".format(_thetabin_i))
             # Load in single-theta backprojection
             unprojected_fn = unprojected_root + "GALFA_HI_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+".fits"
             unprojdata = fits.getdata(unprojected_fn)
