@@ -955,7 +955,8 @@ def project_hp_singlevel_singletheta_data(velstr="S0974_0978"):
 
     nthets = 165
     
-    for _thetabin_i in range(100, 166, 1):
+    #for _thetabin_i in range(100, 166, 1):
+    for _thetabin_i in range(nthets):
         print("velstr {}, thetabin {}".format(velstr, _thetabin_i))
         time0 = time.time()
 
@@ -2161,5 +2162,5 @@ if __name__ == "__main__":
     #project_allsky_singlevel_thetaweights_to_database(update = True, velstr="S0989_0993")
     
     # project a bunch of data to hp
-    project_hp_singlevel_singletheta_data(velstr="S0989_0993")
+    project_hp_singlevel_singletheta_data(velstr="S0999_1003")
     
