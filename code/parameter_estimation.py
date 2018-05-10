@@ -955,7 +955,7 @@ def project_hp_singlevel_singletheta_data(velstr="S0974_0978"):
 
     nthets = 165
     
-    for _thetabin_i in xrange(nthets):
+    for _thetabin_i in range(50, 100, 1):
         print("velstr {}, thetabin {}".format(velstr, _thetabin_i))
         time0 = time.time()
 
