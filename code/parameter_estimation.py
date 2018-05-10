@@ -871,6 +871,8 @@ def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0
     if "is" in value_names: value_names.remove("is")
     if "in" in value_names: value_names.remove("in")
     if "if" in value_names: value_names.remove("if")
+    if "do" in value_names: value_names.remove("do")
+    if "id" in value_names: value_names.remove("id")
 
     # Comma separated list of nthets column names
     column_names = " FLOAT DEFAULT 0.0,".join(value_names[:nthets])
@@ -900,10 +902,6 @@ def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0
     #for _thetabin_i in range(23, nthets, 1):
     for _thetabin_i in xrange(nthets):
         time0 = time.time()
-    
-        # Load in single-theta backprojection
-        unprojected_fn = unprojected_root + "GALFA_HI_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+".fits"
-        unprojdata = fits.getdata(unprojected_fn)
 
         # Check if projected data has already been saved
         proj_fn_out = unprojected_root+"/hp_projected/"+"GALFA_HI_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+"_healpixproj.fits"
@@ -912,8 +910,12 @@ def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0
             projdata = hp.fitsfunc.read_map(proj_fn_out)
             print("Loaded projected data with size {}".format(projdata.shape))
         else:
+            # Load in single-theta backprojection
+            unprojected_fn = unprojected_root + "GALFA_HI_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+".fits"
+            unprojdata = fits.getdata(unprojected_fn)
+            
             # Project data to hp galactic
-            projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr, local=False)
+            projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr, local=False, nonedata=None)
             print("Data successfully projected")
             
             hp.fitsfunc.write_map(proj_fn_out, projdata)
@@ -940,6 +942,32 @@ def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0
         print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
 
     conn.close()
+
+def project_hp_singlevel_singletheta_data(velstr="S0974_0978"):
+    """
+    Project a bunch of data
+    """
+    for _thetabin_i in xrange(nthets):
+        time0 = time.time()
+
+        # Check if projected data has already been saved
+        proj_fn_out = unprojected_root+"/hp_projected/"+"GALFA_HI_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+"_healpixproj.fits"
+        
+        if os.path.isfile(proj_fn_out):
+            print("Projected data already exists!")
+        else:
+            # Load in single-theta backprojection
+            unprojected_fn = unprojected_root + "GALFA_HI_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+".fits"
+            unprojdata = fits.getdata(unprojected_fn)
+            
+            # Project data to hp galactic
+            projdata, out_hdr = rht_to_planck.interpolate_data_to_hp_galactic(unprojdata, galfa_hdr, local=False, nonedata=None)
+            print("Data successfully projected")
+            
+            hp.fitsfunc.write_map(proj_fn_out, projdata)
+        
+        time1 = time.time()
+        print("theta bin {} took {} seconds".format(_thetabin_i, time1 - time0))
     
 def project_allsky_vel_weighted_int_thetaweights_to_database(update = False):
     """
@@ -2120,5 +2148,8 @@ if __name__ == "__main__":
     #make_vel_int_galfa_channel_maps()
     
     # make single-vel db indexed by healpix indx, not radec
-    project_allsky_singlevel_thetaweights_to_database(update = True, velstr="S0989_0993")
+    #project_allsky_singlevel_thetaweights_to_database(update = True, velstr="S0989_0993")
+    
+    # project a bunch of data to hp
+    project_hp_singlevel_singletheta_data(velstr="S0974_0978")
     
