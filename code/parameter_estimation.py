@@ -2162,5 +2162,5 @@ if __name__ == "__main__":
     #project_allsky_singlevel_thetaweights_to_database(update = True, velstr="S0989_0993")
     
     # project a bunch of data to hp
-    project_hp_singlevel_singletheta_data(velstr="S1039_1043")
+    project_hp_singlevel_singletheta_data(velstr="S1044_1048")
     
