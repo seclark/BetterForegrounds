@@ -947,6 +947,7 @@ def project_hp_singlevel_singletheta_data(velstr="S0974_0978"):
     """
     Project a bunch of data
     """
+    nthets = 165
     for _thetabin_i in xrange(nthets):
         time0 = time.time()
 
