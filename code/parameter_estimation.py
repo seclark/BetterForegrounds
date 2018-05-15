@@ -2159,7 +2159,7 @@ if __name__ == "__main__":
     #make_vel_int_galfa_channel_maps()
     
     # make single-vel db indexed by healpix indx, not radec
-    project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S1004_1008")
+    project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S1009_1013")
     #project_allsky_singlevel_thetaweights_to_database(update = True, velstr="S1024_1028")
     
     # project a bunch of data to hp
