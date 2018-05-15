@@ -908,7 +908,7 @@ def project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S0
         
         if os.path.isfile(proj_fn_out):
             projdata = hp.fitsfunc.read_map(proj_fn_out)
-            print("Loaded projected data with size {}".format(projdata.shape))
+            print("Loaded projected data with size {} for velstr {}".format(projdata.shape, velstr))
         else:
             # Load in single-theta backprojection
             unprojected_fn = unprojected_root + "GALFA_HI_W_"+velstr+"_newhdr_SRcorr_w75_s15_t70_theta_"+str(_thetabin_i)+".fits"
