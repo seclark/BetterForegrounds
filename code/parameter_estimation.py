@@ -1154,8 +1154,10 @@ def make_vel_int_galfa_channel_maps():
     (channel1 + channel2 + ...)*dv
     """
     
-    begin_vel = 974
-    end_vel = 1073
+    #begin_vel = 974
+    #end_vel = 1073
+    begin_vel = 1074
+    end_vel = 1078
     
     nyfull = 2432
     nxfull = 21600 
@@ -2159,9 +2161,10 @@ if __name__ == "__main__":
     #make_vel_int_galfa_channel_maps()
     
     # make single-vel db indexed by healpix indx, not radec
-    project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S1074_1078")
+    #project_allsky_singlevel_thetaweights_to_database(update = False, velstr="S1074_1078")
     #project_allsky_singlevel_thetaweights_to_database(update = True, velstr="S1024_1028")
     
     # project a bunch of data to hp
     #project_hp_singlevel_singletheta_data(velstr="S0989_0993")
     
+    make_vel_int_galfa_channel_maps()
