@@ -46,4 +46,4 @@ for i in xrange(Nsim):
     print i
     simmap = hp.sphtfunc.synfast(Cellarr, nside=Nside, lmax=int(ellmax), pol=True, pixwin=True, new=True)
     # save simulated TQU maps
-    hp.fitsfunc.write_map(sim_dir+'DustSim_BICEPamp_alpha-2.42_TQU_'+str(i)+'.fits', simmap, coord='G')
+    hp.fitsfunc.write_map(sim_dir+'DustSim_BICEPamp_alpha-2.42_TQU_'+str(i)+'.fits', simmap, coord='G', overwrite=True)
