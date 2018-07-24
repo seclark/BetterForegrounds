@@ -10,6 +10,11 @@ import pyfits
 import healpy as hp
 import subprocess
 import os
+"""
+Code to take a boolean mask and apply an apodization window that smoothly interpolates from 0 to 1
+Uses the fortran healpix routine process_mask
+User needs to supply boolean mask file and define various parameters
+"""
 
 #####
 # your copy of the healpix process_mask routine
@@ -17,6 +22,8 @@ process_mask_routine = '/home/jch/Healpix_3.31/bin_gfortran/process_mask'
 #####
 
 #####
+# option whether to plot images of masks
+PLOT_OPT = False
 # parameters of the mask map
 Nside=2048
 Npix = 12*Nside**2
@@ -71,10 +78,11 @@ mask_dist = hp.read_map(distance_file, verbose=False)
 # apply apodization to the mask
 taper_map = taper_func(mask_dist)
 mask_apod = mask.astype(np.float)*taper_map
-# images
-plt.clf()
-hp.mollview(mask_apod, coord=coords, min=0., max=1., title='apodized mask')
-plt.savefig(mask_dir+mask_name+PDF_end)
+# images, if desired
+if (PLOT_OPT == True):
+    plt.clf()
+    hp.mollview(mask_apod, coord=coords, min=0., max=1., title='apodized mask')
+    plt.savefig(mask_dir+mask_name+PDF_end)
 # compute and save fsky and second moment
 fsky_apod = np.sum(mask_apod)/float(Npix)
 fsky_apod2 = np.sum(mask_apod**2.)/float(Npix)
