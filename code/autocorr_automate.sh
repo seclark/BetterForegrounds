@@ -1,8 +1,11 @@
 #! /bin/bash
 # for polspice
-HEALPIXDATA=/home/seclark/Healpix_3.31/data
-HEALPIX=/home/seclark/Healpix_3.31
-SPICE=/home/seclark/PolSpice_v03-04-01/src/spice
+#HEALPIXDATA=/home/seclark/Healpix_3.31/data
+#HEALPIX=/home/seclark/Healpix_3.31
+#SPICE=/home/seclark/PolSpice_v03-04-01/src/spice
+HEALPIXDATA=/usr/local/Healpix/data
+HEALPIX=/usr/local/Healpix
+SPICE=/usr/local/bin64/spice
 
 # ******************************************************************************
 # This code is for the *autocorrelation* of one masked map.
@@ -75,7 +78,7 @@ kernelbool=${16}
 # auto-correlations
 if [ "${kernelbool}" -eq "1" ]; then
     echo "Computing with kernelsfileout."
-    $SPICE -apodizesigma $APODSIGMA -apodizetype $APODTYPE -beam $beamA -clfile $CLAA -decouple YES -mapfile $mapA -weightfile $weightsA -nlmax $NLMAX -pixelfile YES -polarization YES -subav YES -symmetric_cl YES -kernelsfileout kernelfn -thetamax $THETAMAX > $AAOUT
+    $SPICE -apodizesigma $APODSIGMA -apodizetype $APODTYPE -beam $beamA -clfile $CLAA -decouple YES -mapfile $mapA -weightfile $weightsA -nlmax $NLMAX -pixelfile YES -polarization YES -subav YES -symmetric_cl YES -kernelsfileout $kernelfn -thetamax $THETAMAX > $AAOUT
 else
     $SPICE -apodizesigma $APODSIGMA -apodizetype $APODTYPE -beam $beamA -clfile $CLAA -decouple YES -mapfile $mapA -weightfile $weightsA -nlmax $NLMAX -pixelfile YES -polarization YES -subav YES -symmetric_cl YES -kernelsfileout NO -thetamax $THETAMAX > $AAOUT
 fi
