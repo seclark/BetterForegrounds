@@ -8,7 +8,7 @@ matplotlib.rc('text', usetex=True)
 fontProperties = {'family':'sans-serif',
     'weight' : 'normal', 'size' : 20}
 import matplotlib.pyplot as plt
-import pyfits
+#import pyfits
 import healpy as hp
 import subprocess
 import os
@@ -60,6 +60,8 @@ ellmax = 1001
 ell = np.arange(int(ellmax)+1)
 EEDust = EEDust[0:int(ellmax)+1]
 BBDust = BBDust[0:int(ellmax)+1]
+EBDust = np.zeros(ellmax+1)
+BEDust = np.zeros(ellmax+1)
 #####
 
 #####
@@ -90,6 +92,12 @@ w_pure.compute_coupling_matrix(EB_pure, EB_pure, bins)
 #####
 
 #####
+# get theory predictions with mode-coupling accounted for
+ClDust_binned_npure = w_npure.decouple_cell(w_npure.couple_cell(np.array([EEDust,EBDust,BEDust,BBDust])))
+ClDust_binned_pure = w_pure.decouple_cell(w_pure.couple_cell(np.array([EEDust,EBDust,BEDust,BBDust])))
+#####
+
+#####
 # loop over sims
 ClEE_arr = np.zeros((Nsim,nbins))
 ClBB_arr = np.zeros((Nsim,nbins))
@@ -97,7 +105,7 @@ ClEE_pure_arr = np.zeros((Nsim,nbins))
 ClBB_pure_arr = np.zeros((Nsim,nbins))
 # zeroth sim is already done
 # non-pure
-#print "0"
+print "0"
 Cl_2x2 = w_npure.decouple_cell(nmt.compute_coupled_cell(EB_npure,EB_npure)) # Compute pseudo-Cls and deconvolve mask mode-coupling matrix to get binned bandpowers
 ClEE_arr[0] = Cl_2x2[0]
 ClBB_arr[0] = Cl_2x2[3]
@@ -107,7 +115,7 @@ ClEE_pure_arr[0] = Cl_2x2_pure[0]
 ClBB_pure_arr[0] = Cl_2x2_pure[3]
 # rest of sims
 for i in xrange(1,Nsim):
-    #print i
+    print i
     Q, U = hp.read_map(sim_dir+sim_name+str(i)+FITS_end, field=[1, 2], verbose=False)
     EB_npure = nmt.NmtField(mask_apod, [Q,U])
     EB_pure = nmt.NmtField(mask_apod, [Q,U], purify_e = True, purify_b = True)
@@ -139,11 +147,16 @@ for b in xrange(nbins):
     ClBB_pure_std[b]  = np.std(ClBB_pure_arr[:,b])
 #####
 
+
+
+
 #####
 # Plot results - non-pure
 plt.clf()
 plt.semilogy(ell, EEDust[0:int(ellmax)+1], 'k', lw=1.5, alpha=0.7, label='input theory (EE)')
 plt.semilogy(ell, BBDust[0:int(ellmax)+1], 'k', lw=1.5, alpha=0.7, ls='--', label='input theory (BB)')
+plt.semilogy(ell_binned, ClDust_binned_npure[0], 'bo', label='convolved input theory (EE)')
+plt.semilogy(ell_binned*1.1, ClDust_binned_npure[3], 'mo', label='convolved input theory (BB)')
 plt.errorbar(ell_binned, ClEE_mean, yerr=[ClEE_std,ClEE_std], fmt='c', ecolor='c', elinewidth=1.5, capsize=3, capthick=1, marker='.', label='simulations (EE)')
 plt.errorbar(ell_binned*1.1, ClBB_mean, yerr=[ClBB_std,ClBB_std], fmt='g', ecolor='g', elinewidth=1.5, capsize=3, capthick=1, marker='.', label='simulations (BB)')
 plt.xlim(2, int(ellmax))
@@ -152,12 +165,14 @@ plt.xlabel(r'$\ell$', fontsize=16)
 plt.ylabel(r'$C_{\ell} \, [\mu {\rm K}^2]$', fontsize=16)
 plt.grid()
 plt.legend(loc='upper right', ncol=1, fontsize=9)
-plt.savefig(sim_dir+sim_theory+'_Nsim'+str(Nsim)+'_NMT'+apod_Type+'apodArcmin_'+str(apod_Arcmin)+'_binned_Cl'+'_lmax'+str(ellmax)+'_binwidth'+str(binwidth)+PDF_end)
+plt.savefig(sim_dir+sim_theory+'_Nsim'+str(Nsim)+'_NMT'+apod_Type+'apodArcmin_'+str(apod_Arcmin)+'_binned_Cl_convtheory'+'_lmax'+str(ellmax)+'_binwidth'+str(binwidth)+PDF_end)
 
 # Plot results - pure
 plt.clf()
 plt.semilogy(ell, EEDust[0:int(ellmax)+1], 'k', lw=1.5, alpha=0.7, label='input theory (EE)')
 plt.semilogy(ell, BBDust[0:int(ellmax)+1], 'k', lw=1.5, alpha=0.7, ls='--', label='input theory (BB)')
+plt.semilogy(ell_binned, ClDust_binned_pure[0], 'bo', label='convolved input theory (EE)')
+plt.semilogy(ell_binned*1.1, ClDust_binned_pure[3], 'mo', label='convolved input theory (BB)')
 plt.errorbar(ell_binned, ClEE_pure_mean, yerr=[ClEE_pure_std,ClEE_pure_std], fmt='c', ecolor='c', elinewidth=1.5, capsize=3, capthick=1, marker='.', label='simulations (EE)')
 plt.errorbar(ell_binned*1.1, ClBB_pure_mean, yerr=[ClBB_pure_std,ClBB_pure_std], fmt='g', ecolor='g', elinewidth=1.5, capsize=3, capthick=1, marker='.', label='simulations (BB)')
 plt.xlim(2, int(ellmax))
@@ -166,4 +181,4 @@ plt.xlabel(r'$\ell$', fontsize=16)
 plt.ylabel(r'$C_{\ell} \, [\mu {\rm K}^2]$', fontsize=16)
 plt.grid()
 plt.legend(loc='upper right', ncol=1, fontsize=9)
-plt.savefig(sim_dir+sim_theory+'_Nsim'+str(Nsim)+'_NMT'+apod_Type+'apodArcmin_'+str(apod_Arcmin)+'_binned_Clpure'+'_lmax'+str(ellmax)+'_binwidth'+str(binwidth)+PDF_end)
+plt.savefig(sim_dir+sim_theory+'_Nsim'+str(Nsim)+'_NMT'+apod_Type+'apodArcmin_'+str(apod_Arcmin)+'_binned_Clpure_convtheory'+'_lmax'+str(ellmax)+'_binwidth'+str(binwidth)+PDF_end)
