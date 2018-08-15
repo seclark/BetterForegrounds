@@ -15,7 +15,7 @@ def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False):
     """
     
     out_fn = "../data/masks/mask_absbcut_{}_GALFAcut_{}.fits".format(b_cut, GALFA_cut)
-    if os.isfile(out_fn):
+    if os.path.isfile(out_fn):
         mask = hp.fitsfunc.read_map(out_fn, nest=False)
         return mask
     
