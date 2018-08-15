@@ -101,7 +101,7 @@ def make_bins(nside=2048, binwidth=20, ellmax=1001):
         
 if __name__ == "__main__":
     Q353, U353 = get_planck_data(nu=353, local=False, QU=True, IQU=False)
-    Q217, U217 = get_planck_data(nu=353, local=False, QU=True, IQU=False)
+    Q217, U217 = get_planck_data(nu=217, local=False, QU=True, IQU=False)
 
     nside = 2048
     mask_b30 = make_mask(nside, GALFA_cut=True, b_cut=30, save_mask=True)
@@ -122,15 +122,15 @@ if __name__ == "__main__":
     # define bins
     bins, ell_binned = make_bins(nside=nside, binwidth=20, ellmax=1001)
 
-    #w_pure.compute_coupling_matrix(EB_353_pure, EB_217_pure, bins)
+    w_pure.compute_coupling_matrix(EB_353_pure, EB_217_pure, bins)
 
     # Compute pseudo-Cls and deconvolve mask mode-coupling matrix to get binned bandpowers
-    #Cl_353_217_pure = w_pure.decouple_cell(nmt.compute_coupled_cell(EB_353_pure, EB_217_pure)) 
-    #Cl_EE_353_217 = Cl_353_217_pure[0]
-    #Cl_EB_353_217 = Cl_353_217_pure[1]
-    #Cl_BB_353_217 = Cl_353_217_pure[3]
+    Cl_353_217_pure = w_pure.decouple_cell(nmt.compute_coupled_cell(EB_353_pure, EB_217_pure)) 
+    Cl_EE_353_217 = Cl_353_217_pure[0]
+    Cl_EB_353_217 = Cl_353_217_pure[1]
+    Cl_BB_353_217 = Cl_353_217_pure[3]
     
-    #np.save("../data/Cl_353_217_pure_test.npy", Cl_353_217_pure)
+    np.save("../data/Cl_353_217_pure_test.npy", Cl_353_217_pure)
     
     # Same thing for autocorrelations
     w_pure.compute_coupling_matrix(EB_353_pure, EB_353_pure, bins)
