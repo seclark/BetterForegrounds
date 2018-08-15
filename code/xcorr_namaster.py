@@ -16,6 +16,7 @@ def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False):
     
     out_fn = "../data/masks/mask_absbcut_{}_GALFAcut_{}.fits".format(b_cut, GALFA_cut)
     if os.path.isfile(out_fn):
+        print("Loading mask {}".format(out_fn))
         mask = hp.fitsfunc.read_map(out_fn, nest=False)
         return mask
     
@@ -119,9 +120,9 @@ def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None,
     w.compute_coupling_matrix(EB_Afield, EB_Bfield, bins)
 
     # Compute pseudo-Cls and deconvolve mask mode-coupling matrix to get binned bandpowers
-    Cl_A_B = w_pure.decouple_cell(nmt.compute_coupled_cell(EB_Afield, EB_Bfield)) 
-    Cl_A_A = w_pure.decouple_cell(nmt.compute_coupled_cell(EB_Afield, EB_Afield)) 
-    Cl_B_B = w_pure.decouple_cell(nmt.compute_coupled_cell(EB_Bfield, EB_Bfield)) 
+    Cl_A_B = w.decouple_cell(nmt.compute_coupled_cell(EB_Afield, EB_Bfield)) 
+    Cl_A_A = w.decouple_cell(nmt.compute_coupled_cell(EB_Afield, EB_Afield)) 
+    Cl_B_B = w.decouple_cell(nmt.compute_coupled_cell(EB_Bfield, EB_Bfield)) 
     
     if savedata:
         data_root = "../data/"
