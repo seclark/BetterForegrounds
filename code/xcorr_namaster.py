@@ -97,8 +97,54 @@ def make_bins(nside=2048, binwidth=20, ellmax=1001):
     nbins = len(ell_binned)
     
     return bins, ell_binned
+    
+def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=2048, savedata=True, EBpure=True, dataname=["A", "B"], savestr="", **kwargs):
+    
+    if EBpure:
+        purify_e = True
+        purify_b = True
         
+    EB_Afield = nmt.NmtField(apod_mask, [Q_Afield, U_Afield], purify_e=purify_e, purify_b=purify_b)
+    EB_Bfield = nmt.NmtField(apod_mask, [Q_Bfield, U_Bfield], purify_e=purify_e, purify_b=purify_b)
+
+    # define workspace
+    w = nmt.NmtWorkspace()
+    
+    if bins == None:
+        bins, ell_binned = make_bins(nside=nside, binwidth=20, ellmax=1001)
+    else:
+        ell_binned = bins.get_effective_ells()
+    
+    # Mode coupling matrix depends only on masks, not actual fields, so don't need to do this again for autocorr
+    w.compute_coupling_matrix(EB_Afield, EB_Bfield, bins)
+
+    # Compute pseudo-Cls and deconvolve mask mode-coupling matrix to get binned bandpowers
+    Cl_A_B = w_pure.decouple_cell(nmt.compute_coupled_cell(EB_Afield, EB_Bfield)) 
+    Cl_A_A = w_pure.decouple_cell(nmt.compute_coupled_cell(EB_Afield, EB_Afield)) 
+    Cl_B_B = w_pure.decouple_cell(nmt.compute_coupled_cell(EB_Bfield, EB_Bfield)) 
+    
+    if savedata:
+        data_root = "../data/"
+        Aname = dataname[0]
+        Bname = dataname[1]
+        out_fn = data_root + "Cl_{}_{}_EBpure_{}_{}{}.h5".format(Aname, Bname, EBpure, nside, savestr)
         
+        with h5py.File(outfn, 'w') as f:
+            dset = f.create_dataset(name='Cl_A_B', data=Cl_A_B)
+            dset = f.create_dataset(name='Cl_A_A', data=Cl_A_A)
+            dset = f.create_dataset(name='Cl_B_B', data=Cl_B_B)
+            dset.attrs['nside'] = nside
+            dset.attrs['EBpure'] = EBpure
+            dset.attrs['bins'] = bins
+            dset.attrs['ell_binned'] = ell_binned
+            
+            # add arbitrary kwargs as attributes
+            for key in kwargs.keys():
+                dset.attrs[key] = kwargs[key]
+    
+    else:
+        return Cl_A_B, Cl_A_A, Cl_B_B
+    
 if __name__ == "__main__":
     Q353, U353 = get_planck_data(nu=353, local=False, QU=True, IQU=False)
     Q217, U217 = get_planck_data(nu=217, local=False, QU=True, IQU=False)
@@ -106,10 +152,6 @@ if __name__ == "__main__":
     nside = 2048
     mask_b30 = make_mask(nside, GALFA_cut=True, b_cut=30, save_mask=True)
     mask_b30_apod = apodize_mask(mask_b30, apod_arcmin=60, apod_type='C2')
-
-    # non pure
-    #EB_353_nonpure = nmt.NmtField(mask_b30_apod, [Q353, U353])
-    #EB_217_nonpure = nmt.NmtField(mask_b30_apod, [Q217, U217])
 
     # pure
     EB_353_pure = nmt.NmtField(mask_b30_apod, [Q353, U353], purify_e = True, purify_b = True)
