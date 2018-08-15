@@ -146,55 +146,30 @@ def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None,
         return Cl_A_B, Cl_A_A, Cl_B_B
     
 if __name__ == "__main__":
+    
     Q353, U353 = get_planck_data(nu=353, local=False, QU=True, IQU=False)
     Q217, U217 = get_planck_data(nu=217, local=False, QU=True, IQU=False)
 
     nside = 2048
-    mask_b30 = make_mask(nside, GALFA_cut=True, b_cut=30, save_mask=True)
-    mask_b30_apod = apodize_mask(mask_b30, apod_arcmin=60, apod_type='C2')
-
-    # pure
-    EB_353_pure = nmt.NmtField(mask_b30_apod, [Q353, U353], purify_e = True, purify_b = True)
-    EB_217_pure = nmt.NmtField(mask_b30_apod, [Q217, U217], purify_e = True, purify_b = True)
-
-    # define workspaces
-    #w_nonpure = nmt.NmtWorkspace()
-    w_pure  = nmt.NmtWorkspace()
+    
+    # mask parameters
+    b_cut = 30
+    GALFA_cut = True
+    apod_arcmin = 60
+    apod_type = 'C2'
+    mask_b30 = make_mask(nside, GALFA_cut=GALFA_cut, b_cut=b_cut, save_mask=True)
+    mask_b30_apod = apodize_mask(mask_b30, apod_arcmin=apod_arcmin, apod_type=apod_type)
     
     # define bins
     bins, ell_binned = make_bins(nside=nside, binwidth=20, ellmax=1001)
-
-    w_pure.compute_coupling_matrix(EB_353_pure, EB_217_pure, bins)
-
-    # Compute pseudo-Cls and deconvolve mask mode-coupling matrix to get binned bandpowers
-    Cl_353_217_pure = w_pure.decouple_cell(nmt.compute_coupled_cell(EB_353_pure, EB_217_pure)) 
-    Cl_EE_353_217 = Cl_353_217_pure[0]
-    Cl_EB_353_217 = Cl_353_217_pure[1]
-    Cl_BB_353_217 = Cl_353_217_pure[3]
     
-    np.save("../data/Cl_353_217_pure_test.npy", Cl_353_217_pure)
+    # pass extra kwargs to be saved with data as hdf5 attributes
+    dict_kwargs = {"mask_bcut": b_cut, "mask_GALFA_cut": GALFA_cut, 'mask_apod_arcmin': apod_arcmin, 'mask_apod_type': apod_type}
     
-    # Same thing for autocorrelations
-    w_pure.compute_coupling_matrix(EB_353_pure, EB_353_pure, bins)
-    
-    Cl_353_353_pure = w_pure.decouple_cell(nmt.compute_coupled_cell(EB_353_pure, EB_353_pure)) 
-    Cl_EE_353_353 = Cl_353_353_pure[0]
-    Cl_EB_353_353 = Cl_353_353_pure[1]
-    Cl_BB_353_353 = Cl_353_353_pure[3]
-    
-    w_pure.compute_coupling_matrix(EB_217_pure, EB_217_pure, bins)
-    
-    Cl_217_217_pure = w_pure.decouple_cell(nmt.compute_coupled_cell(EB_217_pure, EB_217_pure)) 
-    Cl_EE_217_217 = Cl_217_217_pure[0]
-    Cl_EB_217_217 = Cl_217_217_pure[1]
-    Cl_BB_217_217 = Cl_217_217_pure[3]
-    
-    np.save("../data/Cl_353_353_pure_test.npy", Cl_353_353_pure)
-    np.save("../data/Cl_217_217_pure_test.npy", Cl_217_217_pure)
+    xcorr_E_B(Q353, U353, Q217, U217, apod_mask=mask_b30_apod, bins=bins, nside=2048, 
+              savedata=True, EBpure=True, dataname=["353", "217"], savestr="_test", **dict_kwargs)
 
-
-
-
+    
 
 
 
