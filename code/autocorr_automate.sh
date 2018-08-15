@@ -1,8 +1,11 @@
 #! /bin/bash
 # for polspice
-HEALPIXDATA=/home/seclark/Healpix_3.31/data
-HEALPIX=/home/seclark/Healpix_3.31
-SPICE=/home/seclark/PolSpice_v03-04-01/src/spice
+#HEALPIXDATA=/home/seclark/Healpix_3.31/data
+#HEALPIX=/home/seclark/Healpix_3.31
+#SPICE=/home/seclark/PolSpice_v03-04-01/src/spice
+HEALPIXDATA=/usr/local/Healpix/data
+HEALPIX=/usr/local/Healpix
+SPICE=/usr/local/bin64/spice
 
 # ******************************************************************************
 # This code is for the *autocorrelation* of one masked map.
@@ -12,27 +15,27 @@ SPICE=/home/seclark/PolSpice_v03-04-01/src/spice
 # autocorr_automate.sh map1fn apodsigma apodtype thetamax nlmax weightsA CLAA AAOUT beamA fskyfile CLAAbinned kernelfn ellmin ellmax nbins kernelbool
 # ******************************************************************************
 
-if [ $# -gt 0 ]; then
-    echo "You entered $# arguments"
-    echo "mapfn1 is ${1}"
-    echo "apodsigma is ${2}"
-    echo "apodtype is ${3}"
-    echo "thetamax is ${4}"
-    echo "nlmax is ${5}"
-    echo "weightsA is ${6}"
-    echo "CLAA is ${7}"
-    echo "AAOUT is ${8}"
-    echo "beamA is ${9}"
-    echo "fskyfile is ${10}"
-    echo "CLAAbinned is ${11}"
-    echo "kernelfn is ${12}"
-    echo "ellmin is ${13}"
-    echo "ellmax is ${14}"
-    echo "nbins is ${15}"
-    echo "kernelbool is ${16}"
-else
-    echo "WARNING. You did not use any arguments."
-fi
+# if [ $# -gt 0 ]; then
+#     echo "You entered $# arguments"
+#     echo "mapfn1 is ${1}"
+#     echo "apodsigma is ${2}"
+#     echo "apodtype is ${3}"
+#     echo "thetamax is ${4}"
+#     echo "nlmax is ${5}"
+#     echo "weightsA is ${6}"
+#     echo "CLAA is ${7}"
+#     echo "AAOUT is ${8}"
+#     echo "beamA is ${9}"
+#     echo "fskyfile is ${10}"
+#     echo "CLAAbinned is ${11}"
+#     echo "kernelfn is ${12}"
+#     echo "ellmin is ${13}"
+#     echo "ellmax is ${14}"
+#     echo "nbins is ${15}"
+#     echo "kernelbool is ${16}"
+# else
+#     echo "WARNING. You did not use any arguments."
+# fi
 
 # input map filename
 mapA=${1}
@@ -74,8 +77,8 @@ kernelbool=${16}
 
 # auto-correlations
 if [ "${kernelbool}" -eq "1" ]; then
-    echo "Computing with kernelsfileout."
-    $SPICE -apodizesigma $APODSIGMA -apodizetype $APODTYPE -beam $beamA -clfile $CLAA -decouple YES -mapfile $mapA -weightfile $weightsA -nlmax $NLMAX -pixelfile YES -polarization YES -subav YES -symmetric_cl YES -kernelsfileout kernelfn -thetamax $THETAMAX > $AAOUT
+    #echo "Computing with kernelsfileout."
+    $SPICE -apodizesigma $APODSIGMA -apodizetype $APODTYPE -beam $beamA -clfile $CLAA -decouple YES -mapfile $mapA -weightfile $weightsA -nlmax $NLMAX -pixelfile YES -polarization YES -subav YES -symmetric_cl YES -kernelsfileout $kernelfn -thetamax $THETAMAX > $AAOUT
 else
     $SPICE -apodizesigma $APODSIGMA -apodizetype $APODTYPE -beam $beamA -clfile $CLAA -decouple YES -mapfile $mapA -weightfile $weightsA -nlmax $NLMAX -pixelfile YES -polarization YES -subav YES -symmetric_cl YES -kernelsfileout NO -thetamax $THETAMAX > $AAOUT
 fi
