@@ -100,6 +100,11 @@ def make_bins(nside=2048, binwidth=20, ellmax=1001):
     return bins, ell_binned
     
 def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=2048, savedata=True, EBpure=True, dataname=["A", "B"], savestr="", **kwargs):
+    """
+    Cross- and autocorrelations between two fields.
+    
+    savedata : make hdf5 file containing Cl outputs and useful parameters.
+    """
     
     if EBpure:
         purify_e = True
