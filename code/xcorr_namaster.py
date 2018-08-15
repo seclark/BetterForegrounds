@@ -122,14 +122,33 @@ if __name__ == "__main__":
     # define bins
     bins, ell_binned = make_bins(nside=nside, binwidth=20, ellmax=1001)
 
-    w_pure.compute_coupling_matrix(EB_353_pure, EB_217_pure, bins)
+    #w_pure.compute_coupling_matrix(EB_353_pure, EB_217_pure, bins)
 
-    Cl_353_217_pure = w_pure.decouple_cell(nmt.compute_coupled_cell(EB_353_pure, EB_217_pure)) # Compute pseudo-Cls and deconvolve mask mode-coupling matrix to get binned bandpowers
-    Cl_EE_353_217 = Cl_353_217_pure[0]
-    Cl_EB_353_217 = Cl_353_217_pure[1]
-    Cl_BB_353_217 = Cl_353_217_pure[3]
+    # Compute pseudo-Cls and deconvolve mask mode-coupling matrix to get binned bandpowers
+    #Cl_353_217_pure = w_pure.decouple_cell(nmt.compute_coupled_cell(EB_353_pure, EB_217_pure)) 
+    #Cl_EE_353_217 = Cl_353_217_pure[0]
+    #Cl_EB_353_217 = Cl_353_217_pure[1]
+    #Cl_BB_353_217 = Cl_353_217_pure[3]
     
-    np.save("../data/Cl_353_217_pure_test.npy", Cl_353_217_pure)
+    #np.save("../data/Cl_353_217_pure_test.npy", Cl_353_217_pure)
+    
+    # Same thing for autocorrelations
+    w_pure.compute_coupling_matrix(EB_353_pure, EB_353_pure, bins)
+    
+    Cl_353_353_pure = w_pure.decouple_cell(nmt.compute_coupled_cell(EB_353_pure, EB_353_pure)) 
+    Cl_EE_353_353 = Cl_353_353_pure[0]
+    Cl_EB_353_353 = Cl_353_353_pure[1]
+    Cl_BB_353_353 = Cl_353_353_pure[3]
+    
+    w_pure.compute_coupling_matrix(EB_217_pure, EB_217_pure, bins)
+    
+    Cl_217_217_pure = w_pure.decouple_cell(nmt.compute_coupled_cell(EB_217_pure, EB_217_pure)) 
+    Cl_EE_217_217 = Cl_217_217_pure[0]
+    Cl_EB_217_217 = Cl_217_217_pure[1]
+    Cl_BB_217_217 = Cl_217_217_pure[3]
+    
+    np.save("../data/Cl_353_353_pure_test.npy", Cl_353_353_pure)
+    np.save("../data/Cl_217_217_pure_test.npy", Cl_217_217_pure)
 
 
 
