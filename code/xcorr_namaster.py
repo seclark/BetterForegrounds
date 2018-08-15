@@ -6,6 +6,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 import astropy.coordinates as coord
 import os
+import h5py
 
 def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False):
     """
