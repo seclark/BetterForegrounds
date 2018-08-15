@@ -5,6 +5,7 @@ import pymaster as nmt
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 import astropy.coordinates as coord
+import os
 
 def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False):
     """
@@ -12,6 +13,11 @@ def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False):
     GALFA_cut : conservative cut on GALFA DEC range: 1-37
     b_cut     : cut on |b|
     """
+    
+    out_fn = "../data/masks/mask_absbcut_{}_GALFAcut_{}.fits".format(b_cut, GALFA_cut)
+    if os.isfile(out_fn):
+        mask = hp.fitsfunc.read_map(out_fn, nest=False)
+        return mask
     
     npix = 12*nside**2
     mask = np.zeros(npix, np.int_)
@@ -30,7 +36,6 @@ def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False):
         mask[np.where(np.abs(all_b) < b_cut)] = 0
         
     if save_mask:
-        out_fn = "../data/mask_absbcut_{}_GALFAcut_{}.fits".format(b_cut, GALFA_cut)
         hp.fitsfunc.write_map(out_fn, mask, nest=False, fits_IDL=False, coord='G')
         
     return mask
@@ -99,7 +104,7 @@ if __name__ == "__main__":
     Q217, U217 = get_planck_data(nu=353, local=False, QU=True, IQU=False)
 
     nside = 2048
-    mask_b30 = make_mask(nside, GALFA_cut=True, b_cut=30, save_mask=False)
+    mask_b30 = make_mask(nside, GALFA_cut=True, b_cut=30, save_mask=True)
     mask_b30_apod = apodize_mask(mask_b30, apod_arcmin=60, apod_type='C2')
 
     # non pure
@@ -115,7 +120,7 @@ if __name__ == "__main__":
     w_pure  = nmt.NmtWorkspace()
     
     # define bins
-    bin, ell_binned = make_bins(nside=nside, binwidth=20, ellmax=1001)
+    bins, ell_binned = make_bins(nside=nside, binwidth=20, ellmax=1001)
 
     w_pure.compute_coupling_matrix(EB_353_pure, EB_217_pure, bins)
 
@@ -123,6 +128,8 @@ if __name__ == "__main__":
     Cl_EE_353_217 = Cl_353_217_pure[0]
     Cl_EB_353_217 = Cl_353_217_pure[1]
     Cl_BB_353_217 = Cl_353_217_pure[3]
+    
+    np.save("../data/Cl_353_217_pure_test.npy", Cl_353_217_pure)
 
 
 
