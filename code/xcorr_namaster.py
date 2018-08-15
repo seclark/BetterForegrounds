@@ -86,8 +86,8 @@ def get_planck_data(nu=353, local=False, QU=True, IQU=False):
     else:
         print("Need to implement all-fields read")
         
-def make_bins(binwidth=20):
-    bins = nmt.NmtBin(N_side, nlb=binwidth, lmax=int(ellmax))
+def make_bins(nside=2048, binwidth=20, ellmax=1001):
+    bins = nmt.NmtBin(nside, nlb=binwidth, lmax=int(ellmax))
     ell_binned = bins.get_effective_ells()
     nbins = len(ell_binned)
     
@@ -113,6 +113,9 @@ if __name__ == "__main__":
     # define workspaces
     #w_nonpure = nmt.NmtWorkspace()
     w_pure  = nmt.NmtWorkspace()
+    
+    # define bins
+    bin, ell_binned = make_bins(nside=nside, binwidth=20, ellmax=1001)
 
     w_pure.compute_coupling_matrix(EB_353_pure, EB_217_pure, bins)
 
