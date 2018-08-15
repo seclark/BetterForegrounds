@@ -78,8 +78,8 @@ def get_planck_data(nu=353, local=False, QU=True, IQU=False):
         return I_data, Q_data, U_data
         
     if QU:
-        Q_data = out_data[1]
-        U_data = out_data[2]  
+        Q_data = out_data[0]
+        U_data = out_data[1]  
         
         return Q_data, U_data  
     
