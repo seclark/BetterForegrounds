@@ -161,7 +161,7 @@ if __name__ == "__main__":
     
     # mask parameters
     b_cut = 30
-    GALFA_cut = True
+    GALFA_cut = False
     apod_arcmin = 60
     apod_type = 'C2'
     mask_b30 = make_mask(nside, GALFA_cut=GALFA_cut, b_cut=b_cut, save_mask=True)
