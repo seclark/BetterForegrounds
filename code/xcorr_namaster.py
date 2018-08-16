@@ -139,8 +139,8 @@ def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None,
         
         with h5py.File(out_fn, 'w') as f:
             dset = f.create_dataset(name='Cl_A_B', data=Cl_A_B)
-            dset = f.create_dataset(name='Cl_A_A', data=Cl_A_A)
-            dset = f.create_dataset(name='Cl_B_B', data=Cl_B_B)
+            dset1= f.create_dataset(name='Cl_A_A', data=Cl_A_A)
+            dset2= f.create_dataset(name='Cl_B_B', data=Cl_B_B)
             dset.attrs['nside'] = nside
             dset.attrs['EBpure'] = EBpure
             dset.attrs['bins'] = bins
@@ -174,8 +174,14 @@ if __name__ == "__main__":
     # pass extra kwargs to be saved with data as hdf5 attributes
     dict_kwargs = {"mask_bcut": b_cut, "mask_GALFA_cut": GALFA_cut, 'mask_apod_arcmin': apod_arcmin, 'mask_apod_type': apod_type}
     
+    # define a filename string based on these keys
+    outstr = ""
+    for _key in dict_kwargs.keys():
+        outstr += "{}_{}_".format(_key, dict_kwargs[_key])    
+    outstr += "test"
+    
     xcorr_E_B(Q353, U353, Q217, U217, apod_mask=mask_b30_apod, bins=bins, nside=2048, 
-              savedata=True, EBpure=True, dataname=["353", "217"], savestr="_test", **dict_kwargs)
+              savedata=True, EBpure=True, dataname=["353", "217"], savestr=outstr, **dict_kwargs)
 
     
 
