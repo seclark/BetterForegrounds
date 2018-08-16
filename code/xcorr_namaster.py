@@ -135,8 +135,9 @@ def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None,
         Aname = dataname[0]
         Bname = dataname[1]
         out_fn = data_root + "Cl_{}_{}_EBpure_{}_{}{}.h5".format(Aname, Bname, EBpure, nside, savestr)
+        print("Saving data to {}".format(out_fn))
         
-        with h5py.File(outfn, 'w') as f:
+        with h5py.File(out_fn, 'w') as f:
             dset = f.create_dataset(name='Cl_A_B', data=Cl_A_B)
             dset = f.create_dataset(name='Cl_A_A', data=Cl_A_A)
             dset = f.create_dataset(name='Cl_B_B', data=Cl_B_B)
