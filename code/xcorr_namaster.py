@@ -143,7 +143,6 @@ def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None,
             dset2= f.create_dataset(name='Cl_B_B', data=Cl_B_B)
             dset.attrs['nside'] = nside
             dset.attrs['EBpure'] = EBpure
-            dset.attrs['bins'] = bins
             dset.attrs['ell_binned'] = ell_binned
             
             # add arbitrary kwargs as attributes
