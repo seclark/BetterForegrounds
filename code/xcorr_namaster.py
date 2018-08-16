@@ -40,7 +40,7 @@ def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False):
     if b_cut and not GALFA_cut:
         print("b cut but no GALFA cut")
         mask = np.ones(npix, np.int_)
-        mask[np.where(np.abs(all_b) < b_cut)] = 0]
+        mask[np.where(np.abs(all_b) < b_cut)] = 0
         
     if save_mask:
         hp.fitsfunc.write_map(out_fn, mask, nest=False, fits_IDL=False, coord='G')
