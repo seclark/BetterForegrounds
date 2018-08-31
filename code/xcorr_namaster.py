@@ -5,6 +5,7 @@ import pymaster as nmt
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 import astropy.coordinates as coord
+from astropy.io import fits
 import os
 import h5py
 
@@ -46,6 +47,19 @@ def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False):
         hp.fitsfunc.write_map(out_fn, mask, nest=False, fits_IDL=False, coord='G')
         
     return mask
+
+def load_Planck_mask(skycoverage=70):
+    """
+    Load one of the Planck-provided masks
+    """
+    
+    maskroot = "/data/seclark/BetterForegrounds/data/masks/"
+    maskhdu=fits.open(maskroot+"HFI_Mask_GalPlane-apo0_2048_R2.00.fits")
+    maskstr = "{0:0=3d}".format(skycoverage)
+    masknest = maskhdu[1].data[maskstr]
+    maskring = hp.pixelfunc.reorder(masknest, n2r)
+    
+    return maskring
     
 def apodize_mask(mask, apod_arcmin=60, apod_type='C2'):
     """
@@ -156,9 +170,8 @@ def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None,
     
     else:
         return Cl_A_B, Cl_A_A, Cl_B_B
-    
-if __name__ == "__main__":
-    
+        
+def example_E_B_Planck():
     Q353, U353 = get_planck_data(nu=353, local=False, QU=True, IQU=False)
     Q217, U217 = get_planck_data(nu=217, local=False, QU=True, IQU=False)
 
@@ -186,6 +199,8 @@ if __name__ == "__main__":
     
     xcorr_E_B(Q353, U353, Q217, U217, apod_mask=mask_b30_apod, bins=bins, nside=2048, 
               savedata=True, EBpure=True, dataname=["353", "217"], savestr=outstr, **dict_kwargs)
+    
+
 
     
 
