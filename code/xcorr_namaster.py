@@ -48,7 +48,7 @@ def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False):
         
     return mask
 
-def load_Planck_mask(skycoverage=70):
+def load_Planck_mask(skycoverage=70, nside=2048):
     """
     Load one of the Planck-provided masks
     """
@@ -58,6 +58,9 @@ def load_Planck_mask(skycoverage=70):
     maskstr = "GAL{0:0=3d}".format(skycoverage)
     masknest = maskhdu[1].data[maskstr]
     maskring = hp.pixelfunc.reorder(masknest, n2r=True)
+    
+    if nside != 2048:
+        maskring = hp.ud_grade(maskring, nside)
     
     return maskring
     
