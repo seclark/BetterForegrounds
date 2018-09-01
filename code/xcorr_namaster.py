@@ -119,7 +119,7 @@ def make_bins(nside=2048, binwidth=20, ellmax=1001):
     
     return bins, ell_binned
     
-def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=2048, savedata=True, EBpure=True, dataname=["A", "B"], savestr="", **kwargs):
+def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=2048, savedata=True, EBpure=True, dataname=["A", "B"], savestr="", verbose=0, **kwargs):
     """
     Cross- and autocorrelations between two fields.
     
@@ -132,9 +132,15 @@ def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None,
         
     EB_Afield = nmt.NmtField(apod_mask, [Q_Afield, U_Afield], purify_e=purify_e, purify_b=purify_b)
     EB_Bfield = nmt.NmtField(apod_mask, [Q_Bfield, U_Bfield], purify_e=purify_e, purify_b=purify_b)
+    
+    if verbose:
+        print("Computed EB for both fields")
 
     # define workspace
     w = nmt.NmtWorkspace()
+    
+    if verbose:
+        print("Workspace ready")
     
     if bins == None:
         bins, ell_binned = make_bins(nside=nside, binwidth=20, ellmax=1001)
@@ -143,11 +149,17 @@ def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None,
     
     # Mode coupling matrix depends only on masks, not actual fields, so don't need to do this again for autocorr
     w.compute_coupling_matrix(EB_Afield, EB_Bfield, bins)
+    
+    if verbose:
+        print("Mode coupling matrix computed")
 
     # Compute pseudo-Cls and deconvolve mask mode-coupling matrix to get binned bandpowers
     Cl_A_B = w.decouple_cell(nmt.compute_coupled_cell(EB_Afield, EB_Bfield)) 
     Cl_A_A = w.decouple_cell(nmt.compute_coupled_cell(EB_Afield, EB_Afield)) 
     Cl_B_B = w.decouple_cell(nmt.compute_coupled_cell(EB_Bfield, EB_Bfield)) 
+    
+    if verbose:
+        print("Data ready to be saved")
     
     if savedata:
         data_root = "../data/"
