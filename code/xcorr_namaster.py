@@ -55,7 +55,7 @@ def load_Planck_mask(skycoverage=70):
     
     maskroot = "/data/seclark/BetterForegrounds/data/masks/"
     maskhdu=fits.open(maskroot+"HFI_Mask_GalPlane-apo0_2048_R2.00.fits")
-    maskstr = "{0:0=3d}".format(skycoverage)
+    maskstr = "GAL{0:0=3d}".format(skycoverage)
     masknest = maskhdu[1].data[maskstr]
     maskring = hp.pixelfunc.reorder(masknest, n2r)
     
