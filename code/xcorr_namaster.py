@@ -122,7 +122,7 @@ def make_bins(nside=2048, binwidth=20, ellmax=1001):
     
     return bins, ell_binned
     
-def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=2048, savedata=True, EBpure=True, dataname=["A", "B"], savestr="", verbose=0, **kwargs):
+def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=2048, savedata=True, EBpure=True, dataname=["A", "B"], savestr="", verbose=0, data_root="../data/" **kwargs):
     """
     Cross- and autocorrelations between two fields.
     
@@ -166,7 +166,6 @@ def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None,
         print("Data ready to be saved")
     
     if savedata:
-        data_root = "../data/"
         Aname = dataname[0]
         Bname = dataname[1]
         out_fn = data_root + "Cl_{}_{}_EBpure_{}_{}{}.h5".format(Aname, Bname, EBpure, nside, savestr)
