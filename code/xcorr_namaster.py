@@ -168,7 +168,7 @@ def xcorr_E_B(Q_Afield, U_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None,
     if savedata:
         Aname = dataname[0]
         Bname = dataname[1]
-        out_fn = data_root + "Cl_{}_{}_EBpure_{}_{}{}.h5".format(Aname, Bname, EBpure, nside, savestr)
+        out_fn = data_root + "Cl_{}_{}_EBpure_{}_{}_{}.h5".format(Aname, Bname, EBpure, nside, savestr)
         print("Saving data to {}".format(out_fn))
         
         with h5py.File(out_fn, 'w') as f:
