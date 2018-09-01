@@ -57,7 +57,7 @@ def load_Planck_mask(skycoverage=70):
     maskhdu=fits.open(maskroot+"HFI_Mask_GalPlane-apo0_2048_R2.00.fits")
     maskstr = "GAL{0:0=3d}".format(skycoverage)
     masknest = maskhdu[1].data[maskstr]
-    maskring = hp.pixelfunc.reorder(masknest, n2r)
+    maskring = hp.pixelfunc.reorder(masknest, n2r=True)
     
     return maskring
     
