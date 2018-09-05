@@ -1,3 +1,4 @@
+from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 import healpy as hp
@@ -106,7 +107,7 @@ def get_planck_data(nu=353, local=False, QU=True, IQU=False):
     
         return I_data, Q_data, U_data
         
-    if QU:
+    elif QU:
         Q_data = out_data[0]
         U_data = out_data[1]  
         
