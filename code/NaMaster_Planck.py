@@ -87,6 +87,10 @@ w_npure = nmt.NmtWorkspace()
 #print "computing coupling matrix"
 w_npure.compute_coupling_matrix(EB_npure_353, EB_npure_217, bins)
 #print "coupling matrix done"
+# try "compute_full_master" for comparison
+Cl_2x2 = nmt.compute_full_master(EB_npure_353, EB_npure_217, bins)
+Cl_EE = Cl_2x2[0]
+Cl_BB = Cl_2x2[3]
 # pure
 EB_pure_353 = nmt.NmtField(mask_apod, [Q_353,U_353], purify_e = True, purify_b = True)
 EB_pure_217 = nmt.NmtField(mask_apod, [Q_217,U_217], purify_e = True, purify_b = True)
@@ -95,6 +99,10 @@ w_pure = nmt.NmtWorkspace()
 #print "computing coupling matrix (pure)"
 w_pure.compute_coupling_matrix(EB_pure_353, EB_pure_217, bins)
 #print "coupling matrix done (pure)"
+# try "compute_full_master" for comparison
+Cl_2x2_pure = nmt.compute_full_master(EB_pure_353, EB_pure_217, bins)
+Cl_EE_pure = Cl_2x2_pure[0]
+Cl_BB_pure = Cl_2x2_pure[3]
 #####
 
 #####
@@ -119,7 +127,9 @@ ClBB_pure = Cl_2x2_pure[3]
 plt.clf()
 plt.title('353 GHz x 217 GHz (beams not deconvolved; non-pure estimator)')
 plt.semilogy(ell_binned, ClEE, 'bo', label='EE')
+plt.semilogy(ell_binned, Cl_EE, 'c*', label='EE (CFM)')
 plt.semilogy(ell_binned*1.1, ClBB, 'mo', label='BB')
+plt.semilogy(ell_binned*1.1, Cl_BB, 'r*', label='BB (CFM)')
 plt.xlim(2, int(ellmax))
 #plt.ylim(1.e-5, 10.)
 plt.xlabel(r'$\ell$', fontsize=16)
@@ -127,13 +137,15 @@ plt.ylabel(r'$C_{\ell} \, [{\rm K}^2]$', fontsize=16)
 plt.grid()
 plt.legend(loc='upper right', ncol=1, fontsize=9)
 plt.savefig(data_dir+'353x217_R3.00_NMT'+apod_Type+'apodArcmin_'+str(apod_Arcmin)+'_binned_Cl_lmax'+str(ellmax)+'_binwidth'+str(binwidth)+PDF_end)
-np.savetxt(data_dir+'353x217_R3.00_NMT'+apod_Type+'apodArcmin_'+str(apod_Arcmin)+'_binned_Cl_lmax'+str(ellmax)+'_binwidth'+str(binwidth)+TXT_end, np.transpose(np.array([ell_binned, ClEE, ClBB])))
+np.savetxt(data_dir+'353x217_R3.00_NMT'+apod_Type+'apodArcmin_'+str(apod_Arcmin)+'_binned_Cl_lmax'+str(ellmax)+'_binwidth'+str(binwidth)+TXT_end, np.transpose(np.array([ell_binned, ClEE, Cl_EE, ClBB, Cl_BB])))
 
 # Plot results - pure
 plt.clf()
 plt.title('353 GHz x 217 GHz (beams not deconvolved; pure estimator)')
 plt.semilogy(ell_binned, ClEE_pure, 'bo', label='EE')
+plt.semilogy(ell_binned, Cl_EE_pure, 'c*', label='EE (CFM)')
 plt.semilogy(ell_binned*1.1, ClBB_pure, 'mo', label='BB')
+plt.semilogy(ell_binned*1.1, Cl_BB_pure, 'r*', label='BB (CFM)')
 plt.xlim(2, int(ellmax))
 #plt.ylim(1.e-5, 10.)
 plt.xlabel(r'$\ell$', fontsize=16)
@@ -141,5 +153,5 @@ plt.ylabel(r'$C_{\ell} \, [{\rm K}^2]$', fontsize=16)
 plt.grid()
 plt.legend(loc='upper right', ncol=1, fontsize=9)
 plt.savefig(data_dir+'353x217_R3.00_NMT'+apod_Type+'apodArcmin_'+str(apod_Arcmin)+'_binned_Clpure_lmax'+str(ellmax)+'_binwidth'+str(binwidth)+PDF_end)
-np.savetxt(data_dir+'353x217_R3.00_NMT'+apod_Type+'apodArcmin_'+str(apod_Arcmin)+'_binned_Clpure_lmax'+str(ellmax)+'_binwidth'+str(binwidth)+TXT_end, np.transpose(np.array([ell_binned, ClEE_pure, ClBB_pure])))
+np.savetxt(data_dir+'353x217_R3.00_NMT'+apod_Type+'apodArcmin_'+str(apod_Arcmin)+'_binned_Clpure_lmax'+str(ellmax)+'_binwidth'+str(binwidth)+TXT_end, np.transpose(np.array([ell_binned, ClEE_pure, Cl_EE_pure, ClBB_pure, Cl_BB_pure])))
 
