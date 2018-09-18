@@ -75,7 +75,7 @@ def apodize_mask(mask, apod_arcmin=60, apod_type='C2'):
 
     return mask_apod
     
-def get_planck_data(nu=353, local=False, QU=True, IQU=False):
+def get_planck_data(nu=353, local=False, QU=False, IQU=False):
     """
     currently loads R3 data in RING ordering.
     nu  : frequency in GHz
@@ -89,7 +89,8 @@ def get_planck_data(nu=353, local=False, QU=True, IQU=False):
         nustr = "-psb"
     else:
         nustr = ""
-    planck_fn = planck_root + "HFI_SkyMap_{}{}_2048_R3.00_full.fits".format(nu, nustr)
+    planck_fn = planck_root + "HFI_SkyMap_{}{}_-field-IQU_2048_R3.00_full.fits".format(nu, nustr)
+    print("loading {}".format(planck_fn))
     
     if QU:
         read_fields = (1,2)
