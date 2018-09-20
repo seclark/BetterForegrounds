@@ -89,7 +89,7 @@ def get_planck_data(nu=353, local=False, QU=False, IQU=False):
         nustr = "-psb"
     else:
         nustr = ""
-    planck_fn = planck_root + "HFI_SkyMap_{}{}_-field-IQU_2048_R3.00_full.fits".format(nu, nustr)
+    planck_fn = planck_root + "HFI_SkyMap_{}{}-field-IQU_2048_R3.00_full.fits".format(nu, nustr)
     print("loading {}".format(planck_fn))
     
     if QU:
