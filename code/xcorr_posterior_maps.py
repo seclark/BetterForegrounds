@@ -9,7 +9,7 @@ import os
 import xcorr_namaster as xm
 
 def get_map(testname):
-    bayesroot = "/Users/susanclark/Dropbox/Foregrounds/BayesianMaps/"
+    bayesroot = "/data/seclark/BetterForegrounds/data/BayesianMaps/"
     mapfn=bayesroot+"HFI_SkyMap_353_2048_R2.02_full_pMB_psiMB_planckpatch_{}.fits".format(testname)
     mapI, mapQ, mapU = hp.fitsfunc.read_map(mapfn, field=(0,1,2))
     
