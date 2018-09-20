@@ -18,7 +18,9 @@ def get_map(testname):
 if __name__ == "__main__":
 
     nside=2048
-    mask = xm.make_mask(nside, GALFA_cut=True, b_cut=30, save_mask=False)
+    GALFA_cut = True
+    b_cut = 30
+    mask = xm.make_mask(nside, GALFA_cut=GALFA_cut, b_cut=b_cut, save_mask=False)
     apod_arcmin = 60
     apod_type = 'C2'
     mask_apod = xm.apodize_mask(mask, apod_arcmin=apod_arcmin, apod_type=apod_type)
