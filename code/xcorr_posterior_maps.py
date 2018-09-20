@@ -30,7 +30,7 @@ if __name__ == "__main__":
     bins, ell_binned = xm.make_bins(nside=nside, binwidth=20, ellmax=3001)
 
     # pass extra kwargs to be saved with data as hdf5 attributes
-    dict_kwargs = {'GALFA_cut': GALFA_cut, 'b_cut': b_cut, 'skymask': skycoverage, 'apod': apod_arcmin, 'type': apod_type}
+    dict_kwargs = {'GALFA_cut': GALFA_cut, 'b_cut': b_cut, 'apod': apod_arcmin, 'type': apod_type}
 
     mapI, mapQ, mapU = get_map("weight0")
     I217, Q217, U217 = xm.get_planck_data(nu=217, local=False, QU=False, IQU=True)
