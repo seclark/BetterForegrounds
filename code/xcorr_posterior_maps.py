@@ -14,6 +14,13 @@ def get_map(testname):
     mapI, mapQ, mapU = hp.fitsfunc.read_map(mapfn, field=(0,1,2))
     
     return mapI, mapQ, mapU
+    
+def get_planck_flatprior_map(testname="newplanck"):
+    bayesroot = "/data/seclark/BetterForegrounds/data/BayesianMaps/"
+    mapfn=bayesroot+"HFI_SkyMap_353_2048_R2.02_full_pMB_psiMB_{}.fits".format(testname)
+    mapI, mapQ, mapU = hp.fitsfunc.read_map(mapfn, field=(0,1,2))
+    
+    return mapI, mapQ, mapU
 
 if __name__ == "__main__":
 
@@ -32,10 +39,11 @@ if __name__ == "__main__":
     # pass extra kwargs to be saved with data as hdf5 attributes
     dict_kwargs = {'GALFA_cut': GALFA_cut, 'b_cut': b_cut, 'apod': apod_arcmin, 'type': apod_type}
 
-    mapI, mapQ, mapU = get_map("weight0")
+    #mapI, mapQ, mapU = get_map("weight0")
+    mapI, mapQ, mapU = get_planck_flatprior_map("newplanck")
     I217, Q217, U217 = xm.get_planck_data(nu=217, local=False, QU=False, IQU=True)
     xm.xcorr_TEB(mapI, mapQ, mapU, I217, Q217, U217, apod_mask=mask_apod, bins=bins, nside=nside, 
-              savedata=True, EBpure=True, dataname=["posterior", "217"], savestr="", verbose=1, data_root="../data/", **dict_kwargs)
+              savedata=True, EBpure=True, dataname=["planck353", "217"], savestr="flatpriorplanck", verbose=1, data_root="../data/", **dict_kwargs)
 
 
 
