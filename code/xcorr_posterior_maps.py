@@ -1,0 +1,42 @@
+from __future__ import division
+import numpy as np
+import healpy as hp
+import h5py
+import pymaster as nmt
+import glob
+import os
+
+import xcorr_namaster as xm
+
+def get_map(testname):
+    bayesroot = "/Users/susanclark/Dropbox/Foregrounds/BayesianMaps/"
+    mapfn=bayesroot+"HFI_SkyMap_353_2048_R2.02_full_pMB_psiMB_planckpatch_{}.fits".format(testname)
+    mapI, mapQ, mapU = hp.fitsfunc.read_map(mapfn, field=(0,1,2))
+    
+    return mapI, mapQ, mapU
+
+if __name__ == "__main__":
+
+    nside=2048
+    mask = xm.make_mask(nside, GALFA_cut=True, b_cut=30, save_mask=False)
+    apod_arcmin = 60
+    apod_type = 'C2'
+    mask_apod = xm.apodize_mask(mask, apod_arcmin=apod_arcmin, apod_type=apod_type)
+    print("mask apodized. Mask shape {}".format(mask_apod.shape))
+
+    # define bins
+    bins, ell_binned = xm.make_bins(nside=nside, binwidth=20, ellmax=3001)
+
+    # pass extra kwargs to be saved with data as hdf5 attributes
+    dict_kwargs = {'GALFA_cut': GALFA_cut, 'b_cut': b_cut, 'skymask': skycoverage, 'apod': apod_arcmin, 'type': apod_type}
+
+    mapI, mapQ, mapU = get_map("weight0")
+    I217, Q217, U217 = xm.get_planck_data(nu=217, local=False, QU=False, IQU=True)
+    xm.xcorr_TEB(mapI, mapQ, mapU, I217, Q217, U217, apod_mask=mask_apod, bins=bins, nside=nside, 
+              savedata=True, EBpure=True, dataname=["posterior", "217"], savestr="", verbose=1, data_root="../data/", **dict_kwargs)
+
+
+
+
+
+
