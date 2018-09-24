@@ -48,6 +48,13 @@ def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False):
         hp.fitsfunc.write_map(out_fn, mask, nest=False, fits_IDL=False, coord='G')
         
     return mask
+    
+def make_circular_pixel_mask(nside=1024, ipix=4000000, raddeg=2):
+    
+    mask = np.zeros(12*nside**2)
+    mask[hp.query_disc(nside, hp.pix2vec(nside, ipix), np.radians(raddeg), nest=False)] = 1
+    
+    return mask
 
 def load_Planck_mask(skycoverage=70, nside=2048):
     """
@@ -291,6 +298,8 @@ def example_E_B_Planck():
     xcorr_E_B(Q353, U353, Q217, U217, apod_mask=mask_b30_apod, bins=bins, nside=2048, 
               savedata=True, EBpure=True, dataname=["353", "217"], savestr=outstr, **dict_kwargs)
     
+
+
 
 
     
