@@ -23,10 +23,12 @@ if __name__ == "__main__":
     print("mask apodized. Mask shape {}".format(mask_apod.shape))
     
     # define bins
-    bins, ell_binned = xm.make_bins(nside=nside, binwidth=20, ellmax=3001)
+    bins, ell_binned = xm.make_bins(nside=nside, binwidth=20, ellmax=1001)
 
     # pass extra kwargs to be saved with data as hdf5 attributes
     dict_kwargs = {'apod': apod_arcmin, 'type': apod_type}
 
-    xm.xcorr_TEB(I353, Q353, U353, I857, I857, I857, apod_mask=mask_apod, bins=bins, nside=nside, 
-              savedata=True, EBpure=True, dataname=["planck353", "planck857"], savestr="planck353x857", verbose=1, data_root="../data/", **dict_kwargs)
+    xm.xcorr_T_EB(I857, Q353, U353, apod_mask=mask_apod, bins=bins, nside=nside, 
+              savedata=True, EBpure=True, dataname=["planck857", "planck353"], savestr="planck857x353", verbose=1, data_root="../data/", **dict_kwargs)
+    
+    

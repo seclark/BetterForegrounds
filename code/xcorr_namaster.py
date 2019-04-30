@@ -127,8 +127,6 @@ def get_planck_data(nu=353, local=False, Ionly=False, QU=False, IQU=False, vers=
         return Q_data, U_data  
         
     elif Ionly:
-        hp.mollview(out_data)
-        plt.savefig('test857.png')
         return out_data
     
     else:
@@ -205,6 +203,64 @@ def xcorr_TEB(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, apod_m
             dset6= f.create_dataset(name='ClAB_22', data=ClAB_22)
             dset7= f.create_dataset(name='ClAA_22', data=ClAA_22)
             dset8= f.create_dataset(name='ClBB_22', data=ClBB_22)
+            dset.attrs['nside'] = nside
+            dset.attrs['EBpure'] = EBpure
+            dset.attrs['ell_binned'] = ell_binned
+            
+            # add arbitrary kwargs as attributes
+            for key in kwargs.keys():
+                dset.attrs[key] = kwargs[key]
+                
+                
+def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=2048, savedata=True, EBpure=True, dataname=["A", "B"], savestr="", verbose=0, data_root="../data/", **kwargs):
+    print("Starting.")
+    
+    if EBpure:
+        purify_e = True
+        purify_b = True
+        
+    # spin 2 fields
+    EB_Bfield = nmt.NmtField(apod_mask, [Q_Bfield, U_Bfield], purify_e=purify_e, purify_b=purify_b) 
+    # spin 0 fields  
+    T_Afield =  nmt.NmtField(apod_mask, [I_Afield])
+    
+    if verbose:
+        print("Computed TEB for both fields")
+    
+    # define workspace
+    w = nmt.NmtWorkspace()
+    
+    if verbose:
+        print("Workspace ready")
+    
+    if bins == None:
+        bins, ell_binned = make_bins(nside=nside, binwidth=20, ellmax=1001)
+    else:
+        ell_binned = bins.get_effective_ells()
+        
+    #Compute MASTER estimator
+    #spin-0 x spin-0
+    #ClAA_00=nmt.compute_full_master(T_Afield, T_Afield, bins)
+    #spin-0 x spin-2
+    ClAB_02=nmt.compute_full_master(T_Afield, EB_Bfield, bins)
+    #spin-2 x spin-2
+    #ClBB_22=nmt.compute_full_master(EB_Bfield, EB_Bfield, bins)
+        
+    if verbose:
+        print("Data ready to be saved")
+    
+    if savedata:
+        Aname = dataname[0]
+        Bname = dataname[1]
+        out_fn = data_root + "Cl_{}_{}_TEB_EBpure_{}_{}_{}.h5".format(Aname, Bname, EBpure, nside, savestr)
+        print("Saving data to {}".format(out_fn))
+        
+        with h5py.File(out_fn, 'w') as f:
+            #dset1= f.create_dataset(name='ClAA_00', data=ClAA_00)
+            
+            dset3= f.create_dataset(name='ClAB_02', data=ClAB_02)
+            
+            #dset8= f.create_dataset(name='ClBB_22', data=ClBB_22)
             dset.attrs['nside'] = nside
             dset.attrs['EBpure'] = EBpure
             dset.attrs['ell_binned'] = ell_binned
