@@ -16,7 +16,9 @@ if __name__ == "__main__":
 
     # masking
     nside=2048
-    mask = xm.make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False)
+    skycoverage=70
+    #mask = xm.make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False)
+    mask = xm.load_Planck_mask(skycoverage=skycoverage, nside=nside)
     apod_arcmin = 60
     apod_type = 'C2'
     mask_apod = xm.apodize_mask(mask, apod_arcmin=apod_arcmin, apod_type=apod_type)
