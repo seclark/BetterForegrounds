@@ -28,5 +28,5 @@ if __name__ == "__main__":
     # pass extra kwargs to be saved with data as hdf5 attributes
     dict_kwargs = {'apod': apod_arcmin, 'type': apod_type}
 
-    xm.xcorr_TEB(I353, Q353, U353, I857, Q857, U857, apod_mask=mask_apod, bins=bins, nside=nside, 
+    xm.xcorr_TEB(I353, Q353, U353, I857, I857, I857, apod_mask=mask_apod, bins=bins, nside=nside, 
               savedata=True, EBpure=True, dataname=["planck353", "planck857"], savestr="planck353x857", verbose=1, data_root="../data/", **dict_kwargs)
