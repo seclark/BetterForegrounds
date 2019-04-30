@@ -12,7 +12,7 @@ if __name__ == "__main__":
     
     # load Planck data
     I353, Q353, U353 = xm.get_planck_data(nu=353, local=False, QU=False, IQU=True)
-    I857, Q857, U857 = xm.get_planck_data(nu=857, local=False, QU=False, IQU=True, vers="R3.01")
+    I857 = xm.get_planck_data(nu=857, local=False, Ionly=True, QU=False, IQU=False, vers="R3.01")
 
     # masking
     nside=2048
