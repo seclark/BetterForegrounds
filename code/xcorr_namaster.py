@@ -82,7 +82,7 @@ def apodize_mask(mask, apod_arcmin=60, apod_type='C2'):
 
     return mask_apod
     
-def get_planck_data(nu=353, local=False, QU=False, IQU=False, vers="R3.01"):
+def get_planck_data(nu=353, local=False, Ionly=False, QU=False, IQU=False, vers="R3.01"):
     """
     currently loads R3 data in RING ordering.
     nu  : frequency in GHz
@@ -108,6 +108,8 @@ def get_planck_data(nu=353, local=False, QU=False, IQU=False, vers="R3.01"):
         read_fields = (0,1,2)
     else:
         read_fields = (0,1,2,3,4,5,6,7,8,9)
+    if Ionly:
+        read_fields = 0
         
     out_data = hp.fitsfunc.read_map(planck_fn, field=read_fields, nest=False)
     
@@ -123,6 +125,9 @@ def get_planck_data(nu=353, local=False, QU=False, IQU=False, vers="R3.01"):
         U_data = out_data[1]  
         
         return Q_data, U_data  
+        
+    elif Ionly:
+        return outdata
     
     else:
         print("Need to implement all-fields read")
