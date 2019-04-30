@@ -127,6 +127,8 @@ def get_planck_data(nu=353, local=False, Ionly=False, QU=False, IQU=False, vers=
         return Q_data, U_data  
         
     elif Ionly:
+        hp.mollview(out_data)
+        plt.savefig('test857.png')
         return out_data
     
     else:
