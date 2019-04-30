@@ -11,7 +11,7 @@ import xcorr_namaster as xm
 if __name__ == "__main__":
     
     # load Planck data
-    I353, Q353, U353 = xm.get_planck_data(nu=353, local=False, QU=False, IQU=True)
+    I353, Q353, U353 = xm.get_planck_data(nu=353, local=False, Ionly=False, QU=False, IQU=True)
     I857 = xm.get_planck_data(nu=857, local=False, Ionly=True, QU=False, IQU=False, vers="R3.01")
 
     # masking
@@ -29,6 +29,6 @@ if __name__ == "__main__":
     dict_kwargs = {'apod': apod_arcmin, 'type': apod_type}
 
     xm.xcorr_T_EB(I857, Q353, U353, apod_mask=mask_apod, bins=bins, nside=nside, 
-              savedata=True, EBpure=True, dataname=["planck857", "planck353"], savestr="planck857x353", verbose=1, data_root="../data/", **dict_kwargs)
+              savedata=True, EBpure=True, CFM=False, dataname=["planck857", "planck353"], savestr="planck857x353", verbose=1, data_root="../data/", **dict_kwargs)
     
     
