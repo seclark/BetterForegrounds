@@ -75,8 +75,10 @@ def load_Planck_mask(skycoverage=70, nside=2048, local=False):
         if nside <= 64:
             maskring_lr = hp.ud_grade(maskring, 512)
             maskring = hp.ud_grade(maskring_lr, nside)
+            print("successfully downgraded to nside {}".format(nside))
         else:
             maskring = hp.ud_grade(maskring, nside)
+            print("successfully downgraded to nside {}".format(nside))
     
     return maskring
     
