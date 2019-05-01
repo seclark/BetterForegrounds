@@ -71,7 +71,12 @@ def load_Planck_mask(skycoverage=70, nside=2048, local=False):
     maskring = hp.pixelfunc.reorder(masknest, n2r=True)
     
     if nside != 2048:
-        maskring = hp.ud_grade(maskring, nside)
+        # going straight from 2048 to 64 breaks things, so:
+        if nside <= 64:
+            maskring_lr = hp.ud_grade(maskring, 512)
+            maskring = hp.ud_grade(maskring_lr, nside)
+        else:
+            maskring = hp.ud_grade(maskring, nside)
     
     return maskring
     
