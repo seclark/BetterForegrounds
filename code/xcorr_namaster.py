@@ -56,12 +56,15 @@ def make_circular_pixel_mask(nside=1024, ipix=4000000, raddeg=2):
     
     return mask
 
-def load_Planck_mask(skycoverage=70, nside=2048):
+def load_Planck_mask(skycoverage=70, nside=2048, local=False):
     """
     Load one of the Planck-provided masks
     """
     
-    maskroot = "/data/seclark/BetterForegrounds/data/masks/"
+    if local:
+        maskroot = "/Users/susanclark/Dropbox/Planck/"
+    else:
+        maskroot = "/data/seclark/BetterForegrounds/data/masks/"
     maskhdu=fits.open(maskroot+"HFI_Mask_GalPlane-apo0_2048_R2.00.fits")
     maskstr = "GAL{0:0=3d}".format(skycoverage)
     masknest = maskhdu[1].data[maskstr]
