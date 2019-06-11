@@ -40,10 +40,10 @@ def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False, nonabsb_cut=
         mask[np.where(np.abs(all_b) < b_cut)] = 0
     
     if nonabsb_cut:
-        mask[np.where(all_b < b_cut)] = 0
+        mask[np.where(all_b < nonabsb_cut)] = 0
 
     if nonabsb_cut_gt:
-        mask[np.where(all_b > b_cut)] = 0
+        mask[np.where(all_b > nonabsb_cut_gt)] = 0
         
     if b_cut and not GALFA_cut:
         print("b cut but no GALFA cut")
