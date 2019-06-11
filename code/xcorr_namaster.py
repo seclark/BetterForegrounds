@@ -39,10 +39,16 @@ def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False, nonabsb_cut=
     if b_cut:
         mask[np.where(np.abs(all_b) < b_cut)] = 0
     
-    if nonabsb_cut:
+    if nonabsb_cut and not GALFA_cut:
+        print("non abs b cut but no GALFA cut")
+        print("Setting latitudes below {} to 0".format(nonabsb_cut))
+        mask = np.ones(npix, np.int_)
         mask[np.where(all_b < nonabsb_cut)] = 0
 
-    if nonabsb_cut_gt:
+    if nonabsb_cut_gt and not GALFA_cut:
+        print("non abs b cut but no GALFA cut")
+        print("Setting latitudes greater than {} to 0".format(nonabsb_cut_gt))
+        mask = np.ones(npix, np.int_)
         mask[np.where(all_b > nonabsb_cut_gt)] = 0
         
     if b_cut and not GALFA_cut:
