@@ -10,7 +10,7 @@ from astropy.io import fits
 import os
 import h5py
 
-def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False, nonabsb_cut=False):
+def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False, nonabsb_cut=False, nonabsb_cut_gt=False):
     """
     make a mask.
     GALFA_cut : conservative cut on GALFA DEC range: 1-37
@@ -41,6 +41,9 @@ def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False, nonabsb_cut=
     
     if nonabsb_cut:
         mask[np.where(all_b < b_cut)] = 0
+
+    if nonabsb_cut_gt:
+        mask[np.where(all_b > b_cut)] = 0
         
     if b_cut and not GALFA_cut:
         print("b cut but no GALFA cut")
