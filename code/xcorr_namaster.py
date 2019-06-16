@@ -283,9 +283,8 @@ def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=20
         ClAB_02 = w.decouple_cell(nmt.compute_coupled_cell(T_Afield, EB_Bfield)) 
         
         if Cerrors:
-            ClAA_00 = w.decouple_cell(nmt.compute_coupled_cell(T_Afield, T_Afield)) 
-            ClBB_22 = w.decouple_cell(nmt.compute_coupled_cell(EB_Bfield, EB_Bfield)) 
-        
+            print("errors not implementsed for non CFM")
+            
     if Cerrors:
         #error = sqrt( TT*BB * (1/fsky) * (1/(2*ell + 1)) * (1/ellbinwidth) )
         TT = ClAA_00[0]
@@ -293,8 +292,8 @@ def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=20
         BB = ClBB_22[3]
         fsky = np.sum(apod_mask/len(apod_mask))
         ell_binwidth = ell_binned[1] - ell_binned[0] # assumes constant
-        err_TE = np.sqrt( (TT*EE) / (fsky*(2*ell_binned + 1)*ell_binwidth) )
-        err_TB = np.sqrt( (TT*BB) / (fsky*(2*ell_binned + 1)*ell_binwidth) )
+        err_TE = (TT*EE) / (fsky*(2*ell_binned + 1)*ell_binwidth) 
+        err_TB = (TT*BB) / (fsky*(2*ell_binned + 1)*ell_binwidth) 
         
     if verbose:
         print("Data ready to be saved")
