@@ -234,7 +234,7 @@ def xcorr_TEB(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, apod_m
                 dset.attrs[key] = kwargs[key]
                 
                 
-def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=2048, savedata=True, EBpure=True, CFM=False, dataname=["A", "B"], savestr="", verbose=0, data_root="../data/", **kwargs):
+def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=2048, savedata=True, EBpure=True, CFM=False, Cerrors=False, dataname=["A", "B"], savestr="", verbose=0, data_root="../data/", **kwargs):
     print("Starting.")
     
     if EBpure:
@@ -265,12 +265,14 @@ def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=20
             print("Compute full master")
             
         #Compute MASTER estimator
-        #spin-0 x spin-0
-        #ClAA_00=nmt.compute_full_master(T_Afield, T_Afield, bins)
         #spin-0 x spin-2
         ClAB_02=nmt.compute_full_master(T_Afield, EB_Bfield, bins)
-        #spin-2 x spin-2
-        #ClBB_22=nmt.compute_full_master(EB_Bfield, EB_Bfield, bins)
+        
+        if Cerrors:
+            #spin-0 x spin-0
+            ClAA_00=nmt.compute_full_master(T_Afield, T_Afield, bins)
+            #spin-2 x spin-2
+            ClBB_22=nmt.compute_full_master(EB_Bfield, EB_Bfield, bins)
     else:
         w.compute_coupling_matrix(T_Afield, EB_Bfield, bins)
         
@@ -279,6 +281,20 @@ def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=20
 
         # Compute pseudo-Cls and deconvolve mask mode-coupling matrix to get binned bandpowers
         ClAB_02 = w.decouple_cell(nmt.compute_coupled_cell(T_Afield, EB_Bfield)) 
+        
+        if Cerrors:
+            ClAA_00 = w.decouple_cell(nmt.compute_coupled_cell(T_Afield, T_Afield)) 
+            ClBB_22 = w.decouple_cell(nmt.compute_coupled_cell(EB_Bfield, EB_Bfield)) 
+        
+    if Cerrors:
+        #error = sqrt( TT*BB * (1/fsky) * (1/(2*ell + 1)) * (1/ellbinwidth) )
+        TT = ClAA_00[0]
+        EE = ClBB_22[0]
+        BB = ClBB_22[3]
+        fsky = np.sum(apod_mask/len(apod_mask))
+        ell_binwidth = ell_binned[1] - ell_binned[0] # assumes constant
+        err_TE = np.sqrt( (TT*EE) / (fsky*(2*ell_binned + 1)*ell_binwidth) )
+        err_TB = np.sqrt( (TT*BB) / (fsky*(2*ell_binned + 1)*ell_binwidth) )
         
     if verbose:
         print("Data ready to be saved")
@@ -293,6 +309,9 @@ def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=20
             #dset1= f.create_dataset(name='ClAA_00', data=ClAA_00)
             
             dset = f.create_dataset(name='ClAB_02', data=ClAB_02)
+            if Cerrors:
+                errTE = f.create_dataset(name='err_TE', data=err_TE)
+                errTB = f.create_dataset(name='err_TB', data=err_TB)
             
             #dset8= f.create_dataset(name='ClBB_22', data=ClBB_22)
             dset.attrs['nside'] = nside
