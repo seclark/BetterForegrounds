@@ -309,6 +309,10 @@ def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=20
             
             dset = f.create_dataset(name='ClAB_02', data=ClAB_02)
             if Cerrors:
+                TT = f.create_dataset(name='TT', data=TT)
+                EE = f.create_dataset(name='EE', data=EE)
+                BB = f.create_dataset(name='BB', data=BB)
+                
                 errTE = f.create_dataset(name='err_TE', data=err_TE)
                 errTB = f.create_dataset(name='err_TB', data=err_TB)
             
