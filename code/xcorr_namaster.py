@@ -243,6 +243,9 @@ def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=20
         if verbose:
             print("Purifying E and B")
     
+    print("fsky = {}".format(np.sum(mask_apod)/len(mask_apod)))
+    print("Q_Bfield: ", Q_Bfield.shape, Q_Bfield.dtype)
+    
     # spin 2 fields
     EB_Bfield = nmt.NmtField(apod_mask, [Q_Bfield, U_Bfield], purify_e=purify_e, purify_b=purify_b) 
     if verbose:
