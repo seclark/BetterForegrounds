@@ -155,8 +155,8 @@ def get_planck_data(nu=353, local=False, Ionly=False, QU=False, IQU=False, vers=
         print("Need to implement all-fields read")
 
         
-def make_bins(nside=2048, binwidth=20, ellmax=1001):
-    bins = nmt.NmtBin(nside, nlb=binwidth, lmax=int(ellmax))
+def make_bins(nside=2048, binwidth=20, ellmax=1001, is_Dell=False):
+    bins = nmt.NmtBin(nside, nlb=binwidth, lmax=int(ellmax), is_Dell=is_Dell)
     ell_binned = bins.get_effective_ells()
     nbins = len(ell_binned)
     
