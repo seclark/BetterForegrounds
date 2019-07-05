@@ -263,6 +263,7 @@ def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=20
         print("Workspace ready")
     
     if bins == None:
+        print("Bins not specified. Using binwidth = 20")
         bins, ell_binned = make_bins(nside=nside, binwidth=20, ellmax=1001)
     else:
         ell_binned = bins.get_effective_ells()
@@ -290,17 +291,21 @@ def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=20
         ClAB_02 = w.decouple_cell(nmt.compute_coupled_cell(T_Afield, EB_Bfield)) 
         
         if Cerrors:
-            print("errors not implementsed for non CFM")
+            print("errors not implemented for non CFM")
             
     if Cerrors:
         #error = sqrt( TT*BB * (1/fsky) * (1/(2*ell + 1)) * (1/ellbinwidth) )
         TT = ClAA_00[0]
         EE = ClBB_22[0]
         BB = ClBB_22[3]
-        fsky = np.sum(apod_mask/len(apod_mask))
+        fsky = np.sum(apod_mask)/len(apod_mask)
+        fsky2 = np.sum(apod_mask**2)/len(apod_mask)
+        fsky3 = np.sum(apod_mask**3)/len(apod_mask)
+        fsky4 = np.sum(apod_mask**4)/len(apod_mask)
         ell_binwidth = ell_binned[1] - ell_binned[0] # assumes constant
         err_TE = (TT*EE) / (fsky*(2*ell_binned + 1)*ell_binwidth) 
         err_TB = (TT*BB) / (fsky*(2*ell_binned + 1)*ell_binwidth) 
+        
         
     if verbose:
         print("Data ready to be saved")
@@ -322,6 +327,11 @@ def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=20
                 
                 errTE = f.create_dataset(name='err_TE', data=err_TE)
                 errTB = f.create_dataset(name='err_TB', data=err_TB)
+                
+                dset.attrs['fsky'] = fsky
+                dset.attrs['fsky2'] = fsky2
+                dset.attrs['fsky3'] = fsky3
+                dset.attrs['fsky4'] = fsky4
             
             #dset8= f.create_dataset(name='ClBB_22', data=ClBB_22)
             dset.attrs['nside'] = nside
