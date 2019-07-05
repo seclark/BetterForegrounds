@@ -297,6 +297,8 @@ def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=20
         #error = sqrt( TT*BB * (1/fsky) * (1/(2*ell + 1)) * (1/ellbinwidth) )
         TT = ClAA_00[0]
         EE = ClBB_22[0]
+        EB = ClBB_22[1]
+        BE = ClBB_22[2]
         BB = ClBB_22[3]
         fsky = np.sum(apod_mask)/len(apod_mask)
         fsky2 = np.sum(apod_mask**2)/len(apod_mask)
@@ -324,6 +326,8 @@ def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=20
                 TT = f.create_dataset(name='TT', data=TT)
                 EE = f.create_dataset(name='EE', data=EE)
                 BB = f.create_dataset(name='BB', data=BB)
+                BE = f.create_dataset(name='BE', data=BE)
+                EB = f.create_dataset(name='EB', data=EB)
                 
                 errTE = f.create_dataset(name='err_TE', data=err_TE)
                 errTB = f.create_dataset(name='err_TB', data=err_TB)
