@@ -168,6 +168,10 @@ def xcorr_TEB(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, apod_m
     if EBpure:
         purify_e = True
         purify_b = True
+    else:
+        purify_e = False
+        purify_b = False
+        
         
     # spin 2 fields
     EB_Afield = nmt.NmtField(apod_mask, [Q_Afield, U_Afield], purify_e=purify_e, purify_b=purify_b)
