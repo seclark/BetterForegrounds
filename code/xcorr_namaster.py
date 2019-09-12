@@ -17,7 +17,7 @@ def make_mask(nside, GALFA_cut=False, b_cut=False, save_mask=False, nonabsb_cut=
     b_cut     : cut on |b|
     """
     
-    out_fn = "../data/masks/mask_absbcut_{}_GALFAcut_{}.fits".format(b_cut, GALFA_cut)
+    out_fn = "../data/masks/mask_nside_{}_absbcut_{}_GALFAcut_{}.fits".format(nside, b_cut, GALFA_cut)
     if os.path.isfile(out_fn):
         print("Loading mask {}".format(out_fn))
         mask = hp.fitsfunc.read_map(out_fn, nest=False)
