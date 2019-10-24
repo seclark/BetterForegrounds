@@ -246,6 +246,11 @@ def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=20
         purify_b = True
         if verbose:
             print("Purifying E and B")
+    else:
+        purify_e = False
+        purify_b = False
+        if verbose:
+            print("Not purifying E and B")
     
     print("fsky = {}".format(np.sum(apod_mask)/len(apod_mask)))
     print("Q_Bfield: ", Q_Bfield.shape, Q_Bfield.dtype)
@@ -305,13 +310,15 @@ def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=20
         BE = ClBB_22[2]
         BB = ClBB_22[3]
         fsky = np.sum(apod_mask)/len(apod_mask)
+        print("fsky = {}".format(fsky))
         fsky2 = np.sum(apod_mask**2)/len(apod_mask)
         fsky3 = np.sum(apod_mask**3)/len(apod_mask)
         fsky4 = np.sum(apod_mask**4)/len(apod_mask)
         ell_binwidth = ell_binned[1] - ell_binned[0] # assumes constant
+        #err_TE = (TT*EE + TE**2) / (fsky*(2*ell_binned + 1)*ell_binwidth) 
+        #err_TB = (TT*BB + TB**2) / (fsky*(2*ell_binned + 1)*ell_binwidth) 
         err_TE = (TT*EE) / (fsky*(2*ell_binned + 1)*ell_binwidth) 
         err_TB = (TT*BB) / (fsky*(2*ell_binned + 1)*ell_binwidth) 
-        
         
     if verbose:
         print("Data ready to be saved")
