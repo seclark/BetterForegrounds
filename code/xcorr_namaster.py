@@ -104,7 +104,7 @@ def apodize_mask(mask, apod_arcmin=60, apod_type='C2'):
 
     return mask_apod
     
-def get_planck_data(nu=353, local=False, Ionly=False, QU=False, IQU=False, vers="R3.01"):
+def get_planck_data(nu=353, local=False, Ionly=False, QU=False, IQU=False, vers="R3.01", HM=False):
     """
     currently loads R3 data in RING ordering.
     nu  : frequency in GHz
@@ -118,10 +118,16 @@ def get_planck_data(nu=353, local=False, Ionly=False, QU=False, IQU=False, vers=
         nustr = "-psb"
     else:
         nustr = ""
-    if vers == "R3.00": 
-        planck_fn = planck_root + "HFI_SkyMap_{}{}-field-IQU_2048_R3.00_full.fits".format(nu, nustr)
-    else:
-        planck_fn = planck_root + "HFI_SkyMap_{}{}_2048_{}_full.fits".format(nu, nustr, vers)
+    if HM is False:
+        if vers == "R3.00": 
+            planck_fn = planck_root + "HFI_SkyMap_{}{}-field-IQU_2048_R3.00_full.fits".format(nu, nustr)
+        else:
+            planck_fn = planck_root + "HFI_SkyMap_{}{}_2048_{}_full.fits".format(nu, nustr, vers)
+    elif HM == "HM1":
+        planck_fn = "HFI_SkyMap_{}{}_2048_{}_halfmission-1.fits".format(nu, nustr, vers)
+    elif HM == "HM2":
+        planck_fn = "HFI_SkyMap_{}{}_2048_{}_halfmission-2.fits".format(nu, nustr, vers)
+    
     print("loading {}".format(planck_fn))
     
     if QU:
