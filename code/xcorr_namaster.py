@@ -122,7 +122,7 @@ def get_planck_data(nu=353, local=False, Ionly=False, QU=False, IQU=False, vers=
         if vers == "R3.00": 
             planck_fn = planck_root + "HFI_SkyMap_{}{}-field-IQU_2048_R3.00_full.fits".format(nu, nustr)
         else:
-            planck_fn = planck_root + "HFI_SkyMap_{}{}_2048_{}_full.fits".format(nu, nustr, vers)
+            planck_fn = planck_root + "HFI_SkyMap_{}{}_2048_{}_full.fits".format(nu, nustr, vers) # K_CMB
     elif HM == "HM1":
         planck_fn = planck_root + "HFI_SkyMap_{}{}_2048_{}_halfmission-1.fits".format(nu, nustr, vers)
     elif HM == "HM2":
@@ -169,7 +169,8 @@ def make_bins(nside=2048, binwidth=20, ellmax=1001, is_Dell=False):
     return bins, ell_binned
 
 def xcorr_TEB(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=2048, savedata=True, EBpure=True, dataname=["A", "B"], savestr="", verbose=0, data_root="../data/", **kwargs):
-    print("Starting.")
+    if verbose:
+        print("Starting.")
     
     if EBpure:
         purify_e = True
@@ -235,6 +236,87 @@ def xcorr_TEB(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, apod_m
             dset6= f.create_dataset(name='ClAB_22', data=ClAB_22)
             dset7= f.create_dataset(name='ClAA_22', data=ClAA_22)
             dset8= f.create_dataset(name='ClBB_22', data=ClBB_22)
+            dset.attrs['nside'] = nside
+            dset.attrs['EBpure'] = EBpure
+            dset.attrs['ell_binned'] = ell_binned
+            
+            # add arbitrary kwargs as attributes
+            for key in kwargs.keys():
+                dset.attrs[key] = kwargs[key]
+
+def xcorr_TEB_ABBA(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=2048, savedata=True, EBpure=True, dataname=["A", "B"], savestr="", verbose=0, data_root="../data/", **kwargs):
+    if verbose:
+        print("Starting.")
+    
+    if EBpure:
+        purify_e = True
+        purify_b = True
+    else:
+        purify_e = False
+        purify_b = False
+        
+        
+    # spin 2 fields
+    EB_Afield = nmt.NmtField(apod_mask, [Q_Afield, U_Afield], purify_e=purify_e, purify_b=purify_b)
+    EB_Bfield = nmt.NmtField(apod_mask, [Q_Bfield, U_Bfield], purify_e=purify_e, purify_b=purify_b) 
+    # spin 0 fields  
+    T_Afield =  nmt.NmtField(apod_mask, [I_Afield])
+    T_Bfield =  nmt.NmtField(apod_mask, [I_Bfield])
+    
+    if verbose:
+        print("Computed TEB for both fields")
+    
+    # define workspace
+    w = nmt.NmtWorkspace()
+    
+    if verbose:
+        print("Workspace ready")
+    
+    if bins == None:
+        bins, ell_binned = make_bins(nside=nside, binwidth=20, ellmax=1001)
+    else:
+        ell_binned = bins.get_effective_ells()
+        
+    #Compute MASTER estimator
+    #spin-0 x spin-0
+    ClAA_00=nmt.compute_full_master(T_Afield, T_Afield, bins)
+    ClAB_00=nmt.compute_full_master(T_Afield, T_Bfield, bins)
+    ClBA_00=nmt.compute_full_master(T_Bfield, T_Afield, bins)
+    ClBB_00=nmt.compute_full_master(T_Bfield, T_Bfield, bins)
+    #spin-0 x spin-2
+    ClAA_02=nmt.compute_full_master(T_Afield, EB_Afield, bins)
+    ClAB_02=nmt.compute_full_master(T_Afield, EB_Bfield, bins)
+    ClBA_02=nmt.compute_full_master(T_Bfield, EB_Afield, bins)
+    ClBB_02=nmt.compute_full_master(T_Bfield, EB_Bfield, bins)
+    #spin-2 x spin-2
+    ClAA_22=nmt.compute_full_master(EB_Afield, EB_Afield, bins)
+    ClAB_22=nmt.compute_full_master(EB_Afield, EB_Bfield, bins)
+    ClBA_22=nmt.compute_full_master(EB_Bfield, EB_Afield, bins)
+    ClBB_22=nmt.compute_full_master(EB_Bfield, EB_Bfield, bins)
+        
+    if verbose:
+        print("Data ready to be saved")
+    
+    if savedata:
+        Aname = dataname[0]
+        Bname = dataname[1]
+        out_fn = data_root + "Cl_{}_{}_TEB_EBpure_{}_{}_{}.h5".format(Aname, Bname, EBpure, nside, savestr)
+        print("Saving data to {}".format(out_fn))
+        
+        with h5py.File(out_fn, 'w') as f:
+            dset = f.create_dataset(name='ClAB_00', data=ClAB_00)
+            dset1= f.create_dataset(name='ClAA_00', data=ClAA_00)
+            dset2= f.create_dataset(name='ClBB_00', data=ClBB_00)
+            
+            dset3= f.create_dataset(name='ClAB_02', data=ClAB_02)
+            dset4= f.create_dataset(name='ClBA_02', data=ClBA_02)
+            dset5= f.create_dataset(name='ClAA_02', data=ClAA_02)
+            dset6= f.create_dataset(name='ClBB_02', data=ClBB_02)
+        
+            dset7= f.create_dataset(name='ClAB_22', data=ClAB_22)
+            dset8= f.create_dataset(name='ClAA_22', data=ClAA_22)
+            dset9= f.create_dataset(name='ClBB_22', data=ClBB_22)
+            dset0= f.create_dataset(name='ClBA_22', data=ClBA_22)
             dset.attrs['nside'] = nside
             dset.attrs['EBpure'] = EBpure
             dset.attrs['ell_binned'] = ell_binned
