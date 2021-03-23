@@ -307,16 +307,17 @@ def xcorr_TEB_ABBA(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, a
             dset = f.create_dataset(name='ClAB_00', data=ClAB_00)
             dset1= f.create_dataset(name='ClAA_00', data=ClAA_00)
             dset2= f.create_dataset(name='ClBB_00', data=ClBB_00)
+            dset3= f.create_dataset(name='ClBA_00', data=ClBA_00)
             
-            dset3= f.create_dataset(name='ClAB_02', data=ClAB_02)
-            dset4= f.create_dataset(name='ClBA_02', data=ClBA_02)
-            dset5= f.create_dataset(name='ClAA_02', data=ClAA_02)
-            dset6= f.create_dataset(name='ClBB_02', data=ClBB_02)
+            dset4= f.create_dataset(name='ClAB_02', data=ClAB_02)
+            dset5= f.create_dataset(name='ClBA_02', data=ClBA_02)
+            dset6= f.create_dataset(name='ClAA_02', data=ClAA_02)
+            dset7= f.create_dataset(name='ClBB_02', data=ClBB_02)
         
-            dset7= f.create_dataset(name='ClAB_22', data=ClAB_22)
-            dset8= f.create_dataset(name='ClAA_22', data=ClAA_22)
-            dset9= f.create_dataset(name='ClBB_22', data=ClBB_22)
-            dset0= f.create_dataset(name='ClBA_22', data=ClBA_22)
+            dset8= f.create_dataset(name='ClAB_22', data=ClAB_22)
+            dset9= f.create_dataset(name='ClAA_22', data=ClAA_22)
+            dset10= f.create_dataset(name='ClBB_22', data=ClBB_22)
+            dset11= f.create_dataset(name='ClBA_22', data=ClBA_22)
             dset.attrs['nside'] = nside
             dset.attrs['EBpure'] = EBpure
             dset.attrs['ell_binned'] = ell_binned
