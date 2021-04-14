@@ -250,7 +250,7 @@ def xcorr_TEB(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, apod_m
             for key in kwargs.keys():
                 dset.attrs[key] = kwargs[key]
 
-def xcorr_TEB_ABBA(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, apod_mask=None, apod_maskB=False, bins=None, nside=2048, savedata=True, EBpure=True, dataname=["A", "B"], savestr="", verbose=0, data_root="../data/", **kwargs):
+def xcorr_TEB_ABBA(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, apod_mask=None, apod_maskB="None", bins=None, nside=2048, savedata=True, EBpure=True, dataname=["A", "B"], savestr="", verbose=0, data_root="../data/", **kwargs):
     if verbose:
         print("Starting.")
     
@@ -261,13 +261,13 @@ def xcorr_TEB_ABBA(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, a
         purify_e = False
         purify_b = False
         
-    if apod_maskB:
-        print("incorporating maskB")
-        apod_maskA = np.copy(apod_mask)
-    else:
+    if apod_maskB == "None":
         print("using a single mask")
         apod_maskA = np.copy(apod_mask)
         apod_maskB = np.copy(apod_mask)
+    else:
+        print("incorporating maskB")
+        apod_maskA = np.copy(apod_mask)
         
     # spin 2 fields
     EB_Afield = nmt.NmtField(apod_maskA, [Q_Afield, U_Afield], purify_e=purify_e, purify_b=purify_b)
