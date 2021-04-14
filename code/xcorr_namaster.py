@@ -331,10 +331,15 @@ def xcorr_TEB_ABBA(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, a
             dset11= f.create_dataset(name='ClBA_22', data=ClBA_22)
             dset.attrs['nside'] = nside
             dset.attrs['EBpure'] = EBpure
-            dset.attrs['ell_binned'] = ell_binned
-            
+            try:
+                dset.attrs['ell_binned'] = ell_binned
+            except:
+                dsetell= f.create_dataset(name='ell_binned', data=ell_binned)
+                print(ell_binned)
+                
             # add arbitrary kwargs as attributes
             for key in kwargs.keys():
+                print(kwargs[key])
                 dset.attrs[key] = kwargs[key]
                 
                 
