@@ -168,7 +168,7 @@ def make_bins(nside=2048, binwidth=20, ellmax=1001, is_Dell=False):
     
     return bins, ell_binned
 
-def xcorr_TEB(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=2048, savedata=True, EBpure=True, dataname=["A", "B"], savestr="", verbose=0, data_root="../data/", **kwargs):
+def xcorr_TEB(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, apod_mask=None, apod_maskB=None, bins=None, nside=2048, savedata=True, EBpure=True, dataname=["A", "B"], savestr="", verbose=0, data_root="../data/", **kwargs):
     if verbose:
         print("Starting.")
     
@@ -179,13 +179,19 @@ def xcorr_TEB(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, apod_m
         purify_e = False
         purify_b = False
         
+    if apod_maskB == None:
+        apod_maskA = np.copy(apod_mask)
+        apod_maskB = np.copy(apod_mask)
+    else:
+        apod_maskA = np.copy(apod_mask)
+        
         
     # spin 2 fields
-    EB_Afield = nmt.NmtField(apod_mask, [Q_Afield, U_Afield], purify_e=purify_e, purify_b=purify_b)
-    EB_Bfield = nmt.NmtField(apod_mask, [Q_Bfield, U_Bfield], purify_e=purify_e, purify_b=purify_b) 
+    EB_Afield = nmt.NmtField(apod_maskA, [Q_Afield, U_Afield], purify_e=purify_e, purify_b=purify_b)
+    EB_Bfield = nmt.NmtField(apod_maskB, [Q_Bfield, U_Bfield], purify_e=purify_e, purify_b=purify_b) 
     # spin 0 fields  
-    T_Afield =  nmt.NmtField(apod_mask, [I_Afield])
-    T_Bfield =  nmt.NmtField(apod_mask, [I_Bfield])
+    T_Afield =  nmt.NmtField(apod_maskA, [I_Afield])
+    T_Bfield =  nmt.NmtField(apod_maskB, [I_Bfield])
     
     if verbose:
         print("Computed TEB for both fields")
@@ -244,7 +250,7 @@ def xcorr_TEB(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, apod_m
             for key in kwargs.keys():
                 dset.attrs[key] = kwargs[key]
 
-def xcorr_TEB_ABBA(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=2048, savedata=True, EBpure=True, dataname=["A", "B"], savestr="", verbose=0, data_root="../data/", **kwargs):
+def xcorr_TEB_ABBA(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, apod_mask=None, apod_maskB=None, bins=None, nside=2048, savedata=True, EBpure=True, dataname=["A", "B"], savestr="", verbose=0, data_root="../data/", **kwargs):
     if verbose:
         print("Starting.")
     
@@ -255,13 +261,18 @@ def xcorr_TEB_ABBA(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, a
         purify_e = False
         purify_b = False
         
+    if apod_maskB == None:
+        apod_maskA = np.copy(apod_mask)
+        apod_maskB = np.copy(apod_mask)
+    else:
+        apod_maskA = np.copy(apod_mask)
         
     # spin 2 fields
-    EB_Afield = nmt.NmtField(apod_mask, [Q_Afield, U_Afield], purify_e=purify_e, purify_b=purify_b)
-    EB_Bfield = nmt.NmtField(apod_mask, [Q_Bfield, U_Bfield], purify_e=purify_e, purify_b=purify_b) 
+    EB_Afield = nmt.NmtField(apod_maskA, [Q_Afield, U_Afield], purify_e=purify_e, purify_b=purify_b)
+    EB_Bfield = nmt.NmtField(apod_maskB, [Q_Bfield, U_Bfield], purify_e=purify_e, purify_b=purify_b) 
     # spin 0 fields  
-    T_Afield =  nmt.NmtField(apod_mask, [I_Afield])
-    T_Bfield =  nmt.NmtField(apod_mask, [I_Bfield])
+    T_Afield =  nmt.NmtField(apod_maskA, [I_Afield])
+    T_Bfield =  nmt.NmtField(apod_maskB, [I_Bfield])
     
     if verbose:
         print("Computed TEB for both fields")
