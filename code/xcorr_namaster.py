@@ -340,7 +340,10 @@ def xcorr_TEB_ABBA(I_Afield, Q_Afield, U_Afield, I_Bfield, Q_Bfield, U_Bfield, a
             # add arbitrary kwargs as attributes
             for key in kwargs.keys():
                 print(kwargs[key])
-                dset.attrs[key] = kwargs[key]
+                try:
+                    dset.attrs[key] = kwargs[key]
+                except:
+                    dsetat= f.create_dataset(name='{}'.format(key), data=kwargs[key])
                 
                 
 def xcorr_T_EB(I_Afield, Q_Bfield, U_Bfield, apod_mask=None, bins=None, nside=2048, savedata=True, EBpure=True, CFM=False, Cerrors=False, dataname=["A", "B"], savestr="", verbose=0, data_root="../data/", **kwargs):
